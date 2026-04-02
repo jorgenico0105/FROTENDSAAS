@@ -1,0 +1,218 @@
+<div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+  <div class="bg-primary-500 px-5 py-3">
+    <div class="flex items-center gap-2.5">
+      <i class="ri-restaurant-line text-white text-base"></i>
+      <h4 class="font-semibold text-white text-sm">Elaboración de dieta</h4>
+      <span class="text-white text-xs opacity-75">· Calorías pre-cargadas desde el RMB calculado</span>
+    </div>
+  </div>
+
+  <div class="px-6 py-5 flex flex-col gap-5">
+
+    <!-- Nombre del plan + duración -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Nombre del plan</label>
+        <input type="text" [(ngModel)]="nombrePlan"
+               placeholder="Ej: Plan de pérdida de peso..."
+               class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+        <p class="text-xs text-gray-400 mt-1">Si lo dejas vacío se genera automáticamente</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Duración (días)</label>
+        <div class="grid grid-cols-4 gap-1.5">
+          @for (d of [7,14,30,60]; track d) {
+            <button (click)="duracionDias = d; onDuracionChange()"
+                    class="py-2.5 rounded-xl border text-xs font-semibold transition-all"
+                    [ngClass]="duracionDias === d
+                      ? 'bg-secondary-500 border-secondary-500 text-white shadow-sm'
+                      : 'border-gray-200 dark:border-[#172036] text-gray-500 dark:text-gray-400 hover:border-secondary-300 hover:text-secondary-600'">
+              {{ d }}d
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Objetivo -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Objetivo del plan</label>
+      <textarea [(ngModel)]="objetivo" rows="2"
+                placeholder="Ej: Reducción de peso corporal y mejora de composición corporal en 30 días..."
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all resize-none placeholder:text-gray-300 dark:placeholder:text-gray-600"></textarea>
+    </div>
+
+    <!-- Calorías + comidas -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Calorías objetivo / día</label>
+        <div class="relative">
+          <input type="number" [ngModel]="caloriasObjetivo" (ngModelChange)="onCaloriasChange($event)" min="500" max="8000"
+                 class="w-full pl-3 pr-12 py-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">kcal</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Número de comidas</label>
+        <div class="grid grid-cols-3 gap-1.5">
+          @for (n of [3,4,5]; track n) {
+            <button (click)="numComidas = n"
+                    class="py-3 rounded-xl border text-sm font-semibold transition-all"
+                    [ngClass]="numComidas === n
+                      ? 'bg-secondary-500 border-secondary-500 text-white shadow-sm'
+                      : 'border-gray-200 dark:border-[#172036] text-gray-500 dark:text-gray-400 hover:border-secondary-300 hover:text-secondary-600'">
+              {{ n }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribución de macros -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <label class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Distribución de macronutrientes</label>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-bold"
+              [ngClass]="macroTotal === 100
+                ? 'bg-success-50 dark:bg-success-900/20 text-success-600 dark:text-success-400'
+                : 'bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400'">
+          {{ macroTotal }}% total
+        </span>
+      </div>
+
+      <!-- Barra visual -->
+      <div class="h-4 flex rounded-xl overflow-hidden mb-4 bg-gray-100 dark:bg-[#0a0e19] shadow-inner">
+        <div class="transition-all" [style.width.%]="pctProteinas" style="background: #3584FC"></div>
+        <div class="transition-all" [style.width.%]="pctCarbos"    style="background: #fd5812"></div>
+        <div class="transition-all" [style.width.%]="pctGrasas"    style="background: #ffc107"></div>
+      </div>
+
+      <!-- Macro inputs -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="rounded-xl border-2 border-secondary-200 dark:border-secondary-900/50 bg-secondary-50 dark:bg-secondary-900/10 p-4 text-center">
+          <div class="w-2 h-2 rounded-full bg-secondary-500 mx-auto mb-2"></div>
+          <p class="text-xs font-semibold text-secondary-600 dark:text-secondary-400 mb-2">Proteínas</p>
+          <div class="relative mb-1">
+            <input type="number" [(ngModel)]="pctProteinas" min="0" max="100"
+                   class="w-full text-center text-2xl font-bold bg-transparent text-secondary-700 dark:text-secondary-300 focus:outline-none border-none" />
+            <span class="text-xs text-secondary-500">%</span>
+          </div>
+          <p class="text-xs text-gray-400 font-medium">{{ proteinasG }}g/día</p>
+        </div>
+        <div class="rounded-xl border-2 border-orange-200 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-900/10 p-4 text-center">
+          <div class="w-2 h-2 rounded-full bg-orange-500 mx-auto mb-2"></div>
+          <p class="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-2">Carbohidratos</p>
+          <div class="relative mb-1">
+            <input type="number" [(ngModel)]="pctCarbos" min="0" max="100"
+                   class="w-full text-center text-2xl font-bold bg-transparent text-orange-700 dark:text-orange-300 focus:outline-none border-none" />
+            <span class="text-xs text-orange-500">%</span>
+          </div>
+          <p class="text-xs text-gray-400 font-medium">{{ carbosG }}g/día</p>
+        </div>
+        <div class="rounded-xl border-2 border-warning-200 dark:border-warning-900/50 bg-warning-50 dark:bg-warning-900/10 p-4 text-center">
+          <div class="w-2 h-2 rounded-full bg-warning-500 mx-auto mb-2"></div>
+          <p class="text-xs font-semibold text-warning-600 dark:text-warning-400 mb-2">Grasas</p>
+          <div class="relative mb-1">
+            <input type="number" [(ngModel)]="pctGrasas" min="0" max="100"
+                   class="w-full text-center text-2xl font-bold bg-transparent text-warning-700 dark:text-warning-300 focus:outline-none border-none" />
+            <span class="text-xs text-warning-500">%</span>
+          </div>
+          <p class="text-xs text-gray-400 font-medium">{{ grasasG }}g/día</p>
+        </div>
+      </div>
+
+      @if (macroTotal !== 100) {
+        <p class="text-xs text-danger-500 text-center mt-2 flex items-center justify-center gap-1">
+          <i class="ri-error-warning-line"></i>
+          Los porcentajes deben sumar 100% — faltan {{ 100 - macroTotal }}%
+        </p>
+      }
+    </div>
+
+    <!-- ── Proyección ──────────────────────────────────────────────────────── -->
+    <div class="border-t border-gray-100 dark:border-[#172036] pt-5">
+
+      <div class="flex items-center gap-2 mb-4">
+        <i class="ri-line-chart-line text-secondary-500 text-base"></i>
+        <h5 class="text-sm font-semibold text-black dark:text-white">Proyección del efecto de la dieta</h5>
+      </div>
+
+      @if (!tieneProyeccion) {
+        <div class="rounded-xl border border-dashed border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] px-6 py-8 text-center">
+          <i class="ri-bar-chart-2-line text-3xl text-gray-300 dark:text-gray-600 mb-3 block"></i>
+          <p class="text-sm font-medium text-gray-400 dark:text-gray-500">Completa el formulario de mediciones</p>
+          <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">Los gráficos aparecerán cuando se registren peso y gasto energético.</p>
+        </div>
+      }
+
+      <!-- Stats summary — siempre en DOM, visible solo con datos -->
+      <div class="grid grid-cols-3 gap-3 mb-5" [class.hidden]="!tieneProyeccion">
+        <div class="rounded-xl bg-gray-50 dark:bg-[#0a0e19] border border-gray-100 dark:border-[#172036] px-4 py-3 text-center">
+          <p class="text-xs text-gray-400 mb-1">Déficit diario</p>
+          <p class="text-xl font-bold"
+             [ngClass]="deficitDiario > 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'">
+            {{ deficitDiario > 0 ? '+' : '' }}{{ deficitDiario | number:'1.0-0' }}
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">kcal/día</p>
+        </div>
+        <div class="rounded-xl bg-gray-50 dark:bg-[#0a0e19] border border-gray-100 dark:border-[#172036] px-4 py-3 text-center">
+          <p class="text-xs text-gray-400 mb-1">Pérdida esperada</p>
+          <p class="text-xl font-bold text-secondary-600 dark:text-secondary-400">
+            {{ perdidaSemanalKg > 0 ? (perdidaSemanalKg | number:'1.1-2') : '0' }}
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">kg/semana</p>
+        </div>
+        <div class="rounded-xl bg-gray-50 dark:bg-[#0a0e19] border border-gray-100 dark:border-[#172036] px-4 py-3 text-center">
+          <p class="text-xs text-gray-400 mb-1">Peso estimado final</p>
+          <p class="text-xl font-bold text-black dark:text-white">
+            {{ pesoFinal | number:'1.1-1' }}
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">kg al finalizar</p>
+        </div>
+      </div>
+
+      <!-- Charts — siempre en DOM para que ViewChild los encuentre -->
+      <div class="grid grid-cols-1 gap-4" [class.hidden]="!tieneProyeccion">
+
+        <div class="rounded-xl border border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] overflow-hidden">
+          <div class="px-4 pt-3 pb-1 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-black dark:text-white">Proyección de peso corporal</p>
+              <p class="text-xs text-gray-400">Evolución semanal durante la dieta</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-xs text-gray-400">
+              <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#3584FC"></span> Peso (kg)
+            </span>
+          </div>
+          <div #chartPesoEl></div>
+        </div>
+
+        <div class="rounded-xl border border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] overflow-hidden">
+          <div class="px-4 pt-3 pb-1 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-black dark:text-white">Composición corporal estimada</p>
+              <p class="text-xs text-gray-400">Masa grasa vs masa magra por semana</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-gray-400">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#FD5812"></span> Grasa
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#3584FC"></span> Magra
+              </span>
+            </div>
+          </div>
+          <div #chartComposicionEl></div>
+        </div>
+
+      </div>
+
+      <p class="text-xs text-gray-400 text-center mt-3 flex items-center justify-center gap-1" [class.hidden]="!tieneProyeccion">
+        <i class="ri-information-line"></i>
+        Proyección estimada. Resultados reales pueden variar.
+      </p>
+
+    </div>
+
+  </div>
+</div>

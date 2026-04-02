@@ -1,0 +1,184 @@
+@if (isOpen) {
+  <div class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50"
+       (click)="close()">
+    <div class="bg-white dark:bg-[#0c1427] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <div>
+          <h3 class="text-base font-semibold text-black dark:text-white">Nueva Cita</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Completa los datos para registrar la cita</p>
+        </div>
+        <button (click)="close()"
+                class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#172036] text-gray-400 transition-all">
+          <i class="ri-close-line text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body (scrollable) -->
+      <div class="px-6 py-5 flex flex-col gap-5 overflow-y-auto flex-1">
+
+        @if (errorMsg) {
+          <div class="px-3 py-2.5 rounded-lg bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm">
+            {{ errorMsg }}
+          </div>
+        }
+
+        <!-- ── Paciente ────────────────────────────────────────────── -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Paciente</label>
+
+          @if (!selectedPaciente && !isAnonymous) {
+            <!-- Buscador -->
+            <div class="relative">
+              <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+              <input [(ngModel)]="searchQuery" (ngModelChange)="onSearchInput()"
+                     type="text" placeholder="Buscar por nombre o apellido..."
+                     class="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all" />
+              @if (isSearching) {
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></span>
+              }
+            </div>
+
+            <!-- Resultados -->
+            @if (searchResults.length > 0) {
+              <div class="mt-1 bg-white dark:bg-[#0a0e19] border border-gray-200 dark:border-[#172036] rounded-lg shadow-lg overflow-hidden">
+                @for (p of searchResults; track p.id) {
+                  <button (click)="selectPaciente(p)"
+                          class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#15203c] transition-all text-left">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {{ p.nombres.charAt(0) }}{{ p.apellidos.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-black dark:text-white">{{ p.nombres }} {{ p.apellidos }}</p>
+                      @if (p.telefono) {
+                        <p class="text-xs text-gray-400 dark:text-gray-500">{{ p.telefono }}</p>
+                      }
+                    </div>
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Acciones rápidas -->
+            <div class="flex items-center gap-2 mt-2">
+              <button (click)="isCrearPacienteOpen = true"
+                      class="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 font-medium transition-all px-2 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900/20">
+                <i class="ri-user-add-line"></i> Crear nuevo paciente
+              </button>
+              <span class="text-gray-300 dark:text-gray-600">·</span>
+              <button (click)="useAnonymous()"
+                      class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-all px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-[#15203c]">
+                <i class="ri-user-question-line"></i> Sin paciente (anónimo)
+              </button>
+            </div>
+          }
+
+          @if (selectedPaciente) {
+            <!-- Paciente seleccionado -->
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {{ selectedPaciente.nombres.charAt(0) }}{{ selectedPaciente.apellidos.charAt(0) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-black dark:text-white">{{ selectedPaciente.nombres }} {{ selectedPaciente.apellidos }}</p>
+                @if (selectedPaciente.telefono) {
+                  <p class="text-xs text-gray-400 dark:text-gray-500">{{ selectedPaciente.telefono }}</p>
+                }
+              </div>
+              <button (click)="clearPaciente()"
+                      class="p-1 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-800 text-primary-400 transition-all">
+                <i class="ri-close-line text-sm"></i>
+              </button>
+            </div>
+          }
+
+          @if (isAnonymous) {
+            <!-- Modo anónimo -->
+            <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#15203c] border border-gray-200 dark:border-[#172036]">
+              <div class="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 flex-shrink-0">
+                <i class="ri-user-question-line text-sm"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-black dark:text-white">Cita anónima</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">Podrás crear el paciente al iniciar la sesión</p>
+              </div>
+              <button (click)="clearPaciente()"
+                      class="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-[#172036] text-gray-400 transition-all">
+                <i class="ri-close-line text-sm"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ── Tipo de cita ────────────────────────────────────────── -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Tipo de cita <span class="text-danger-500">*</span></label>
+          <select [(ngModel)]="form.tipo_cita_id"
+                  class="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all">
+            <option [ngValue]="0" disabled>Selecciona un tipo...</option>
+            @for (t of tiposCita; track t.id) {
+              <option [ngValue]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- ── Fecha y hora ───────────────────────────────────────── -->
+        <div class="grid grid-cols-3 gap-3">
+          <div class="col-span-3 sm:col-span-1">
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Fecha <span class="text-danger-500">*</span></label>
+            <input [(ngModel)]="form.fecha" type="date"
+                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Hora <span class="text-danger-500">*</span></label>
+            <input [(ngModel)]="form.hora" type="time"
+                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Duración</label>
+            <select [(ngModel)]="form.duracion_min"
+                    class="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all">
+              <option [ngValue]="15">15 min</option>
+              <option [ngValue]="30">30 min</option>
+              <option [ngValue]="45">45 min</option>
+              <option [ngValue]="60">1 hora</option>
+              <option [ngValue]="90">1h 30min</option>
+              <option [ngValue]="120">2 horas</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ── Motivo ─────────────────────────────────────────────── -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Motivo / Notas</label>
+          <textarea [(ngModel)]="form.motivo" rows="2" placeholder="Motivo de la consulta..."
+                    class="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"></textarea>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <button (click)="close()"
+                class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] transition-all">
+          Cancelar
+        </button>
+        <button (click)="submit()" [disabled]="isSubmitting"
+                class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-all disabled:opacity-60 flex items-center gap-2">
+          @if (isSubmitting) {
+            <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          }
+          <i class="ri-calendar-add-line"></i> Agendar cita
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal crear nuevo paciente -->
+  <app-nuevo-paciente
+    [isOpen]="isCrearPacienteOpen"
+    (closed)="isCrearPacienteOpen = false"
+    (pacienteGuardado)="onPacienteCreado($event)">
+  </app-nuevo-paciente>
+}

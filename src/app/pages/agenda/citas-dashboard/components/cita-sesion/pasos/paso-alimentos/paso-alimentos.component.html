@@ -1,0 +1,108 @@
+<div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+  <div class="bg-primary-500 px-5 py-3">
+    <div class="flex items-center gap-2.5">
+      <i class="ri-leaf-line text-white text-base"></i>
+      <h4 class="font-semibold text-white text-sm">Construcción del menú</h4>
+    </div>
+  </div>
+
+  <div class="p-5 flex flex-col gap-5">
+
+    <!-- Loader permanente -->
+    <div class="flex flex-col items-center py-6 gap-3">
+      <div class="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <div class="text-center">
+        <p class="text-sm font-semibold text-black dark:text-white">Generando menú...</p>
+        <p class="text-xs text-gray-400 mt-1">Procesando datos del plan nutricional</p>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-100 dark:border-[#172036]"></div>
+
+    <!-- Dieta creada -->
+    @if (dieta) {
+      <div class="rounded-xl border border-primary-100 dark:border-primary-900/30 bg-primary-50 dark:bg-primary-900/10 p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="ri-restaurant-line text-primary-500 text-base"></i>
+          <p class="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide">Dieta creada</p>
+        </div>
+        <p class="font-semibold text-black dark:text-white text-sm mb-3">{{ dieta.nombre }}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white dark:bg-[#0c1427] rounded-lg p-3 text-center border border-primary-100 dark:border-[#172036]">
+            <p class="text-lg font-bold text-primary-600 dark:text-primary-400">{{ dieta.calorias_dia_objetivo ?? '—' }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">kcal / día</p>
+          </div>
+          <div class="bg-white dark:bg-[#0c1427] rounded-lg p-3 text-center border border-primary-100 dark:border-[#172036]">
+            <p class="text-lg font-bold text-secondary-600 dark:text-secondary-400">{{ dieta.proteinas_g_dia ?? '—' }}g</p>
+            <p class="text-xs text-gray-400 mt-0.5">Proteínas</p>
+          </div>
+          <div class="bg-white dark:bg-[#0c1427] rounded-lg p-3 text-center border border-primary-100 dark:border-[#172036]">
+            <p class="text-lg font-bold text-orange-600 dark:text-orange-400">{{ dieta.carbohidratos_g_dia ?? '—' }}g</p>
+            <p class="text-xs text-gray-400 mt-0.5">Carbohidratos</p>
+          </div>
+          <div class="bg-white dark:bg-[#0c1427] rounded-lg p-3 text-center border border-primary-100 dark:border-[#172036]">
+            <p class="text-lg font-bold text-warning-600 dark:text-warning-400">{{ dieta.grasas_g_dia ?? '—' }}g</p>
+            <p class="text-xs text-gray-400 mt-0.5">Grasas</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-3 mt-3 pt-3 border-t border-primary-100 dark:border-primary-900/30 text-xs text-gray-500 dark:text-gray-400">
+          <span><i class="ri-calendar-line mr-1"></i>Inicio: {{ dieta.fecha_inicio }}</span>
+          <span><i class="ri-timer-line mr-1"></i>{{ dieta.duracion_dias }} días</span>
+          <span><i class="ri-knife-line mr-1"></i>{{ dieta.num_comidas }} comidas/día</span>
+          @if (dieta.objetivo) {
+            <span class="w-full mt-1 italic">"{{ dieta.objetivo }}"</span>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="rounded-xl border border-dashed border-gray-200 dark:border-[#172036] p-4 text-center">
+        <p class="text-xs text-gray-400">Dieta no generada (paso omitido)</p>
+      </div>
+    }
+
+    <!-- Preferencias -->
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <i class="ri-heart-3-line text-gray-400 text-base"></i>
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Preferencias del paciente</p>
+        <span class="ml-auto text-xs text-gray-400">{{ preferencias.length }} registradas</span>
+      </div>
+      @if (preferencias.length > 0) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          @if (preferenciasGusto.length > 0) {
+            <div class="rounded-xl border border-success-100 dark:border-success-900/30 bg-success-50 dark:bg-success-900/10 p-3">
+              <p class="text-xs font-semibold text-success-600 dark:text-success-400 mb-2 flex items-center gap-1">
+                <i class="ri-thumb-up-line"></i> Le gustan ({{ preferenciasGusto.length }})
+              </p>
+              <div class="flex flex-wrap gap-1">
+                @for (p of preferenciasGusto; track p.id) {
+                  <span class="text-xs bg-white dark:bg-[#0c1427] border border-success-200 dark:border-success-900/40 text-success-700 dark:text-success-400 px-2 py-0.5 rounded-lg">
+                    {{ p.nombre_libre ?? 'Alimento #' + p.alimento_id }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+          @if (preferenciasRestriccion.length > 0) {
+            <div class="rounded-xl border border-danger-100 dark:border-danger-900/30 bg-danger-50 dark:bg-danger-900/10 p-3">
+              <p class="text-xs font-semibold text-danger-600 dark:text-danger-400 mb-2 flex items-center gap-1">
+                <i class="ri-alert-line"></i> Restricciones ({{ preferenciasRestriccion.length }})
+              </p>
+              <div class="flex flex-wrap gap-1">
+                @for (p of preferenciasRestriccion; track p.id) {
+                  <span class="text-xs bg-white dark:bg-[#0c1427] border border-danger-200 dark:border-danger-900/40 text-danger-700 dark:text-danger-400 px-2 py-0.5 rounded-lg">
+                    {{ p.nombre_libre ?? 'Alimento #' + p.alimento_id }}
+                    <span class="opacity-60 ml-0.5">({{ p.tipo }})</span>
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-xs text-gray-400 dark:text-gray-600">Sin preferencias registradas</p>
+      }
+    </div>
+
+  </div>
+</div>

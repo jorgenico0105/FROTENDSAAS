@@ -1,0 +1,80 @@
+<div class="sidebar-area fixed overflow-hidden z-[7] top-0 h-screen transition-all rounded-r-md" style="background-color: var(--color-surface-5)">
+    <!-- Logo / Clinic branding -->
+    <div class="logo px-[25px] pt-[12px] pb-[12px] absolute z-[2] right-0 top-0 left-0" style="background-color: var(--color-surface-5); border-bottom: 1px solid var(--color-surface-3)">
+        <a routerLink="/dashboard" class="transition-none relative flex items-center justify-center">
+            @if (logoUrl) {
+                <img [src]="logoUrl" alt="logo" class="h-20 w-auto object-contain max-w-[180px] mx-auto">
+            } @else {
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base mx-auto" style="background: linear-gradient(135deg, #8b0000, #cc0000);">
+                    <i class="ri-hospital-fill"></i>
+                </div>
+            }
+        </a>
+        <button type="button" (click)="closeSidebar()" class="burger-menu inline-block absolute z-[3] top-[24px] ltr:right-[25px] rtl:left-[25px] transition-all hover:text-primary-500">
+            <i class="material-symbols-outlined">close</i>
+        </button>
+    </div>
+
+    <ng-scrollbar visibility="hover" class="!h-screen">
+        <div class="pt-[116px] px-[20px] pb-[20px]">
+
+            <!-- Dynamic Menu -->
+            <div class="accordion">
+                @for (item of menuItems; track item.id) {
+                    @if (item.visible !== false) {
+                        <!-- Item with children (accordion) -->
+                        @if (hasChildren(item)) {
+                            <div class="accordion-item rounded-md text-black dark:text-white mb-[5px] whitespace-nowrap">
+                                <button
+                                    class="accordion-button toggle flex items-center transition-all py-[9px] ltr:pl-[14px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] rounded-md font-medium w-full relative text-left hover:bg-[var(--color-surface-4)]"
+                                    type="button"
+                                    (click)="toggleItem(item.id)"
+                                    [ngClass]="{ 'open': isExpanded(item.id) }"
+                                >
+                                    <i [class]="getIconClass(item.icono) + ' transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] text-[20px] leading-none'"></i>
+                                    <span class="title leading-none text-sm">{{ item.nombre }}</span>
+                                </button>
+                                <div class="accordion-collapse" [ngClass]="{ 'open': isExpanded(item.id) }">
+                                    <div class="pt-[4px]">
+                                        <ul class="sidebar-sub-menu">
+                                            @for (child of item.children; track child.id) {
+                                                @if (child.visible !== false && child.ruta) {
+                                                    <li class="sidemenu-item mb-[4px] last:mb-0">
+                                                        <a [routerLink]="child.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+                                                            class="sidemenu-link rounded-md flex items-center gap-2 relative transition-all font-medium text-gray-500 dark:text-gray-400 py-[9px] ltr:pl-[38px] ltr:pr-[30px] rtl:pr-[38px] rtl:pl-[30px] hover:text-primary-500 hover:bg-[var(--color-surface-4)] w-full text-left text-sm">
+                                                            {{ child.nombre }}
+                                                        </a>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        } @else if (item.ruta) {
+                            <!-- Direct link item -->
+                            <div class="accordion-item rounded-md text-black dark:text-white mb-[5px]">
+                                <a [routerLink]="item.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+                                    class="accordion-button flex items-center transition-all py-[9px] ltr:pl-[14px] ltr:pr-[30px] rtl:pr-[14px] rtl:pl-[30px] rounded-md font-medium w-full hover:bg-[var(--color-surface-4)] text-sm">
+                                    <i [class]="getIconClass(item.icono) + ' transition-all text-gray-500 dark:text-gray-400 ltr:mr-[7px] rtl:ml-[7px] text-[20px] leading-none'"></i>
+                                    <span class="title leading-none">{{ item.nombre }}</span>
+                                </a>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            <!-- Separator -->
+            <div class="border-t border-[var(--color-surface-3)] my-4"></div>
+
+            <!-- Logout -->
+            <button (click)="logout()" type="button"
+                class="flex items-center gap-2 w-full py-[9px] px-[14px] rounded-md font-medium text-gray-500 dark:text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all text-sm">
+                <i class="ri-logout-box-line text-[20px] leading-none"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+
+        </div>
+    </ng-scrollbar>
+</div>

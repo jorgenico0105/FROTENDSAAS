@@ -1,0 +1,117 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-black dark:text-white">Planes SaaS</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestión de planes de suscripción</p>
+    </div>
+    <button (click)="openCreate()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-400 transition-all text-sm font-medium">
+      <i class="ri-add-line text-lg"></i> Nuevo Plan
+    </button>
+  </div>
+
+  @if (successMsg) {
+    <div class="mb-4 p-3 rounded-lg bg-success-50 dark:bg-success-900/20 text-success-600 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i>{{ successMsg }}
+    </div>
+  }
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (plan of planes; track plan.id) {
+      <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-6 shadow-sm hover:shadow-md transition-all">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <span class="inline-block px-2 py-0.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-full mb-2">{{ plan.codigo }}</span>
+            <h3 class="text-lg font-bold text-black dark:text-white">{{ plan.nombre }}</h3>
+            @if (plan.descripcion) {
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ plan.descripcion }}</p>
+            }
+          </div>
+          <button (click)="openEdit(plan)" class="p-2 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors">
+            <i class="ri-pencil-line"></i>
+          </button>
+        </div>
+        <div class="border-t border-gray-100 dark:border-[#172036] pt-4 mt-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-600">Mensual</p>
+              <p class="text-xl font-bold text-black dark:text-white">${{ plan.precio_mensual }}<span class="text-xs font-normal text-gray-500">/mes</span></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-600">Anual</p>
+              <p class="text-xl font-bold text-black dark:text-white">${{ plan.precio_anual }}<span class="text-xs font-normal text-gray-500">/año</span></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-600">Usuarios</p>
+              <p class="text-sm font-medium text-black dark:text-white">{{ plan.max_usuarios || 'Ilimitados' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 dark:text-gray-600">Pacientes</p>
+              <p class="text-sm font-medium text-black dark:text-white">{{ plan.max_pacientes || 'Ilimitados' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @empty {
+      @if (!isLoading) {
+        <div class="col-span-full text-center py-12 text-gray-400 dark:text-gray-600">
+          <i class="ri-price-tag-3-line text-4xl block mb-2 opacity-40"></i>
+          No hay planes registrados
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-[#172036]">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+        <h3 class="font-semibold text-black dark:text-white">{{ isEditing ? 'Editar Plan' : 'Nuevo Plan' }}</h3>
+        <button (click)="closeModal()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded"><i class="ri-close-line text-xl"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (errorMsg) {
+          <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 text-sm">{{ errorMsg }}</div>
+        }
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Código *</label>
+            <input [(ngModel)]="form.codigo" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="BASICO">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+            <input [(ngModel)]="form.nombre" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Plan Básico">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Precio Mensual ($)</label>
+            <input [(ngModel)]="form.precio_mensual" type="number" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Precio Anual ($)</label>
+            <input [(ngModel)]="form.precio_anual" type="number" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Máx. Usuarios</label>
+            <input [(ngModel)]="form.max_usuarios" type="number" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Vacío = ilimitado">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Máx. Pacientes</label>
+            <input [(ngModel)]="form.max_pacientes" type="number" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Vacío = ilimitado">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
+            <textarea [(ngModel)]="form.descripcion" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 resize-none"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancelar</button>
+        <button (click)="save()" [disabled]="isLoading" class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400 disabled:opacity-50">
+          {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Plan') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

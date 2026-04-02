@@ -1,0 +1,433 @@
+<div class="min-h-full bg-gray-50 dark:bg-[#070d1a]">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HEADER HERO
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="bg-white dark:bg-[#0c1427] border-b border-gray-100 dark:border-[#172036] px-6 py-5">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-black dark:text-white">Biblioteca de recursos</h1>
+        <p class="text-sm text-gray-400 dark:text-gray-500 mt-0.5">Archivos clínicos de la clínica — menús, recetas, diagnósticos y más</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Contador total -->
+        <div class="hidden sm:flex items-center gap-3 mr-4">
+          <div class="text-center">
+            <p class="text-lg font-bold text-black dark:text-white leading-none">{{ archivos.length }}</p>
+            <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">archivos</p>
+          </div>
+          <div class="w-px h-8 bg-gray-100 dark:bg-[#172036]"></div>
+          <div class="text-center">
+            <p class="text-lg font-bold text-black dark:text-white leading-none">{{ tipoRecursos.length }}</p>
+            <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">categorías</p>
+          </div>
+        </div>
+        <button (click)="triggerFileInput()"
+          class="flex items-center gap-2 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+          <i class="ri-upload-cloud-2-line"></i>
+          <span class="hidden sm:inline">Subir archivo</span>
+          <span class="sm:hidden">Subir</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas -->
+    @if (successMsg) {
+      <div class="mt-4 px-4 py-2.5 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+        <i class="ri-checkbox-circle-line flex-shrink-0"></i> {{ successMsg }}
+      </div>
+    }
+    @if (errorMsg && !showUploadPanel) {
+      <div class="mt-4 px-4 py-2.5 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+        <i class="ri-error-warning-line flex-shrink-0"></i> {{ errorMsg }}
+      </div>
+    }
+  </div>
+
+  <!-- Input oculto -->
+  <input #fileInput type="file" class="hidden"
+    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mp3"
+    (change)="onFileSelected($event)">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       DROP ZONE (cuando no hay upload activo)
+  ══════════════════════════════════════════════════════════════════════════ -->
+  @if (!showUploadPanel) {
+    <div class="px-6 pt-5">
+      <div
+        class="relative rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden"
+        [ngClass]="isDragOver
+          ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20 scale-[1.005]'
+          : 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] hover:border-primary-300 dark:hover:border-primary-800 hover:bg-primary-50/20 dark:hover:bg-primary-900/5'"
+        (click)="triggerFileInput()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave()"
+        (drop)="onDrop($event)">
+
+        <!-- Decoration blobs -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+          <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-primary-100/40 dark:bg-primary-900/10 blur-2xl"></div>
+          <div class="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-secondary-100/30 dark:bg-secondary-900/10 blur-xl"></div>
+        </div>
+
+        <div class="relative flex items-center gap-6 px-8 py-5">
+          <!-- Ícono central -->
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all"
+               [ngClass]="isDragOver
+                 ? 'bg-primary-100 dark:bg-primary-900/40'
+                 : 'bg-gray-100 dark:bg-[#0a0e19]'">
+            <i class="ri-cloud-upload-line text-2xl transition-all"
+               [ngClass]="isDragOver ? 'text-primary-500' : 'text-gray-400 dark:text-gray-500'"></i>
+          </div>
+
+          <!-- Texto -->
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-black dark:text-white">
+              @if (isDragOver) { Suelta el archivo aquí } @else { Arrastra un archivo o haz clic para seleccionar }
+            </p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">PDF, Word, Excel, Imágenes, Videos · Máx. 10 MB</p>
+          </div>
+
+          <!-- Tipos de archivo badges -->
+          <div class="hidden md:flex items-center gap-2 flex-shrink-0">
+            @for (ext of [
+              {label:'PDF',  icon:'ri-file-pdf-2-line',  cls:'text-red-500    bg-red-50    dark:bg-red-900/20'},
+              {label:'Word', icon:'ri-file-word-line',   cls:'text-blue-500   bg-blue-50   dark:bg-blue-900/20'},
+              {label:'Excel',icon:'ri-file-excel-line',  cls:'text-green-600  bg-green-50  dark:bg-green-900/20'},
+              {label:'IMG',  icon:'ri-image-line',       cls:'text-purple-500 bg-purple-50 dark:bg-purple-900/20'}
+            ]; track ext.label) {
+              <div class="flex flex-col items-center gap-1">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" [ngClass]="ext.cls">
+                  <i [class]="ext.icon + ' text-lg'"></i>
+                </div>
+                <span class="text-[9px] text-gray-400 font-medium">{{ ext.label }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PANEL DE UPLOAD
+  ══════════════════════════════════════════════════════════════════════════ -->
+  @if (showUploadPanel && uploadFile) {
+    <div class="px-6 pt-5">
+      <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-primary-200 dark:border-primary-800/50 shadow-sm overflow-hidden">
+
+        <!-- Header del panel -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#172036] bg-gradient-to-r from-primary-50/80 to-transparent dark:from-primary-900/20 dark:to-transparent">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0">
+              <i [class]="fileIcon + ' text-primary-600 dark:text-primary-400 text-lg'"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-black dark:text-white truncate max-w-[280px]">{{ uploadFile.name }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500">{{ fileSize }} · listo para subir</p>
+            </div>
+          </div>
+          <button (click)="cancelUpload()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-[#172036] transition-all">
+            <i class="ri-close-line text-xl"></i>
+          </button>
+        </div>
+
+        <div class="p-5">
+          <!-- Preview imagen -->
+          @if (uploadPreview) {
+            <div class="mb-5">
+              <img [src]="uploadPreview" alt="preview"
+                class="h-40 w-auto rounded-xl object-cover border border-gray-100 dark:border-[#172036]">
+            </div>
+          }
+
+          @if (errorMsg) {
+            <div class="mb-4 px-3 py-2.5 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+              <i class="ri-error-warning-line flex-shrink-0"></i> {{ errorMsg }}
+            </div>
+          }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Título *</label>
+              <input [(ngModel)]="uploadForm.titulo" type="text" placeholder="Nombre del recurso"
+                class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Categoría *</label>
+              <select [(ngModel)]="uploadForm.tipo_recurso_id"
+                class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 transition-all">
+                <option [value]="0" disabled>— Selecciona —</option>
+                @for (t of tipoRecursos; track t.id) {
+                  <option [value]="t.id">{{ t.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Paciente <span class="normal-case font-normal">(opcional)</span></label>
+              <select [(ngModel)]="uploadForm.paciente_id"
+                class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 transition-all">
+                <option value="">— Recurso de la clínica —</option>
+                @for (p of pacientes; track p.id) {
+                  <option [value]="p.id">{{ p.nombres }} {{ p.apellidos }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Descripción</label>
+              <input [(ngModel)]="uploadForm.descripcion" type="text" placeholder="Descripción breve (opcional)"
+                class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 transition-all">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 dark:border-[#172036] bg-gray-50/60 dark:bg-[#0a0e19]/40">
+          <button (click)="cancelUpload()" class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] rounded-xl transition-all">
+            Cancelar
+          </button>
+          <button (click)="upload()" [disabled]="isUploading"
+            class="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 shadow-sm">
+            @if (isUploading) {
+              <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Subiendo...
+            } @else {
+              <i class="ri-cloud-upload-line"></i> Subir archivo
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       FILTROS + CONTENIDO
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="p-6">
+
+    <!-- Barra de filtros -->
+    <div class="flex items-center gap-3 mb-5 flex-wrap">
+
+      <!-- Categorías pill scroll -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 flex-1">
+        <button (click)="filtroTipoID = 0"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 border"
+          [ngClass]="filtroTipoID === 0
+            ? 'bg-primary-500 border-primary-500 text-white shadow-sm shadow-primary-200 dark:shadow-primary-900/30'
+            : 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-gray-600 dark:text-gray-400 hover:border-primary-300 hover:text-primary-600'">
+          <i class="ri-apps-2-line"></i>
+          Todos
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+            [ngClass]="filtroTipoID === 0 ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-[#172036] text-gray-500'">
+            {{ archivos.length }}
+          </span>
+        </button>
+        @for (t of tipoRecursos; track t.id) {
+          <button (click)="filtroTipoID = t.id"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 border"
+            [ngClass]="filtroTipoID === t.id
+              ? 'bg-primary-500 border-primary-500 text-white shadow-sm shadow-primary-200 dark:shadow-primary-900/30'
+              : 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-gray-600 dark:text-gray-400 hover:border-primary-300 hover:text-primary-600'">
+            <i [class]="archivoIcon(t.id)"></i>
+            {{ t.nombre }}
+            @if (countByTipoID(t.id) > 0) {
+              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                [ngClass]="filtroTipoID === t.id ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-[#172036] text-gray-500'">
+                {{ countByTipoID(t.id) }}
+              </span>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Búsqueda + view toggle -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative">
+          <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+          <input [(ngModel)]="search" type="text" placeholder="Buscar..."
+            class="h-9 pl-8 pr-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white outline-none focus:border-primary-500 w-44 lg:w-56 transition-all">
+        </div>
+        <!-- Grid / List toggle -->
+        <div class="flex items-center bg-white dark:bg-[#0c1427] border border-gray-200 dark:border-[#172036] rounded-xl p-0.5">
+          <button (click)="viewMode = 'grid'"
+            class="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+            [ngClass]="viewMode === 'grid'
+              ? 'bg-primary-500 text-white shadow-sm'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+            <i class="ri-grid-fill text-sm"></i>
+          </button>
+          <button (click)="viewMode = 'list'"
+            class="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+            [ngClass]="viewMode === 'list'
+              ? 'bg-primary-500 text-white shadow-sm'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
+            <i class="ri-list-unordered text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (isLoading) {
+      <div class="flex flex-col items-center justify-center py-24 gap-3">
+        <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm text-gray-400">Cargando recursos...</span>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading && archivosFiltrados.length === 0) {
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <div class="w-24 h-24 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-dashed border-gray-200 dark:border-[#172036] flex items-center justify-center mb-5 shadow-sm">
+          <i class="ri-folder-open-line text-4xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <h3 class="text-base font-semibold text-black dark:text-white mb-1">
+          @if (search || filtroTipoID) { Sin resultados } @else { Sin recursos aún }
+        </h3>
+        <p class="text-sm text-gray-400 max-w-xs">
+          @if (search || filtroTipoID) {
+            Ningún archivo coincide con tu búsqueda
+          } @else {
+            Arrastra un archivo a la zona de carga o haz clic en "Subir archivo"
+          }
+        </p>
+        @if (search || filtroTipoID) {
+          <button (click)="search = ''; filtroTipoID = 0"
+            class="mt-4 text-sm text-primary-500 hover:text-primary-600 font-semibold">
+            Limpiar filtros
+          </button>
+        }
+      </div>
+    }
+
+    <!-- ── VISTA GRID ──────────────────────────────────────────────────────── -->
+    @if (!isLoading && archivosFiltrados.length > 0 && viewMode === 'grid') {
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+        @for (archivo of archivosFiltrados; track archivo.id) {
+          <div class="group bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] hover:border-primary-200 dark:hover:border-primary-800/50 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col cursor-pointer"
+               (click)="$event.stopPropagation()">
+
+            <!-- Área visual -->
+            <div class="relative aspect-[4/3] flex items-center justify-center overflow-hidden"
+                 [ngClass]="archivoBgGradient(archivo.tipo_recurso_id)">
+
+              <!-- Círculos decorativos -->
+              <div class="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-20 bg-white"></div>
+              <div class="absolute -bottom-4 -left-4 w-14 h-14 rounded-full opacity-10 bg-white"></div>
+
+              <!-- Ícono -->
+              <i [class]="archivoIcon(archivo.tipo_recurso_id) + ' text-4xl relative z-10'"
+                 [ngClass]="archivoIconColor(archivo.tipo_recurso_id)"></i>
+
+              <!-- Acciones on hover -->
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 z-20">
+                <a [href]="fileUrl(archivo.ruta_archivo)" target="_blank"
+                   (click)="$event.stopPropagation()"
+                   class="w-9 h-9 rounded-xl bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-primary-600 transition-colors"
+                   title="Abrir">
+                  <i class="ri-external-link-line"></i>
+                </a>
+                <button (click)="eliminar(archivo); $event.stopPropagation()"
+                  class="w-9 h-9 rounded-xl bg-white shadow-md flex items-center justify-center text-danger-500 hover:text-danger-600 transition-colors"
+                  title="Eliminar">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </div>
+
+              <!-- Badge categoría -->
+              <div class="absolute top-2 left-2 z-10">
+                <span class="text-[10px] px-1.5 py-0.5 rounded-lg font-semibold bg-black/30 text-white backdrop-blur-sm">
+                  {{ tipoNombre(archivo.tipo_recurso_id) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="p-3 flex-1 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-black dark:text-white line-clamp-2 leading-snug">{{ archivo.titulo }}</p>
+              @if (archivo.pacienteNombre) {
+                <p class="text-[10px] text-primary-500 truncate flex items-center gap-0.5">
+                  <i class="ri-user-3-line"></i> {{ archivo.pacienteNombre }}
+                </p>
+              } @else {
+                <p class="text-[10px] text-gray-400 flex items-center gap-0.5">
+                  <i class="ri-hospital-line"></i> Clínica
+                </p>
+              }
+              <div class="flex items-center justify-between mt-auto pt-1">
+                <span class="text-[10px] text-gray-400">{{ formatDate(archivo.creado_en) }}</span>
+                <a [href]="fileUrl(archivo.ruta_archivo)" target="_blank"
+                   (click)="$event.stopPropagation()"
+                   class="text-[10px] text-primary-500 hover:text-primary-600 font-semibold flex items-center gap-0.5">
+                  Ver <i class="ri-arrow-right-up-line"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── VISTA LISTA ─────────────────────────────────────────────────────── -->
+    @if (!isLoading && archivosFiltrados.length > 0 && viewMode === 'list') {
+      <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+        <div class="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 px-4 py-2.5 border-b border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19]">
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo</span>
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Nombre</span>
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Categoría</span>
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide hidden md:block">Fecha</span>
+          <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Acciones</span>
+        </div>
+        @for (archivo of archivosFiltrados; track archivo.id) {
+          <div class="group grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 px-4 py-3 border-b border-gray-50 dark:border-[#172036] last:border-0 hover:bg-gray-50 dark:hover:bg-[#0a0e19]/60 transition-all">
+
+            <!-- Ícono tipo -->
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                 [ngClass]="archivoBgGradient(archivo.tipo_recurso_id)">
+              <i [class]="archivoIcon(archivo.tipo_recurso_id) + ' text-base'"
+                 [ngClass]="archivoIconColor(archivo.tipo_recurso_id)"></i>
+            </div>
+
+            <!-- Nombre + descripción -->
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-black dark:text-white truncate">{{ archivo.titulo }}</p>
+              <div class="flex items-center gap-2 mt-0.5">
+                @if (archivo.descripcion) {
+                  <p class="text-xs text-gray-400 truncate max-w-[200px]">{{ archivo.descripcion }}</p>
+                }
+                @if (archivo.pacienteNombre) {
+                  <span class="text-[10px] text-primary-500 flex items-center gap-0.5 flex-shrink-0">
+                    <i class="ri-user-3-line"></i>{{ archivo.pacienteNombre }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Categoría -->
+            <span class="hidden sm:inline text-xs px-2 py-0.5 rounded-full flex-shrink-0 font-medium"
+                  [ngClass]="archivoBadge(archivo.tipo_recurso_id)">
+              {{ tipoNombre(archivo.tipo_recurso_id) }}
+            </span>
+
+            <!-- Fecha -->
+            <span class="hidden md:block text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">{{ formatDate(archivo.creado_en) }}</span>
+
+            <!-- Acciones -->
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <a [href]="fileUrl(archivo.ruta_archivo)" target="_blank"
+                 class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
+                 title="Abrir">
+                <i class="ri-external-link-line text-sm"></i>
+              </a>
+              <button (click)="eliminar(archivo)"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all"
+                title="Eliminar">
+                <i class="ri-delete-bin-line text-sm"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

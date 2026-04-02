@@ -1,0 +1,65 @@
+<!-- Breadcrumb -->
+<div class="mb-[25px] md:flex items-center justify-between">
+    <h5 class="!mb-0">
+        Tooltips
+    </h5>
+    <ol class="breadcrumb mt-[12px] md:mt-0">
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            <a routerLink="/dashboard" class="inline-block relative ltr:pl-[22px] rtl:pr-[22px] transition-all hover:text-primary-500">
+                <i class="material-symbols-outlined absolute ltr:left-0 rtl:right-0 !text-lg -mt-px text-primary-500 top-1/2 -translate-y-1/2">
+                    home
+                </i>
+                Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            UI Elements
+        </li>
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            Tooltips
+        </li>
+    </ol>
+</div>
+
+<!-- Tooltips -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-[25px]">
+    <div class="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
+        <div class="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
+            <div class="trezo-card-title">
+                <h5 class="!mb-0">
+                    Default Tooltip
+                </h5>
+            </div>
+        </div>
+        <div class="trezo-card-content">
+            <div class="relative inline-block">
+                <button
+                    type="button"
+                    class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 custom-tooltip"
+                    (mouseenter)="showTooltip()"
+                    (mouseleave)="hideTooltip()"
+                    [attr.data-text]="'Hey, Hello World!'"
+                >
+                    Hover Tooltip
+                </button>
+                @if (tooltipVisible) {
+                    <span class="tooltip-text">
+                        {{ tooltipText }}
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
+        <div class="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
+            <div class="trezo-card-title">
+                <h5 class="!mb-0">
+                    Bottom Tooltip
+                </h5>
+            </div>
+        </div>
+        <div class="trezo-card-content">
+            <app-bottom-tooltip />
+        </div>
+    </div>
+</div>

@@ -1,0 +1,112 @@
+<!-- Breadcrumb -->
+<div class="mb-[25px] md:flex items-center justify-between">
+    <h5 class="!mb-0">
+        Accordion
+    </h5>
+    <ol class="breadcrumb mt-[12px] md:mt-0">
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            <a routerLink="/dashboard" class="inline-block relative ltr:pl-[22px] rtl:pr-[22px] transition-all hover:text-primary-500">
+                <i class="material-symbols-outlined absolute ltr:left-0 rtl:right-0 !text-lg -mt-px text-primary-500 top-1/2 -translate-y-1/2">
+                    home
+                </i>
+                Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            UI Elements
+        </li>
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            Accordion
+        </li>
+    </ol>
+</div>
+
+<!-- Accordion -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-[25px] mb-[25px]">
+    <div class="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
+        <div class="trezo-card-content">
+            <div class="toc-accordion" id="tablesOfContentAccordion">
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button open text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(0)" [ngClass]="{ 'open': isSectionOpen(0) }">
+                        What is Trezo?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(0) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                    </div>
+                </div>
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(1)" [ngClass]="{ 'open': isSectionOpen(1) }">
+                        What features does Trezo offer?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(1) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                        <ul class="list-disc ltr:pl-[17px] rtl:pr-[17px]">
+                            <li class="text-gray-500 dark:text-gray-400 leading-[1.6] mb-[7px] last:mb-0">
+                                Pellentesque viverra lorem malesuada nunc tristique sapien.
+                            </li>
+                            <li class="text-gray-500 dark:text-gray-400 leading-[1.6] mb-[7px] last:mb-0">
+                                Imperdiet sit hendrerit tincidunt bibendum donec adipiscing.
+                            </li>
+                            <li class="text-gray-500 dark:text-gray-400 leading-[1.6] mb-[7px] last:mb-0">
+                                Tellus non morbi nascetur cursus etiam facilisis mi.
+                            </li>
+                            <li class="text-gray-500 dark:text-gray-400 leading-[1.6] mb-[7px] last:mb-0">
+                                Imperdiet sit hendrerit tincidunt bibendum donec adipiscing.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(2)" [ngClass]="{ 'open': isSectionOpen(2) }">
+                        How can Trezo benefit my team?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(2) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                    </div>
+                </div>
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(3)" [ngClass]="{ 'open': isSectionOpen(3) }">
+                        Is Trezo suitable for small businesses?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(3) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                    </div>
+                </div>
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(4)" [ngClass]="{ 'open': isSectionOpen(4) }">
+                        Can I customize Trezo to fit my team's specific needs?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(4) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                    </div>
+                </div>
+                <div class="toc-accordion-item bg-gray-50 dark:bg-[#15203c] rounded-md text-black dark:text-white mb-[15px] last:mb-0">
+                    <button class="toc-accordion-button text-base md:text-[15px] lg:text-md py-[13px] px-[20px] md:px-[25px] block w-full ltr:text-left rtl:text-right font-medium relative" type="button" (click)="toggleSection(5)" [ngClass]="{ 'open': isSectionOpen(5) }">
+                        Is Trezo cloud-based or on-premises?
+                        <i class="ri-arrow-down-s-line absolute top-1/2 -translate-y-1/2 ltr:right-[20px] rtl:left-[20px] md:ltr:right-[25px] md:rtl:left-[25px] text-[20px]"></i>
+                    </button>
+                    <div class="toc-accordion-collapse px-[20px] md:px-[25px] pb-[20px]" [ngClass]="{ 'open': isSectionOpen(5) }">
+                        <p class="text-gray-500 dark:text-gray-400 leading-[1.7]">
+                            Trezo is a comprehensive project management software designed to help teams streamline their workflow, collaborate effectively, and achieve project success.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

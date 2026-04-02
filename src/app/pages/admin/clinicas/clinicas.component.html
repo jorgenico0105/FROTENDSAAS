@@ -1,0 +1,133 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-black dark:text-white">Clínicas</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestión de clínicas registradas en el sistema</p>
+    </div>
+    <button (click)="openCreate()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-400 transition-all text-sm font-medium">
+      <i class="ri-add-line text-lg"></i> Nueva Clínica
+    </button>
+  </div>
+
+  @if (successMsg) {
+    <div class="mb-4 p-3 rounded-lg bg-success-50 dark:bg-success-900/20 text-success-600 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i>{{ successMsg }}
+    </div>
+  }
+
+  @if (isLoading && clinicas.length === 0) {
+    <div class="text-center py-12">
+      <div class="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (!isLoading || clinicas.length > 0) {
+    <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-[#0a0e19]">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">NIT</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teléfono</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ciudad</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-[#172036]">
+            @for (c of clinicas; track c.id) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors">
+                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">#{{ c.id }}</td>
+                <td class="px-4 py-3 font-medium text-black dark:text-white">{{ c.nombre }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ c.nit || '—' }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ c.telefono || '—' }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ c.ciudad || '—' }}</td>
+                <td class="px-4 py-3">
+                  <span [ngClass]="c.state === 'A' ? 'bg-success-50 text-success-600 dark:bg-success-900/20 dark:text-success-400' : 'bg-danger-50 text-danger-600 dark:bg-danger-900/20 dark:text-danger-400'"
+                    class="px-2 py-0.5 rounded-full text-xs font-medium">
+                    {{ c.state === 'A' ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <button (click)="openEdit(c)" class="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors" title="Editar">
+                      <i class="ri-pencil-line text-base"></i>
+                    </button>
+                    <button (click)="delete(c.id)" class="p-1.5 text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded transition-colors" title="Eliminar">
+                      <i class="ri-delete-bin-line text-base"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              @if (!isLoading) {
+                <tr>
+                  <td colspan="7" class="px-4 py-12 text-center text-gray-400 dark:text-gray-600">
+                    <i class="ri-hospital-line text-4xl block mb-2 opacity-40"></i>
+                    No hay clínicas registradas
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-[#172036]">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+        <h3 class="font-semibold text-black dark:text-white">{{ isEditing ? 'Editar Clínica' : 'Nueva Clínica' }}</h3>
+        <button (click)="closeModal()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (errorMsg) {
+          <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 text-sm">{{ errorMsg }}</div>
+        }
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+            <input [(ngModel)]="form.nombre" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="Nombre de la clínica">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">NIT</label>
+            <input [(ngModel)]="form.nit" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="NIT">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+            <input [(ngModel)]="form.telefono" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="Teléfono">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo</label>
+            <input [(ngModel)]="form.correo" type="email" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="correo@clinica.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ciudad</label>
+            <input [(ngModel)]="form.ciudad" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="Ciudad">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+            <input [(ngModel)]="form.direccion" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 transition-colors" placeholder="Dirección completa">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 transition-colors">Cancelar</button>
+        <button (click)="save()" [disabled]="isLoading" class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400 transition-all disabled:opacity-50">
+          {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Clínica') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

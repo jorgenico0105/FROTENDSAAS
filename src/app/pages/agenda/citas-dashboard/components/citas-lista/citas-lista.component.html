@@ -1,0 +1,213 @@
+<!-- ── Stats ─────────────────────────────────────────────────────────────── -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+  <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-4">
+    <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Hoy</p>
+    <p class="text-2xl font-bold text-black dark:text-white">{{ statHoy }}</p>
+  </div>
+  <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-4">
+    <p class="text-xs text-warning-500 mb-1">Pendientes</p>
+    <p class="text-2xl font-bold text-black dark:text-white">{{ statPendientes }}</p>
+  </div>
+  <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-4">
+    <p class="text-xs text-primary-500 mb-1">Confirmadas</p>
+    <p class="text-2xl font-bold text-black dark:text-white">{{ statConfirmadas }}</p>
+  </div>
+  <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-4">
+    <p class="text-xs text-success-500 mb-1">Atendidas</p>
+    <p class="text-2xl font-bold text-black dark:text-white">{{ statAtendidas }}</p>
+  </div>
+</div>
+
+<!-- ── Filtros ────────────────────────────────────────────────────────────── -->
+<div class="flex flex-wrap items-center gap-3 mb-4">
+  <!-- Periodo -->
+  <div class="flex items-center gap-1.5">
+    <button (click)="setFiltro('hoy')"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            [ngClass]="filtro === 'hoy'
+              ? 'bg-primary-500 text-white shadow-sm'
+              : 'bg-white dark:bg-[#0c1427] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-[#172036] hover:border-primary-300 dark:hover:border-primary-700'">
+      Hoy
+    </button>
+    <button (click)="setFiltro('semanal')"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            [ngClass]="filtro === 'semanal'
+              ? 'bg-primary-500 text-white shadow-sm'
+              : 'bg-white dark:bg-[#0c1427] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-[#172036] hover:border-primary-300 dark:hover:border-primary-700'">
+      Semana
+    </button>
+    <button (click)="setFiltro('mensual')"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            [ngClass]="filtro === 'mensual'
+              ? 'bg-primary-500 text-white shadow-sm'
+              : 'bg-white dark:bg-[#0c1427] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-[#172036] hover:border-primary-300 dark:hover:border-primary-700'">
+      Mes
+    </button>
+  </div>
+
+  <!-- Búsqueda paciente -->
+  <div class="relative">
+    <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+    <input [(ngModel)]="search" (ngModelChange)="onSearchChange()" type="text"
+      class="h-8 pl-8 pr-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white text-xs outline-none focus:border-primary-500 w-44"
+      placeholder="Buscar paciente...">
+  </div>
+
+  <!-- Filtro estado -->
+  <select [(ngModel)]="estadoFilter" (ngModelChange)="onEstadoChange()"
+    class="h-8 px-2 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white text-xs outline-none focus:border-primary-500">
+    <option value="">Todos los estados</option>
+    <option value="PE">Pendiente</option>
+    <option value="CF">Confirmada</option>
+    <option value="AT">Atendida</option>
+    <option value="CA">Cancelada</option>
+  </select>
+
+  <p class="text-xs text-gray-400 dark:text-gray-500 ml-auto">{{ filtroLabel }}</p>
+</div>
+
+<!-- ── Tabla ──────────────────────────────────────────────────────────────── -->
+<div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden">
+
+  @if (isLoading) {
+    <div class="flex items-center justify-center py-16">
+      <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <table class="w-full">
+      <thead>
+        <tr class="border-b border-gray-100 dark:border-[#172036]">
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide w-[40%]">Paciente</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide hidden sm:table-cell w-[18%]">Tipo</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide hidden md:table-cell w-[20%]">Fecha & Hora</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide w-[14%]">Estado</th>
+          <th class="px-4 py-3 w-[8%]"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50 dark:divide-[#172036]">
+
+        @if (citasFiltradas.length === 0) {
+          <tr>
+            <td colspan="5" class="py-16 text-center">
+              <i class="ri-calendar-check-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
+              <p class="text-sm text-gray-400 dark:text-gray-600">
+                @if (filtro === 'hoy')     { No hay citas para hoy }
+                @if (filtro === 'semanal') { No hay citas esta semana }
+                @if (filtro === 'mensual') { No hay citas este mes }
+              </p>
+            </td>
+          </tr>
+        }
+
+        @for (c of citasPaginadas; track c.id) {
+          <tr class="group hover:bg-gray-50 dark:hover:bg-[#0a0e19]/50 transition-all">
+
+            <!-- Paciente -->
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold"
+                     [ngClass]="c.id_paciente > 0
+                       ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white'
+                       : 'bg-gray-100 dark:bg-gray-800 text-gray-400'">
+                  {{ inicialesPaciente(c) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-black dark:text-white truncate">{{ nombrePaciente(c) }}</p>
+                  @if (c.motivo) {
+                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ c.motivo }}</p>
+                  }
+                </div>
+              </div>
+            </td>
+
+            <!-- Tipo -->
+            <td class="px-4 py-3 hidden sm:table-cell">
+              <span class="text-sm text-gray-600 dark:text-gray-300">{{ c.tipo_cita?.nombre ?? '—' }}</span>
+            </td>
+
+            <!-- Fecha & Hora -->
+            <td class="px-4 py-3 hidden md:table-cell">
+              <p class="text-sm text-black dark:text-white">{{ formatFecha(c.fecha) }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                <i class="ri-time-line"></i>{{ formatHora(c.hora) }}
+                <span class="text-gray-300 dark:text-gray-700">·</span>{{ c.duracion_min }} min
+              </p>
+            </td>
+
+            <!-- Estado -->
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                    [ngClass]="estadoClass(c)">
+                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" [ngClass]="dotClass(c)"></span>
+                {{ c.estado_cita?.nombre ?? '—' }}
+              </span>
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-3 py-3">
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all justify-end">
+                @if (puedeIniciar(c)) {
+                  <button (click)="iniciarSesion.emit(c)" title="Iniciar sesión"
+                          class="p-1.5 rounded-lg text-success-500 hover:bg-success-50 dark:hover:bg-success-900/20 transition-all">
+                    <i class="ri-play-circle-line text-base"></i>
+                  </button>
+                }
+                @if (puedeConfirmar(c)) {
+                  <button (click)="confirmar.emit(c)" title="Confirmar"
+                          class="p-1.5 rounded-lg text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all">
+                    <i class="ri-checkbox-circle-line text-base"></i>
+                  </button>
+                }
+                @if (puedeCancelar(c)) {
+                  <button (click)="cancelar.emit(c)" title="Cancelar"
+                          class="p-1.5 rounded-lg text-warning-500 hover:bg-warning-50 dark:hover:bg-warning-900/20 transition-all">
+                    <i class="ri-close-circle-line text-base"></i>
+                  </button>
+                }
+                <button (click)="eliminar.emit(c)" title="Eliminar"
+                        class="p-1.5 rounded-lg text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all">
+                  <i class="ri-delete-bin-line text-base"></i>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Paginador -->
+    @if (totalPages > 1) {
+      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-[#172036]">
+        <span class="text-xs text-gray-400 dark:text-gray-500">
+          Página {{ page }} de {{ totalPages }}
+        </span>
+        <div class="flex items-center gap-1">
+          <button (click)="goTo(page - 1)" [disabled]="page === 1"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#172036] text-gray-500 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm">
+            <i class="ri-arrow-left-s-line"></i>
+          </button>
+          @for (p of pageRange; track p) {
+            <button (click)="goTo(p)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-medium transition-all"
+              [class.bg-primary-500]="p === page"
+              [class.text-white]="p === page"
+              [class.border]="p !== page"
+              [class.border-gray-200]="p !== page"
+              [class.dark:border-gray-700]="p !== page"
+              [class.text-gray-500]="p !== page"
+              [class.hover:border-primary-400]="p !== page">
+              {{ p }}
+            </button>
+          }
+          <button (click)="goTo(page + 1)" [disabled]="page === totalPages"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#172036] text-gray-500 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm">
+            <i class="ri-arrow-right-s-line"></i>
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

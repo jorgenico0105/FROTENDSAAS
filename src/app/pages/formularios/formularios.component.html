@@ -1,0 +1,435 @@
+<div class="p-4 md:p-6">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+      @if (vista !== 'lista') {
+        <button (click)="setVista('lista')"
+          class="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-primary-500 mb-2 transition-colors">
+          <i class="ri-arrow-left-s-line"></i> Formularios
+        </button>
+      }
+      <h1 class="text-xl font-bold text-black dark:text-white">
+        @if (vista === 'lista')                      { Formularios clínicos }
+        @if (vista === 'editor' && !editingId)       { Nuevo formulario }
+        @if (vista === 'editor' && editingId)        { Editar formulario }
+        @if (vista === 'detalle')                    { Vista previa }
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        @if (vista === 'lista')      { {{ formularios.length }} formulario{{ formularios.length !== 1 ? 's' : '' }} configurado{{ formularios.length !== 1 ? 's' : '' }} }
+        @if (vista === 'editor')     { Completa la información y agrega las preguntas }
+        @if (vista === 'detalle')    { Revisa el formulario antes de usarlo en una sesión }
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      @if (vista === 'lista') {
+        <button (click)="abrirCrear()"
+          class="inline-flex items-center gap-2 bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
+          <i class="ri-add-line text-base"></i> Nuevo formulario
+        </button>
+      }
+      @if (vista === 'detalle' && detalle) {
+        <button (click)="abrirEditar(detalle.formulario)"
+          class="inline-flex items-center gap-2 border border-gray-200 dark:border-[#1b2c4f] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#15203c] text-sm font-medium px-3 py-2 rounded-xl transition-all">
+          <i class="ri-pencil-line"></i> Editar
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ─── Alertas ───────────────────────────────────────────────────────── -->
+  @if (successMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i> {{ successMsg }}
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+      <i class="ri-error-warning-line"></i> {{ errorMsg }}
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       LISTA
+  ════════════════════════════════════════════════════════════════════════ -->
+  @if (vista === 'lista') {
+
+    @if (isLoading) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+        <div class="w-8 h-8 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm">Cargando formularios...</span>
+      </div>
+    } @else if (formularios.length === 0) {
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <div class="w-20 h-20 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center mb-5">
+          <i class="ri-file-list-3-line text-4xl text-secondary-400"></i>
+        </div>
+        <h3 class="text-base font-semibold text-black dark:text-white mb-2">Sin formularios</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs mb-6">Crea tu primer formulario clínico para recopilar información estructurada en cada sesión.</p>
+        <button (click)="abrirCrear()"
+          class="inline-flex items-center gap-2 bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-sm">
+          <i class="ri-add-line"></i> Crear formulario
+        </button>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        @for (f of formularios; track f.id) {
+          <div class="group relative bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer overflow-hidden"
+               (click)="verDetalle(f)">
+
+            <!-- Header coloreado por tipo -->
+            <div class="px-5 pt-5 pb-4 flex items-start gap-3"
+                 [ngClass]="tipoHeaderClass(tipoCodigo(f.tipo_formulario_id))">
+              <!-- Icono -->
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
+                   [ngClass]="tipoIconBgClass(tipoCodigo(f.tipo_formulario_id))">
+                <i class="text-xl" [ngClass]="tipoIcono(tipoCodigo(f.tipo_formulario_id))"></i>
+              </div>
+              <!-- Tipo + nombre -->
+              <div class="flex-1 min-w-0 pt-0.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-widest mb-1"
+                  [ngClass]="tipoBadgeClass(tipoCodigo(f.tipo_formulario_id))">
+                  {{ tipoCodigo(f.tipo_formulario_id) || 'FORM' }}
+                </span>
+                <p class="text-xs text-gray-400 dark:text-gray-500">{{ tipoNombre(f.tipo_formulario_id) }}</p>
+              </div>
+              <!-- Acciones hover -->
+              <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                   (click)="$event.stopPropagation()">
+                <button (click)="abrirEditar(f)"
+                  class="p-1.5 rounded-lg text-gray-400 hover:text-warning-600 dark:hover:text-warning-400 hover:bg-white/60 dark:hover:bg-white/10 transition-all" title="Editar">
+                  <i class="ri-pencil-line text-sm"></i>
+                </button>
+                <button (click)="eliminar(f)"
+                  class="p-1.5 rounded-lg text-gray-400 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-white/60 dark:hover:bg-white/10 transition-all" title="Eliminar">
+                  <i class="ri-delete-bin-line text-sm"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cuerpo -->
+            <div class="px-5 py-4 flex-1 flex flex-col gap-1.5 border-t border-gray-50 dark:border-[#172036]">
+              <h3 class="font-bold text-black dark:text-white text-sm leading-snug">{{ f.nombre }}</h3>
+              @if (f.descripcion) {
+                <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">{{ f.descripcion }}</p>
+              } @else {
+                <p class="text-xs text-gray-300 dark:text-gray-700 italic">Sin descripción</p>
+              }
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 pb-4 pt-2 flex items-center justify-between">
+              <span class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                <i class="ri-calendar-line text-xs"></i>
+                {{ formatFecha(f.creado_en) }}
+              </span>
+              <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
+                [ngClass]="tipoBadgeClass(tipoCodigo(f.tipo_formulario_id))">
+                <i class="ri-eye-line text-xs"></i> Ver formulario
+              </span>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       DETALLE
+  ════════════════════════════════════════════════════════════════════════ -->
+  @if (vista === 'detalle') {
+    @if (isLoadingDetalle) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+        <div class="w-8 h-8 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm">Cargando...</span>
+      </div>
+    } @else if (detalle) {
+      <div class="max-w-3xl mx-auto space-y-4">
+
+        <!-- Cabecera del formulario -->
+        <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] overflow-hidden shadow-sm">
+          <div class="h-1.5 w-full" [ngClass]="tipoIconBgClass(tipoCodigo(detalle.formulario.tipo_formulario_id))"></div>
+          <div class="p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                   [ngClass]="tipoIconBgClass(tipoCodigo(detalle.formulario.tipo_formulario_id))">
+                <i class="text-2xl" [ngClass]="tipoIcono(tipoCodigo(detalle.formulario.tipo_formulario_id))"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    [ngClass]="tipoBadgeClass(tipoCodigo(detalle.formulario.tipo_formulario_id))">
+                    {{ tipoCodigo(detalle.formulario.tipo_formulario_id) }}
+                  </span>
+                  <span class="text-xs text-gray-400">{{ tipoNombre(detalle.formulario.tipo_formulario_id) }}</span>
+                </div>
+                <h2 class="text-lg font-bold text-black dark:text-white leading-snug">{{ detalle.formulario.nombre }}</h2>
+                @if (detalle.formulario.descripcion) {
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ detalle.formulario.descripcion }}</p>
+                }
+              </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-50 dark:border-[#172036] flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
+              <span class="flex items-center gap-1.5">
+                <i class="ri-question-line text-secondary-400"></i>
+                {{ detalle.preguntas.length }} pregunta{{ detalle.preguntas.length !== 1 ? 's' : '' }}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <i class="ri-calendar-line"></i>
+                {{ formatFecha(detalle.formulario.creado_en) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preguntas -->
+        <div class="space-y-2">
+          @for (p of detalle.preguntas; track p.id; let i = $index) {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] p-4 flex items-start gap-4 shadow-sm">
+              <span class="flex-shrink-0 w-7 h-7 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 text-xs font-bold flex items-center justify-center">
+                {{ i + 1 }}
+              </span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start gap-2 flex-wrap mb-2">
+                  <span class="text-sm font-semibold text-black dark:text-white leading-snug">{{ p.pregunta }}</span>
+                  @if (p.obligatorio) {
+                    <span class="inline-flex items-center gap-0.5 text-[11px] font-semibold text-danger-500 flex-shrink-0 mt-0.5">
+                      <i class="ri-asterisk text-xs"></i> Requerida
+                    </span>
+                  }
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-gray-100 dark:bg-[#15203c] text-gray-500 dark:text-gray-400 font-medium">
+                    <i class="ri-input-cursor-move text-xs"></i>
+                    {{ TIPO_LABELS[p.tipo_respuesta] }}
+                  </span>
+                  @if (getPreguntaOpciones(p)) {
+                    <span class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{{ getPreguntaOpciones(p) }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          @if (detalle.preguntas.length === 0) {
+            <div class="text-center py-10 bg-white dark:bg-[#0c1427] rounded-2xl border border-dashed border-gray-200 dark:border-[#1b2c4f] text-sm text-gray-400">
+              Este formulario no tiene preguntas aún.
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       EDITOR (crear / editar)
+  ════════════════════════════════════════════════════════════════════════ -->
+  @if (vista === 'editor') {
+    @if (isLoadingDetalle) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+        <div class="w-8 h-8 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm">Cargando formulario...</span>
+      </div>
+    } @else {
+      <div class="max-w-3xl mx-auto space-y-5">
+
+        <!-- Datos generales -->
+        <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] overflow-hidden shadow-sm">
+          <div class="bg-gradient-to-r from-secondary-500 to-secondary-600 px-6 py-4 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+              <i class="ri-information-line text-white text-sm"></i>
+            </div>
+            <h2 class="text-sm font-semibold text-white">Información general</h2>
+          </div>
+
+          <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Nombre -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                Nombre <span class="text-danger-500">*</span>
+              </label>
+              <input type="text" [(ngModel)]="formNombre" placeholder="Ej: Historia clínica inicial"
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+            </div>
+
+            <!-- Tipo -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                Tipo <span class="text-danger-500">*</span>
+              </label>
+              <select [(ngModel)]="formTipoId"
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all">
+                <option [ngValue]="0" disabled>Seleccionar tipo...</option>
+                @for (t of tiposFormulario; track t.id) {
+                  <option [ngValue]="t.id">{{ t.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Descripción -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Descripción</label>
+              <textarea [(ngModel)]="formDescripcion" rows="2" placeholder="Descripción breve del formulario..."
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preguntas -->
+        <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] overflow-hidden shadow-sm">
+          <div class="bg-gradient-to-r from-gray-700 to-gray-800 dark:from-[#1b2c4f] dark:to-[#172036] px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+                <i class="ri-list-ordered text-white text-sm"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-semibold text-white">Preguntas</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ preguntas.length }} pregunta{{ preguntas.length !== 1 ? 's' : '' }}</p>
+              </div>
+            </div>
+            <button (click)="addPregunta()"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-xl transition-all">
+              <i class="ri-add-line"></i> Agregar pregunta
+            </button>
+          </div>
+
+          <div class="px-6 py-5">
+            @if (preguntas.length === 0) {
+              <div class="text-center py-12 rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#1b2c4f]">
+                <div class="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-[#0a0e19] flex items-center justify-center mx-auto mb-3">
+                  <i class="ri-question-answer-line text-2xl text-gray-300 dark:text-gray-600"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sin preguntas aún</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">Haz clic en <strong>Agregar pregunta</strong> para comenzar</p>
+              </div>
+            }
+
+            <div class="space-y-3">
+              @for (p of preguntas; track p._id; let i = $index) {
+                <div class="rounded-2xl border border-gray-200 dark:border-[#1b2c4f] overflow-hidden bg-gray-50 dark:bg-[#0a0e19]">
+
+                  <!-- Barra de control -->
+                  <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#0c1427] border-b border-gray-100 dark:border-[#1b2c4f]">
+                    <span class="w-6 h-6 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {{ i + 1 }}
+                    </span>
+                    <span class="flex-1 text-xs font-medium text-gray-400 truncate">
+                      {{ p.pregunta || 'Pregunta sin texto' }}
+                    </span>
+                    <div class="flex items-center gap-0.5 flex-shrink-0">
+                      <button (click)="moverArriba(i)" [disabled]="i === 0"
+                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all"
+                        title="Subir">
+                        <i class="ri-arrow-up-s-line text-sm"></i>
+                      </button>
+                      <button (click)="moverAbajo(i)" [disabled]="i === preguntas.length - 1"
+                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all"
+                        title="Bajar">
+                        <i class="ri-arrow-down-s-line text-sm"></i>
+                      </button>
+                      <button (click)="removePregunta(i)"
+                        class="p-1.5 text-gray-400 hover:text-danger-500 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all ml-1"
+                        title="Eliminar pregunta">
+                        <i class="ri-delete-bin-line text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Contenido -->
+                  <div class="p-4 space-y-3">
+                    <!-- Texto de la pregunta -->
+                    <input type="text" [(ngModel)]="p.pregunta" [name]="'preg_' + p._id"
+                      placeholder="Escribe aquí el texto de la pregunta..."
+                      class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+
+                    <!-- Tipo + Obligatoria (2 columnas en desktop) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Tipo de respuesta</label>
+                        <select [(ngModel)]="p.tipo_respuesta" [name]="'tipo_' + p._id"
+                          class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all">
+                          @for (tipo of TIPOS_RESPUESTA; track tipo[0]) {
+                            <option [value]="tipo[0]">{{ tipo[1] }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="flex flex-col justify-end">
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Opciones</label>
+                        <label class="flex items-center gap-2.5 cursor-pointer px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] hover:border-secondary-300 dark:hover:border-secondary-800 transition-all h-[42px]"
+                               [ngClass]="p.obligatorio ? 'border-secondary-300 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-900/20' : ''">
+                          <div class="relative w-8 h-4 flex-shrink-0">
+                            <input type="checkbox" [(ngModel)]="p.obligatorio" [name]="'oblig_' + p._id" class="sr-only peer">
+                            <div class="w-8 h-4 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-secondary-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:w-3 after:h-3 after:transition-all peer-checked:after:translate-x-4"></div>
+                          </div>
+                          <span class="text-xs font-medium"
+                                [ngClass]="p.obligatorio ? 'text-secondary-600 dark:text-secondary-400' : 'text-gray-500 dark:text-gray-400'">
+                            Respuesta obligatoria
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Opciones (SELECT / MULTISELECT) -->
+                    @if (necesitaOpciones(p.tipo_respuesta)) {
+                      <div class="pt-3 border-t border-gray-200 dark:border-[#1b2c4f]">
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                          Opciones <span class="text-danger-500">*</span>
+                          <span class="font-normal normal-case text-gray-400 ml-1">— separadas por coma</span>
+                        </label>
+                        <input type="text" [(ngModel)]="p.opcionesTexto" [name]="'opts_' + p._id"
+                          placeholder="Ej: Nunca, A veces, Frecuentemente, Siempre"
+                          class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+                        @if (p.opcionesTexto.trim()) {
+                          <div class="flex flex-wrap gap-1.5 mt-2">
+                            @for (opt of p.opcionesTexto.split(','); track $index) {
+                              @if (opt.trim()) {
+                                <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 border border-secondary-100 dark:border-secondary-800">
+                                  {{ opt.trim() }}
+                                </span>
+                              }
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (preguntas.length > 0) {
+              <div class="mt-4 pt-4 border-t border-gray-100 dark:border-[#172036]">
+                <button (click)="addPregunta()"
+                  class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-[#1b2c4f] text-sm text-gray-400 hover:text-secondary-500 hover:border-secondary-300 dark:hover:border-secondary-800 transition-all">
+                  <i class="ri-add-circle-line"></i> Agregar otra pregunta
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex items-center justify-between pb-6">
+          <button (click)="setVista('lista')" [disabled]="isSubmitting"
+            class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#15203c] transition-all disabled:opacity-50">
+            Cancelar
+          </button>
+          <button (click)="submit()" [disabled]="isSubmitting"
+            class="inline-flex items-center gap-2 bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all disabled:opacity-60 shadow-sm">
+            @if (isSubmitting) {
+              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            } @else {
+              <i class="ri-save-3-line"></i>
+            }
+            {{ editingId ? 'Actualizar formulario' : 'Crear formulario' }}
+          </button>
+        </div>
+
+      </div>
+    }
+  }
+
+</div>

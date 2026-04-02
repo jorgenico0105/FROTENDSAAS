@@ -1,0 +1,55 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-black dark:text-white">Pacientes — Nutrición</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Selecciona un paciente para gestionar su plan nutricional</p>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="mb-5 max-w-sm">
+    <div class="relative">
+      <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      <input [(ngModel)]="search" (ngModelChange)="applyFilter()" type="text"
+        class="w-full h-10 pl-9 pr-4 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+        placeholder="Buscar paciente...">
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    @for (p of filtered; track p.id) {
+      <a [routerLink]="['/dashboard/nutricion/pacientes', p.id]"
+        class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-5 shadow-sm hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 transition-all">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-base flex-shrink-0">
+            {{ p.nombres.charAt(0) }}{{ p.apellidos.charAt(0) }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-black dark:text-white text-sm truncate">{{ p.nombres }} {{ p.apellidos }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ p.telefono || 'Sin teléfono' }}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-600">
+          <span>{{ p.sexo === 'M' ? 'Masculino' : p.sexo === 'F' ? 'Femenino' : 'N/D' }}</span>
+          <span class="flex items-center gap-1 text-primary-500">
+            Ver plan <i class="ri-arrow-right-s-line"></i>
+          </span>
+        </div>
+      </a>
+    } @empty {
+      @if (!isLoading) {
+        <div class="col-span-full text-center py-16 text-gray-400 dark:text-gray-600">
+          <i class="ri-user-3-line text-5xl block mb-3 opacity-30"></i>
+          No hay pacientes registrados
+        </div>
+      }
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="text-center py-16">
+      <div class="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+</div>

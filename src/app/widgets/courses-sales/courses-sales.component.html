@@ -1,0 +1,56 @@
+<div class="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
+    <div class="trezo-card-header mb-[20px] md:mb-[25px] flex items-center justify-between">
+        <div class="trezo-card-title">
+            <h5 class="!mb-0">
+                Courses Sales
+            </h5>
+        </div>
+        <div class="trezo-card-subtitle">
+            <div class="trezo-card-dropdown relative">
+                <button type="button" class="trezo-card-dropdown-btn inline-block transition-all hover:text-primary-500" (click)="toggleCardHeaderMenu()">
+                    <span class="inline-block relative ltr:pr-[17px] ltr:md:pr-[20px] rtl:pl-[17px] rtl:ml:pr-[20px]">
+                        {{ selectedTimeframe }}
+                        <i class="ri-arrow-down-s-line text-lg absolute ltr:-right-[3px] rtl:-left-[3px] top-1/2 -translate-y-1/2"></i>
+                    </span>
+                </button>
+                @if (isCardHeaderOpen) {
+                    <ul class="trezo-card-dropdown-menu transition-all bg-white shadow-3xl rounded-md top-full py-[15px] absolute ltr:right-0 rtl:left-0 w-[195px] z-[5] dark:bg-dark dark:shadow-none">
+                        <li>
+                            <button type="button" class="block w-full transition-all text-black ltr:text-left rtl:text-right relative py-[8px] px-[20px] hover:bg-gray-50 dark:text-white dark:hover:bg-black" (click)="onTimeframeChange('This Day')">
+                                This Day
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="block w-full transition-all text-black ltr:text-left rtl:text-right relative py-[8px] px-[20px] hover:bg-gray-50 dark:text-white dark:hover:bg-black" (click)="onTimeframeChange('This Week')">
+                                This Week
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="block w-full transition-all text-black ltr:text-left rtl:text-right relative py-[8px] px-[20px] hover:bg-gray-50 dark:text-white dark:hover:bg-black" (click)="onTimeframeChange('This Month')">
+                                This Month
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="block w-full transition-all text-black ltr:text-left rtl:text-right relative py-[8px] px-[20px] hover:bg-gray-50 dark:text-white dark:hover:bg-black" (click)="onTimeframeChange('This Year')">
+                                This Year
+                            </button>
+                        </li>
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="trezo-card-content h-[225px] relative pt-[20px]">
+        <div class="flex items-center z-[2] relative">
+            <h5 class="!mb-0 !text-[20px]">
+                $57.2k
+            </h5>
+            <span class="inline-block text-sm text-success-700 ltr:ml-[15px] rtl:mr-[15px] px-[8.3px] py-[3px] rounded-full border border-success-300 bg-success-100 dark:bg-[#15203c] dark:border-[#15203c]">
+                +10%
+            </span>
+        </div>
+        <div class="absolute left-0 right-0 -bottom-[54px] -ml-[37px] -mr-[35px]">
+            <div id="widgets_courses_sales_chart"></div>
+        </div>
+    </div>
+</div>

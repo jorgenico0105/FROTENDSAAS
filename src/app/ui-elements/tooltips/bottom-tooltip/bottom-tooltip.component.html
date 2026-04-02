@@ -1,0 +1,16 @@
+<div class="relative inline-block">
+    <button
+        type="button"
+        class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 custom-tooltip"
+        (mouseenter)="showTooltip()"
+        (mouseleave)="hideTooltip()"
+        [attr.data-text]="'Hey, Hello World!'"
+    >
+        Hover Tooltip
+    </button>
+    @if (tooltipVisible) {
+        <span class="tooltip-text bottom-tooltip">
+            {{ tooltipText }}
+        </span>
+    }
+</div>

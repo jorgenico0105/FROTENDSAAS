@@ -1,0 +1,521 @@
+<div class="space-y-4">
+
+  <!-- ── Header paciente ─────────────────────────────────────────────────── -->
+  <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-5 shadow-sm">
+    <div class="flex items-start gap-4">
+      <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-sm">
+        {{ inicialesPaciente() }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="font-semibold text-black dark:text-white text-base">{{ nombrePaciente() }}</h3>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-xs text-primary-500 font-medium">{{ cita.tipo_cita?.nombre ?? 'Consulta de seguimiento' }}</span>
+          @if (cita.motivo) {
+            <span class="text-gray-300 dark:text-gray-700">·</span>
+            <span class="text-xs text-gray-400 italic">{{ cita.motivo }}</span>
+          }
+        </div>
+        @if (sesion) {
+          <span class="inline-flex items-center gap-1 mt-1.5 text-xs bg-success-50 dark:bg-success-900/20 text-success-600 dark:text-success-400 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse"></span>
+            Sesión activa
+          </span>
+        }
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="text-sm font-semibold text-black dark:text-white">{{ cita.hora.substring(0,5) }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">{{ cita.duracion_min }} min</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────────────────────────── -->
+  <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+    <div class="flex items-center border-b border-gray-100 dark:border-[#172036] px-2 pt-2 gap-1 overflow-x-auto">
+      @for (tab of [
+        {id:'resumen',   icon:'ri-dashboard-3-line',  label:'Resumen'},
+        {id:'dieta',     icon:'ri-restaurant-line',   label:'Dieta activa'},
+        {id:'registros', icon:'ri-calendar-check-line', label:'Registros'},
+        {id:'progreso',  icon:'ri-line-chart-line',   label:'Progreso'},
+        {id:'logros',    icon:'ri-trophy-line',        label:'Logros'},
+        {id:'imagenes',  icon:'ri-image-line',         label:'Imágenes'}
+      ]; track tab.id) {
+        <button (click)="setTab($any(tab.id))"
+          class="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-all -mb-px"
+          [ngClass]="activeTab === tab.id
+            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'">
+          <i [class]="tab.icon + ' text-sm'"></i>{{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <div class="p-5">
+
+      @if (isLoading) {
+        <div class="flex items-center justify-center py-12">
+          <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+
+      <!-- RESUMEN ──────────────────────────────────────────────────────────── -->
+      @if (!isLoading && activeTab === 'resumen') {
+        <div class="space-y-4">
+          <!-- Stats row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Dietas activas</p>
+              <p class="text-2xl font-bold text-black dark:text-white">{{ dietasActivas.length }}</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Último peso</p>
+              <p class="text-2xl font-bold text-black dark:text-white">
+                {{ ultimoProgreso?.peso_kg ? (ultimoProgreso!.peso_kg | number:'1.1-1') + ' kg' : '—' }}
+              </p>
+            </div>
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">IMC</p>
+              <p class="text-2xl font-bold text-black dark:text-white">
+                {{ ultimoProgreso?.imc ? (ultimoProgreso!.imc | number:'1.1-1') : '—' }}
+              </p>
+            </div>
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xs text-primary-500 mb-1">Nivel XP</p>
+              <p class="text-2xl font-bold text-black dark:text-white">{{ xp?.nivel ?? '—' }}</p>
+            </div>
+          </div>
+
+          <!-- XP bar -->
+          @if (xp) {
+            <div class="bg-gradient-to-br from-primary-50 to-primary-100/40 dark:from-primary-900/20 dark:to-primary-900/10 rounded-xl p-4 border border-primary-100 dark:border-primary-900/30">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <i class="ri-medal-line text-primary-500 text-lg"></i>
+                  <span class="text-sm font-semibold text-primary-700 dark:text-primary-300">Nivel {{ xp.nivel }}</span>
+                </div>
+                <span class="text-xs text-primary-500">{{ xp.xp_total }} XP total</span>
+              </div>
+              <div class="h-2 bg-primary-100 dark:bg-primary-900/30 rounded-full overflow-hidden">
+                <div class="h-full bg-primary-500 rounded-full transition-all"
+                     [style.width.%]="xpNivelPct()"></div>
+              </div>
+              <div class="flex items-center justify-between mt-1.5">
+                <span class="text-xs text-primary-400">Racha: {{ xp.racha_actual }} días</span>
+                <span class="text-xs text-primary-400">Máx. racha: {{ xp.racha_maxima }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- Dieta activa resumen -->
+          @if (dietaActual) {
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-4 border border-gray-100 dark:border-[#172036]">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold text-black dark:text-white flex items-center gap-2">
+                  <i class="ri-restaurant-line text-success-500"></i>{{ dietaActual.nombre }}
+                </h4>
+                <span class="text-xs px-2 py-0.5 rounded-full" [ngClass]="estadoBadge(dietaActual.estado)">
+                  {{ dietaActual.estado }}
+                </span>
+              </div>
+              @if (dietaActual.objetivo) {
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ dietaActual.objetivo }}</p>
+              }
+              <div class="flex items-center gap-4 mt-2">
+                @if (dietaActual.calorias_dia_objetivo) {
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    <i class="ri-fire-line text-warning-500 mr-0.5"></i>{{ dietaActual.calorias_dia_objetivo | number:'1.0-0' }} kcal/día
+                  </span>
+                }
+                <span class="text-xs text-gray-400">Inicio: {{ formatDate(dietaActual.fecha_inicio) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- DIETA ────────────────────────────────────────────────────────────── -->
+      @if (!isLoading && activeTab === 'dieta') {
+        @if (dietasActivas.length === 0) {
+          <div class="text-center py-10">
+            <i class="ri-restaurant-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
+            <p class="text-sm text-gray-400">No tiene dietas activas</p>
+          </div>
+        }
+        <div class="space-y-3">
+          @for (dieta of dietasActivas; track dieta.id) {
+            <div class="border border-gray-100 dark:border-[#172036] rounded-xl p-4 hover:border-primary-200 dark:hover:border-primary-800/40 transition-all">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-semibold text-black dark:text-white">{{ dieta.nombre }}</p>
+                    <span class="text-xs px-2 py-0.5 rounded-full flex-shrink-0" [ngClass]="estadoBadge(dieta.estado)">{{ dieta.estado }}</span>
+                  </div>
+                  @if (dieta.descripcion) {
+                    <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ dieta.descripcion }}</p>
+                  }
+                  <div class="flex flex-wrap items-center gap-3 mt-2">
+                    @if (dieta.calorias_dia_objetivo) {
+                      <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <i class="ri-fire-line text-warning-500"></i>{{ dieta.calorias_dia_objetivo | number:'1.0-0' }} kcal
+                      </span>
+                    }
+                    @if (dieta.proteinas_g_dia) {
+                      <span class="text-xs text-gray-500 dark:text-gray-400">P: {{ dieta.proteinas_g_dia | number:'1.0-0' }}g</span>
+                    }
+                    @if (dieta.carbohidratos_g_dia) {
+                      <span class="text-xs text-gray-500 dark:text-gray-400">C: {{ dieta.carbohidratos_g_dia | number:'1.0-0' }}g</span>
+                    }
+                    @if (dieta.grasas_g_dia) {
+                      <span class="text-xs text-gray-500 dark:text-gray-400">G: {{ dieta.grasas_g_dia | number:'1.0-0' }}g</span>
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-[#172036]">
+                <span class="text-xs text-gray-400 flex items-center gap-1">
+                  <i class="ri-calendar-line"></i> Inicio: {{ formatDate(dieta.fecha_inicio) }}
+                </span>
+                <span class="text-xs text-gray-400">{{ dieta.duracion_dias }} días · {{ dieta.num_comidas }} comidas</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- REGISTROS ────────────────────────────────────────────────────────── -->
+      @if (!isLoading && activeTab === 'registros') {
+        <div class="space-y-4">
+          <!-- Comidas -->
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <i class="ri-restaurant-2-line text-warning-500"></i> Registros de comida ({{ registrosComida.length }})
+            </h4>
+            @if (registrosComida.length === 0) {
+              <p class="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Sin registros de comida</p>
+            }
+            <div class="space-y-2">
+              @for (r of registrosComida.slice(0,10); track r.id) {
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-2.5 text-sm">
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-[#172036] px-2 py-0.5 rounded-lg">{{ formatDate(r.fecha) }}</span>
+                    @if (r.descripcion_libre) { <span class="text-gray-600 dark:text-gray-300 truncate max-w-[160px]">{{ r.descripcion_libre }}</span> }
+                    @if (r.fuera_de_plan) { <span class="text-xs text-warning-500 bg-warning-50 dark:bg-warning-900/20 px-1.5 py-0.5 rounded">Fuera del plan</span> }
+                  </div>
+                  @if (r.calorias_consumidas) {
+                    <span class="text-xs text-gray-400 flex-shrink-0">{{ r.calorias_consumidas | number:'1.0-0' }} kcal</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Ejercicio -->
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <i class="ri-run-line text-success-500"></i> Registros de ejercicio ({{ registrosEjercicio.length }})
+            </h4>
+            @if (registrosEjercicio.length === 0) {
+              <p class="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Sin registros de ejercicio</p>
+            }
+            <div class="space-y-2">
+              @for (r of registrosEjercicio.slice(0,10); track r.id) {
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-2.5 text-sm">
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-[#172036] px-2 py-0.5 rounded-lg">{{ formatDate(r.fecha) }}</span>
+                    <span class="text-gray-600 dark:text-gray-300 truncate max-w-[160px]">{{ r.nombre_libre ?? ('Ejercicio #' + r.ejercicio_id) }}</span>
+                    @if (r.duracion_min_real) { <span class="text-xs text-gray-400">{{ r.duracion_min_real }} min</span> }
+                  </div>
+                  @if (r.calorias_quemadas) {
+                    <span class="text-xs text-gray-400 flex-shrink-0">{{ r.calorias_quemadas | number:'1.0-0' }} kcal</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- PROGRESO ─────────────────────────────────────────────────────────── -->
+      @if (!isLoading && activeTab === 'progreso') {
+        <div class="space-y-4">
+
+          <!-- Botón / formulario registro -->
+          @if (!showProgresoForm) {
+            <div class="flex justify-end">
+              <button (click)="openProgresoForm()"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-all shadow-sm">
+                <i class="ri-add-line"></i> Registrar progreso
+              </button>
+            </div>
+          }
+
+          @if (showProgresoForm) {
+            <div class="border border-primary-200 dark:border-primary-800/40 rounded-2xl p-4 bg-primary-50/30 dark:bg-primary-900/10 space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-black dark:text-white flex items-center gap-2">
+                  <i class="ri-line-chart-line text-primary-500"></i> Nuevo registro de progreso
+                </h4>
+                <button (click)="showProgresoForm = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                  <i class="ri-close-line text-lg"></i>
+                </button>
+              </div>
+
+              <!-- Campos obligatorios -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Fecha <span class="text-danger-500">*</span>
+                  </label>
+                  <input type="date" [(ngModel)]="progresoForm.fecha"
+                    class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Peso (kg) <span class="text-danger-500">*</span>
+                  </label>
+                  <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.peso_kg" placeholder="70.5"
+                    class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    % Grasa corporal <span class="text-danger-500">*</span>
+                  </label>
+                  <input type="number" step="0.1" min="0" max="100" [(ngModel)]="progresoForm.grasa_corporal_pct" placeholder="22.5"
+                    class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Masa muscular (kg) <span class="text-danger-500">*</span>
+                  </label>
+                  <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.masa_muscular_kg" placeholder="30.0"
+                    class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                </div>
+              </div>
+
+              <!-- Campos opcionales -->
+              <details class="group">
+                <summary class="cursor-pointer text-xs font-medium text-primary-500 hover:text-primary-600 flex items-center gap-1 select-none">
+                  <i class="ri-add-circle-line group-open:hidden"></i>
+                  <i class="ri-indeterminate-circle-line hidden group-open:inline"></i>
+                  Medidas adicionales (opcionales)
+                </summary>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Altura (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.altura_cm" placeholder="170"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cintura (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.cintura_cm" placeholder="80"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cadera (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.cadera_cm" placeholder="95"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pecho (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.pecho_cm" placeholder="90"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Brazo (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.brazo_cm" placeholder="35"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Muslo (cm)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.muslo_cm" placeholder="55"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Hidratación (L)</label>
+                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.hidratacion_litros" placeholder="2.5"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sueño (h)</label>
+                    <input type="number" step="0.5" min="0" max="24" [(ngModel)]="progresoForm.sueno_horas" placeholder="7"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Energía (1-10)</label>
+                    <input type="number" min="1" max="10" [(ngModel)]="progresoForm.energia_nivel" placeholder="7"
+                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
+                  </div>
+                </div>
+              </details>
+
+              <!-- Foto -->
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Foto de progreso (opcional)</label>
+                <div class="flex items-center gap-3">
+                  @if (progresoFotoPreview) {
+                    <img [src]="progresoFotoPreview" alt="preview"
+                      class="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-[#172036]">
+                  }
+                  <button type="button" (click)="progresoFotoInput.click()"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400 hover:border-primary-400 hover:text-primary-500 transition-all">
+                    <i class="ri-image-add-line text-base"></i>
+                    {{ progresoFotoPreview ? 'Cambiar foto' : 'Agregar foto' }}
+                  </button>
+                  <input #progresoFotoInput type="file" accept="image/*" class="hidden" (change)="onProgresoFotoChange($event)">
+                </div>
+              </div>
+
+              <!-- Acciones -->
+              <div class="flex items-center justify-end gap-2 pt-1">
+                <button (click)="showProgresoForm = false"
+                  class="px-4 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] transition-all">
+                  Cancelar
+                </button>
+                <button (click)="saveProgreso()" [disabled]="isSavingProgreso || !progresoForm.peso_kg || !progresoForm.grasa_corporal_pct || !progresoForm.masa_muscular_kg"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-all disabled:opacity-50">
+                  @if (isSavingProgreso) {
+                    <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  }
+                  Guardar progreso
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Tabla historial -->
+          @if (progreso.length === 0 && !showProgresoForm) {
+            <div class="text-center py-10">
+              <i class="ri-line-chart-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
+              <p class="text-sm text-gray-400">Sin registros de progreso aún</p>
+            </div>
+          }
+          @if (progreso.length > 0) {
+            <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-[#172036]">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-[#0a0e19]">
+                  <tr class="border-b border-gray-100 dark:border-[#172036]">
+                    <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Fecha</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide">Peso</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide">IMC</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:table-cell">% Grasa</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:table-cell">Muscular</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">Cintura</th>
+                    <th class="px-3 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">Cadera</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-[#172036]">
+                  @for (p of progreso; track p.id) {
+                    <tr class="hover:bg-gray-50 dark:hover:bg-[#0a0e19]/50">
+                      <td class="px-3 py-2.5 text-gray-600 dark:text-gray-300">{{ formatDate(p.fecha) }}</td>
+                      <td class="px-3 py-2.5 text-right font-medium text-black dark:text-white">{{ p.peso_kg ? (p.peso_kg | number:'1.1-1') + ' kg' : '—' }}</td>
+                      <td class="px-3 py-2.5 text-right text-gray-600 dark:text-gray-300">{{ p.imc ? (p.imc | number:'1.1-1') : '—' }}</td>
+                      <td class="px-3 py-2.5 text-right text-gray-600 dark:text-gray-300 hidden sm:table-cell">{{ p.grasa_corporal_pct ? (p.grasa_corporal_pct | number:'1.1-1') + '%' : '—' }}</td>
+                      <td class="px-3 py-2.5 text-right text-gray-600 dark:text-gray-300 hidden sm:table-cell">{{ p.masa_muscular_kg ? (p.masa_muscular_kg | number:'1.1-1') + ' kg' : '—' }}</td>
+                      <td class="px-3 py-2.5 text-right text-gray-600 dark:text-gray-300 hidden md:table-cell">{{ p.cintura_cm ? (p.cintura_cm | number:'1.1-1') + ' cm' : '—' }}</td>
+                      <td class="px-3 py-2.5 text-right text-gray-600 dark:text-gray-300 hidden md:table-cell">{{ p.cadera_cm ? (p.cadera_cm | number:'1.1-1') + ' cm' : '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- IMÁGENES ────────────────────────────────────────────────────────────── -->
+      @if (activeTab === 'imagenes') {
+        <div class="space-y-4">
+          <!-- Upload bar -->
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              {{ imagenes.length }} imagen{{ imagenes.length !== 1 ? 'es' : '' }} del paciente
+            </p>
+            <button type="button" (click)="sesionImagenInput.click()" [disabled]="isUploadingImagen"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-all disabled:opacity-60 shadow-sm">
+              @if (isUploadingImagen) {
+                <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              } @else {
+                <i class="ri-image-add-line"></i>
+              }
+              Subir imagen
+            </button>
+            <input #sesionImagenInput type="file" accept="image/*" class="hidden" (change)="onSesionImagenChange($event)">
+          </div>
+
+          @if (imagenesLoading) {
+            <div class="flex items-center justify-center py-10">
+              <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }
+
+          @if (!imagenesLoading && imagenes.length === 0) {
+            <div class="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl">
+              <i class="ri-image-line text-4xl text-gray-300 dark:text-gray-700 mb-3 block"></i>
+              <p class="text-sm text-gray-400">No hay imágenes registradas</p>
+              <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">Sube la primera imagen de evolución del paciente</p>
+            </div>
+          }
+
+          @if (!imagenesLoading && imagenes.length > 0) {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              @for (img of imagenes; track img.id) {
+                <div class="group relative rounded-xl overflow-hidden border border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] aspect-square">
+                  <img [src]="imageUrl(img.url_archivo)" [alt]="img.descripcion || 'Imagen paciente'"
+                    class="w-full h-full object-cover">
+                  @if (img.descripcion) {
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p class="text-xs text-white truncate">{{ img.descripcion }}</p>
+                    </div>
+                  }
+                  <div class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-xs bg-black/60 text-white px-1.5 py-0.5 rounded-lg">{{ formatDate(img.creado_en) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- LOGROS ───────────────────────────────────────────────────────────── -->
+      @if (!isLoading && activeTab === 'logros') {
+        @if (logros.length === 0) {
+          <div class="text-center py-10">
+            <i class="ri-trophy-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
+            <p class="text-sm text-gray-400">Sin logros obtenidos aún</p>
+          </div>
+        }
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          @for (l of logros; track l.id) {
+            <div class="bg-gradient-to-br from-warning-50 to-warning-100/40 dark:from-warning-900/20 dark:to-warning-900/10 border border-warning-100 dark:border-warning-900/30 rounded-xl p-3 text-center">
+              <div class="text-2xl mb-1">{{ l.logro?.icono ?? '🏆' }}</div>
+              <p class="text-xs font-semibold text-warning-700 dark:text-warning-300">{{ l.logro?.nombre ?? 'Logro' }}</p>
+              <p class="text-xs text-warning-500 mt-0.5">{{ l.puntos_xp }} XP</p>
+              <p class="text-xs text-gray-400 mt-1">{{ formatDate(l.fecha_obtenido) }}</p>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- ── Error ────────────────────────────────────────────────────────────── -->
+  @if (errorMsg) {
+    <div class="px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+      <i class="ri-error-warning-line flex-shrink-0"></i> {{ errorMsg }}
+    </div>
+  }
+
+  <!-- ── Footer: notas + finalizar ────────────────────────────────────────── -->
+  <div class="flex items-center justify-end bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] px-5 py-3.5 shadow-sm">
+    <button (click)="finalizarSesion()" [disabled]="isFinalizando"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-success-500 hover:bg-success-600 text-white transition-all disabled:opacity-50 shadow-sm">
+      @if (isFinalizando) {
+        <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+      }
+      <i class="ri-checkbox-circle-line"></i> Finalizar sesión
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,100 @@
+import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { NgClass } from '@angular/common';
+import { PacientesService } from '../../../core/services/pacientes.service';
+import { Paciente } from '../../../core/models/pacientes.model';
+import { NuevoPaciente } from '../componentes/nuevo-paciente/nuevo-paciente';
+
+@Component({
+  selector: 'app-pacientes-lista',
+  imports: [RouterLink, FormsModule, NgClass, NuevoPaciente],
+  templateUrl: './pacientes-lista.component.html'
+})
+export class PacientesListaComponent implements OnInit {
+  pacientes: Paciente[] = [];
+  filtered: Paciente[] = [];
+  isLoading  = false;
+  showModal  = false;
+  isEditing  = false;
+  successMsg = '';
+  search     = '';
+  selectedPaciente: Paciente | null = null;
+
+  // Pagination
+  page = 1;
+  pageSize = 15;
+
+  constructor(private svc: PacientesService) {}
+
+  ngOnInit(): void { this.loadPacientes(); }
+
+  loadPacientes(): void {
+    this.isLoading = true;
+    this.svc.list().subscribe({
+      next: (res) => { this.pacientes = res.data; this.applyFilter(); this.isLoading = false; },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
+  applyFilter(): void {
+    const q = this.search.toLowerCase();
+    this.filtered = q
+      ? this.pacientes.filter(p =>
+          `${p.nombres} ${p.apellidos}`.toLowerCase().includes(q) ||
+          (p.telefono || '').includes(q) ||
+          (p.correo || '').toLowerCase().includes(q) ||
+          (p.numero_documento || '').includes(q)
+        )
+      : [...this.pacientes];
+    this.page = 1;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
+  }
+
+  get paginated(): Paciente[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageRange(): number[] {
+    const pages: number[] = [];
+    let start = Math.max(1, this.page - 2);
+    const end = Math.min(this.totalPages, start + 4);
+    if (end - start < 4) start = Math.max(1, end - 4);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }
+
+  goTo(p: number): void {
+    if (p >= 1 && p <= this.totalPages) this.page = p;
+  }
+
+  openCreate(): void {
+    this.isEditing = false;
+    this.selectedPaciente = null;
+    this.showModal = true;
+  }
+
+  openEdit(p: Paciente): void {
+    this.isEditing = true;
+    this.selectedPaciente = p;
+    this.showModal = true;
+  }
+
+  onPacienteGuardado(p: Paciente): void {
+    this.successMsg = this.isEditing ? 'Paciente actualizado.' : 'Paciente creado.';
+    this.showModal = false;
+    this.loadPacientes();
+    setTimeout(() => this.successMsg = '', 3000);
+    void p;
+  }
+
+  calcAge(fechaNac?: string): string {
+    if (!fechaNac) return '—';
+    const diff = Date.now() - new Date(fechaNac).getTime();
+    return `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25))} años`;
+  }
+}

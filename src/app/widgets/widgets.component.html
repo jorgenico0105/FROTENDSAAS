@@ -1,0 +1,114 @@
+<!-- Breadcrumb -->
+<div class="mb-[25px] md:flex items-center justify-between">
+    <h5 class="!mb-0">
+        Widgets
+    </h5>
+    <ol class="breadcrumb mt-[12px] md:mt-0">
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            <a routerLink="/dashboard" class="inline-block relative ltr:pl-[22px] rtl:pr-[22px] transition-all hover:text-primary-500">
+                <i class="material-symbols-outlined absolute ltr:left-0 rtl:right-0 !text-lg -mt-px text-primary-500 top-1/2 -translate-y-1/2">
+                    home
+                </i>
+                Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item inline-block relative text-sm mx-[13px] ltr:first:ml-0 rtl:first:mr-0 ltr:last:mr-0 rtl:last:ml-0">
+            Widgets
+        </li>
+    </ol>
+</div>
+
+<!-- Widgets -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px] mb-[25px]">
+
+    <!-- Revenue Growth -->
+    <app-revenue-growth />
+
+    <!-- Lead Conversion -->
+    <app-lead-conversion />
+
+    <!-- Total Orders -->
+    <app-total-orders />
+
+    <!-- Annual Profit -->
+    <app-annual-profit />
+
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px] mb-[25px]">
+
+    <!-- Tickets Resolved -->
+    <app-tickets-resolved />
+
+    <!-- Tickets In Progress -->
+    <app-tickets-in-progress />
+
+    <!-- Tickets Due -->
+    <app-tickets-due />
+
+    <!-- Tickets New Open -->
+    <app-tickets-new-open />
+
+</div>
+<div class="grid grid-cols-1 2xl:grid-cols-2 gap-[25px] mb-[25px]">
+
+    <!-- Welcome -->
+    <app-welcome />
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-[25px]">
+    
+        <!-- Total Courses -->
+        <app-total-courses />
+
+        <!-- Total Enrolled -->
+        <app-total-enrolled />
+
+        <!-- Total Mentors -->
+        <app-total-mentors />
+    
+    </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-[25px] mb-[25px]">
+        
+    <!-- Total Customers -->
+    <app-total-customers />
+    
+    <!-- Total Revenue -->
+    <app-total-revenue />
+    
+    <!-- Top Orders -->
+    <app-top-orders />
+
+</div>
+<div class="grid grid-cols-1 2xl:grid-cols-2 gap-[25px] mb-[25px]">
+
+    <!-- Projects Overview -->
+    <app-projects-overview />
+
+    <!-- Projects Roadmap -->
+    <app-projects-roadmap />
+
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-[25px] mb-[25px]">
+    
+    <!-- Courses Sales -->
+    <app-courses-sales />
+
+    <!-- Time Spent -->
+    <app-time-spent />
+
+    <!-- Our Top Courses -->
+    <app-our-top-courses />
+
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-[25px] mb-[25px]">
+
+    <!-- Project Analysis -->
+    <app-project-analysis />
+
+    <!-- Team Members -->
+    <app-team-members />
+
+    <!-- Leads by Source -->
+    <app-leads-by-source />
+
+</div>

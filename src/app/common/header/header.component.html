@@ -1,0 +1,161 @@
+<div class="header-area bg-[var(--color-surface-5)] py-[13px] px-[20px] md:px-[25px] fixed top-0 z-[6] rounded-b-md transition-all" id="header-area">
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="flex items-center justify-center md:justify-normal">
+            <div class="relative leading-none top-px ltr:mr-[13px] ltr:md:mr-[18px] ltr:lg:mr-[23px] rtl:ml-[13px] rtl:md:ml-[18px] rtl:lg:ml-[23px]">
+                <button type="button" class="hide-sidebar-toggle transition-all inline-block hover:text-primary-500" (click)="toggleSidebar()">
+                    <i class="material-symbols-outlined !text-[20px]">
+                        menu
+                    </i>
+                </button>
+            </div>
+            <form class="relative w-[250px] lg:w-[260px]">
+                <input type="text" placeholder="Search here....." class="h-[44px] rounded-md w-full block pt-[11px] pb-[12px] px-[13px] md:px-[16px] outline-0 border border-[var(--color-surface-3)] bg-[var(--color-surface-4)] text-[var(--color-text-high)] placeholder:text-[var(--color-text-hint)] bg-[var(--color-surface-4)] dark:placeholder:text-gray-400">
+                <button type="button" class="absolute text-primary-500 mt-[2px] ltr:right-[13px] ltr:md:right-[15px] rtl:left-[13px] rtl:md:left-[15px] top-1/2 -translate-y-1/2">
+                    <i class="material-symbols-outlined !text-[20px]">
+                        search
+                    </i>
+                </button>
+            </form>
+        </div>
+        <ul class="flex items-center justify-center md:justify-normal mt-[13px] md:mt-0">
+            <li class="relative mx-[8px] md:mx-[10px] lg:mx-[12px] ltr:first:ml-0 ltr:last:mr-0 rtl:first:mr-0 rtl:last:ml-0">
+                <button type="button" class="light-dark-toggle leading-none inline-block transition-all relative top-[2px] text-orange-400" (click)="toggleTheme()">
+                    <i class="material-symbols-outlined !text-[20px] md:!text-[22px]">
+                        light_mode
+                    </i>
+                </button>
+            </li>
+            <li class="relative mx-[8px] md:mx-[10px] lg:mx-[12px] ltr:first:ml-0 ltr:last:mr-0 rtl:first:mr-0 rtl:last:ml-0">
+                <button type="button" class="leading-none inline-block transition-all relative top-[2px] hover:text-primary-500" (click)="toggleFullscreen()">
+                    <i class="material-symbols-outlined !text-[22px] md:!text-xl">
+                        {{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}
+                    </i>
+                </button>
+            </li>
+            <li class="relative notifications-menu mx-[8px] md:mx-[10px] lg:mx-[12px] ltr:first:ml-0 ltr:last:mr-0 rtl:first:mr-0 rtl:last:ml-0">
+                <button type="button" class="leading-none inline-block transition-all relative top-[2px] hover:text-primary-500" id="notificationsMenuBtn" (click)="toggleClass('notificationsMenuBtn')" [class.active]="buttonStates['notificationsMenuBtn']">
+                    <i class="material-symbols-outlined !text-[22px] md:!text-xl">
+                        notifications
+                    </i>
+                    <span class="top-[3px] ltr:right-[4px] rtl:left-[4px] w-[6px] h-[6px] rounded-full absolute bg-orange-500"></span>
+                </button>
+                <div class="notifications-menu-dropdown bg-[var(--color-surface-5)] transition-all shadow-3xl dark:shadow-none py-[17px] absolute mt-[17px] md:mt-[20px] w-[290px] md:w-[350px] z-[1] top-full ltr:-right-[120px] ltr:md:right-0 rtl:-left-[120px] rtl:md:left-0 rounded-md">
+                    <div class="flex items-center justify-between px-[20px] pb-[17px]">
+                        <span class="font-semibold text-black dark:text-white text-[15px]">
+                            Notifications
+                            <span class="text-gray-500 dark:text-gray-400 font-normal text-base">
+                                (03)
+                            </span>
+                        </span>
+                        <a routerLink="." class="text-primary-500">
+                            Clear All
+                        </a>
+                    </div>
+                    <ul class="mb-[18px]">
+                        <li class="relative border-b border-[var(--color-surface-3)] border-dashed py-[17px] ltr:pl-[75px] ltr:pr-[20px] rtl:pr-[75px] rtl:pl-[20px] first:border-t first:border-gray-100 first:border-[var(--color-surface-3)]">
+                            <div class="rounded-full flex items-center justify-center absolute text-center transition-all top-1/2 -translate-y-1/2 ltr:left-[20px] rtl:right-[20px] w-[44px] h-[44px] text-primary-500 bg-[#4936f50d]">
+                                <i class="material-symbols-outlined !text-[22px]">
+                                    sms
+                                </i>
+                            </div>
+                            <span class="block mb-[3px] text-black dark:text-white">
+                                You have requested to <strong class="font-semibold">withdrawal</strong>
+                            </span>
+                            <span class="block">
+                                2 hrs ago
+                            </span>
+                            <a routerLink="/dashboard/notifications" class="block left-0 top-0 right-0 bottom-0 z-[1] absolute"></a>
+                        </li>
+                        <li class="relative border-b border-[var(--color-surface-3)] border-dashed py-[17px] ltr:pl-[75px] ltr:pr-[20px] rtl:pr-[75px] rtl:pl-[20px] first:border-t first:border-gray-100 first:border-[var(--color-surface-3)]">
+                            <div class="rounded-full flex items-center justify-center absolute text-center transition-all top-1/2 -translate-y-1/2 ltr:left-[20px] rtl:right-[20px] w-[44px] h-[44px] text-[#39b2de] bg-[#4936f50d]">
+                                <i class="material-symbols-outlined !text-[22px]">
+                                    person
+                                </i>
+                            </div>
+                            <span class="block mb-[3px] text-black dark:text-white">
+                                <strong class="font-semibold">A new user</strong> added in Trezo
+                            </span>
+                            <span class="block">
+                                3 hrs ago
+                            </span>
+                            <a routerLink="/dashboard/notifications" class="block left-0 top-0 right-0 bottom-0 z-[1] absolute"></a>
+                            <span class="inline-block rounded-full bg-primary-500 absolute w-[6px] h-[6px] right-[20px] top-1/2 -translate-y-1/2"></span>
+                        </li>
+                        <li class="relative border-b border-[var(--color-surface-3)] border-dashed py-[17px] ltr:pl-[75px] ltr:pr-[20px] rtl:pr-[75px] rtl:pl-[20px] first:border-t first:border-gray-100 first:border-[var(--color-surface-3)]">
+                            <div class="rounded-full flex items-center justify-center absolute text-center transition-all top-1/2 -translate-y-1/2 ltr:left-[20px] rtl:right-[20px] w-[44px] h-[44px] text-[#00b69b] bg-[#4936f50d]">
+                                <i class="material-symbols-outlined !text-[22px]">
+                                    mark_email_unread
+                                </i>
+                            </div>
+                            <span class="block mb-[3px] text-black dark:text-white">
+                                You have requested to <strong class="font-semibold">withdrawal</strong>
+                            </span>
+                            <span class="block">
+                                1 day ago
+                            </span>
+                            <a routerLink="/dashboard/notifications" class="block left-0 top-0 right-0 bottom-0 z-[1] absolute"></a>
+                        </li>
+                    </ul>
+                    <div class="text-center">
+                        <a routerLink="/dashboard/notifications" class="inline-block font-medium relative text-primary-500 transition-all hover:underline">
+                            See All Notifications
+                        </a>
+                    </div>
+                </div>
+            </li>
+            <li class="relative profile-menu mx-[8px] md:mx-[10px] lg:mx-[12px] ltr:first:ml-0 ltr:last:mr-0 rtl:first:mr-0 rtl:last:ml-0">
+                <button type="button" class="flex items-center -mx-[5px] relative ltr:pr-[14px] rtl:pl-[14px] text-black dark:text-white" id="profileMenuBtn" (click)="toggleClass('profileMenuBtn')" [class.active]="buttonStates['profileMenuBtn']">
+                    @if (userAvatar) {
+                        <img [src]="userAvatar" class="w-[35px] h-[35px] md:w-[42px] md:h-[42px] rounded-full ltr:md:mr-[2px] ltr:lg:mr-[8px] rtl:md:ml-[2px] rtl:lg:ml-[8px] border-[2px] border-primary-200 inline-block object-cover" alt="avatar">
+                    } @else {
+                        <div class="w-[35px] h-[35px] md:w-[42px] md:h-[42px] rounded-full ltr:md:mr-[2px] ltr:lg:mr-[8px] rtl:md:ml-[2px] rtl:lg:ml-[8px] border-[2px] border-primary-200 inline-flex items-center justify-center text-white font-semibold text-sm flex-shrink-0" style="background: linear-gradient(135deg, #8b0000, #cc0000);">
+                            {{ userInitial }}
+                        </div>
+                    }
+                    <span class="block font-semibold text-[0] lg:text-base truncate max-w-[90px]">
+                        {{ userName }}
+                    </span>
+                    <i class="ri-arrow-down-s-line text-[15px] absolute ltr:-right-[3px] rtl:-left-[3px] top-1/2 -translate-y-1/2 mt-px"></i>
+                </button>
+                <div class="profile-menu-dropdown bg-[var(--color-surface-5)] transition-all shadow-3xl dark:shadow-none py-[22px] absolute mt-[13px] md:mt-[14px] w-[210px] z-[1] top-full ltr:right-0 rtl:left-0 rounded-md">
+                    <div class="flex items-center border-b border-[var(--color-surface-3)] pb-[12px] mx-[20px] mb-[10px]">
+                        @if (userAvatar) {
+                            <img [src]="userAvatar" class="rounded-full w-[31px] h-[31px] ltr:mr-[9px] rtl:ml-[9px] border-2 border-primary-200 inline-block object-cover flex-shrink-0" alt="avatar">
+                        } @else {
+                            <div class="rounded-full w-[31px] h-[31px] ltr:mr-[9px] rtl:ml-[9px] border-2 border-primary-200 inline-flex items-center justify-center text-white font-semibold text-xs flex-shrink-0" style="background: linear-gradient(135deg, #8b0000, #cc0000);">
+                                {{ userInitial }}
+                            </div>
+                        }
+                        <div class="overflow-hidden">
+                            <span class="block text-black dark:text-white font-medium truncate text-sm">{{ userName }}</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400 truncate capitalize">{{ userRole }}</span>
+                        </div>
+                    </div>
+                    <ul>
+                        <li>
+                            <a routerLink="/dashboard/mi-perfil" class="block relative py-[7px] ltr:pl-[50px] ltr:pr-[20px] rtl:pr-[50px] rtl:pl-[20px] text-black dark:text-white transition-all hover:text-primary-500">
+                                <i class="material-symbols-outlined top-1/2 -translate-y-1/2 !text-[22px] absolute ltr:left-[20px] rtl:right-[20px]">account_circle</i>
+                                Mi Perfil
+                            </a>
+                        </li>
+                        <li>
+                            <a routerLink="/dashboard/settings" class="block relative py-[7px] ltr:pl-[50px] ltr:pr-[20px] rtl:pr-[50px] rtl:pl-[20px] text-black dark:text-white transition-all hover:text-primary-500">
+                                <i class="material-symbols-outlined top-1/2 -translate-y-1/2 !text-[22px] absolute ltr:left-[20px] rtl:right-[20px]">settings</i>
+                                Configuración
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="border-t border-[var(--color-surface-3)] mx-[20px] my-[9px]"></div>
+                    <ul>
+                        <li>
+                            <button type="button" (click)="logout()" class="block w-full text-left relative py-[7px] ltr:pl-[50px] ltr:pr-[20px] rtl:pr-[50px] rtl:pl-[20px] text-black dark:text-white transition-all hover:text-danger-500">
+                                <i class="material-symbols-outlined top-1/2 -translate-y-1/2 !text-[22px] absolute ltr:left-[20px] rtl:right-[20px]">logout</i>
+                                Cerrar Sesión
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

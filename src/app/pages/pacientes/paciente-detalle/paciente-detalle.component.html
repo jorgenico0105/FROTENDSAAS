@@ -1,0 +1,714 @@
+<div class="min-h-full bg-gray-50 dark:bg-[#070d1a]">
+
+  <!-- Loading skeleton -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center py-32">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-10 h-10 border-3 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm text-gray-400">Cargando paciente...</span>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading && paciente) {
+
+    <!-- ═══════════════════════════════════════════════════════════
+         HERO HEADER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="bg-white dark:bg-[#0c1427] border-b border-gray-100 dark:border-[#172036]">
+
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 px-6 pt-5 pb-0">
+        <a routerLink="/dashboard/pacientes" class="hover:text-primary-500 transition-colors flex items-center gap-1">
+          <i class="ri-team-line"></i> Pacientes
+        </a>
+        <i class="ri-arrow-right-s-line"></i>
+        <span class="text-gray-600 dark:text-gray-300 font-medium">{{ paciente.nombres }} {{ paciente.apellidos }}</span>
+      </div>
+
+      @if (successMsg) {
+        <div class="mx-6 mt-4 px-4 py-2.5 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+          <i class="ri-checkbox-circle-line flex-shrink-0"></i>{{ successMsg }}
+        </div>
+      }
+
+      <div class="px-6 py-6">
+        <div class="flex items-start gap-6 flex-wrap lg:flex-nowrap">
+
+          <!-- Avatar -->
+          <div class="relative flex-shrink-0">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-primary-500/20">
+              {{ paciente.nombres.charAt(0) }}{{ paciente.apellidos.charAt(0) }}
+            </div>
+            <div class="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full border-2 border-white dark:border-[#0c1427] flex items-center justify-center"
+                 [ngClass]="paciente.state === 'A' ? 'bg-success-500' : 'bg-gray-400'">
+              <i [class]="paciente.state === 'A' ? 'ri-check-line' : 'ri-close-line'" class="text-white text-[10px]"></i>
+            </div>
+          </div>
+
+          <!-- Info principal -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h1 class="text-2xl font-bold text-black dark:text-white tracking-tight">
+                  {{ paciente.nombres }} {{ paciente.apellidos }}
+                </h1>
+                <div class="flex items-center gap-3 mt-2 flex-wrap">
+                  @if (paciente.numero_documento) {
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <i class="ri-id-card-line"></i> {{ paciente.numero_documento }}
+                    </span>
+                  }
+                  @if (paciente.tipo_sangre) {
+                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 text-xs font-semibold">
+                      <i class="ri-heart-pulse-line"></i> {{ paciente.tipo_sangre }}
+                    </span>
+                  }
+                  @if (paciente.sexo) {
+                    <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <i [class]="paciente.sexo === 'M' ? 'ri-men-line' : 'ri-women-line'"></i>
+                      {{ paciente.sexo === 'M' ? 'Masculino' : paciente.sexo === 'F' ? 'Femenino' : 'Otro' }}
+                    </span>
+                  }
+                  <span class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    <i class="ri-cake-3-line"></i> {{ calcAge(paciente.fecha_nacimiento) }}
+                  </span>
+                  <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
+                    [ngClass]="paciente.state === 'A'
+                      ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400'
+                      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'">
+                    {{ paciente.state === 'A' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+
+                <!-- Datos de contacto rápidos -->
+                <div class="flex items-center gap-4 mt-3 flex-wrap">
+                  @if (paciente.telefono) {
+                    <a [href]="'tel:' + paciente.telefono" class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors">
+                      <i class="ri-phone-line"></i> {{ paciente.telefono }}
+                    </a>
+                  }
+                  @if (paciente.correo) {
+                    <a [href]="'mailto:' + paciente.correo" class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors">
+                      <i class="ri-mail-line"></i> {{ paciente.correo }}
+                    </a>
+                  }
+                  @if (paciente.direccion) {
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <i class="ri-map-pin-line"></i> {{ paciente.direccion }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Acciones -->
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button (click)="startEdit()"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-gray-600 dark:text-gray-300 hover:border-primary-300 hover:text-primary-600 dark:hover:text-primary-400 transition-all">
+                  <i class="ri-pencil-line"></i> Editar
+                </button>
+                <a [routerLink]="['/dashboard/nutricion/pacientes', paciente.id]"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary-500 hover:bg-primary-600 text-white transition-all shadow-sm shadow-primary-500/20">
+                  <i class="ri-leaf-line"></i> Nutrición
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats rápidas -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+          <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+              <i class="ri-calendar-check-line text-primary-500 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-black dark:text-white leading-none">{{ citas.length || '—' }}</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">Citas</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center flex-shrink-0">
+              <i class="ri-leaf-line text-secondary-500 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-black dark:text-white leading-none">{{ dietas.length || '—' }}</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">Dietas</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center flex-shrink-0">
+              <i class="ri-file-list-3-line text-warning-500 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-black dark:text-white leading-none">{{ historiaGroups.length || '—' }}</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">Historias</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+              <i class="ri-image-line text-purple-500 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-lg font-bold text-black dark:text-white leading-none">{{ imagenes.length || '—' }}</p>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">Imágenes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="flex items-center gap-0 px-6 overflow-x-auto">
+        @for (tab of [
+          { id: 'datos',     label: 'Datos personales', icon: 'ri-user-3-line' },
+          { id: 'historias', label: 'Historia clínica',  icon: 'ri-file-list-3-line' },
+          { id: 'nutricion', label: 'Nutrición',         icon: 'ri-leaf-line' },
+          { id: 'citas',     label: 'Citas',             icon: 'ri-calendar-schedule-line' },
+          { id: 'imagenes',  label: 'Imágenes',          icon: 'ri-image-2-line' }
+        ]; track tab.id) {
+          <button
+            (click)="setTab(tab.id)"
+            class="flex items-center gap-2 px-4 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all"
+            [ngClass]="activeTab === tab.id
+              ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-200 dark:hover:border-gray-600'">
+            <i [class]="tab.icon + ' text-base'"></i>
+            <span class="hidden sm:inline">{{ tab.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB CONTENT
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="p-6">
+
+      <!-- ── Tab: Datos personales ──────────────────────────────────────── -->
+      @if (activeTab === 'datos') {
+
+        @if (!isEditing) {
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+            <!-- Información Personal -->
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-50 dark:border-[#172036] bg-gray-50/60 dark:bg-[#0a0e19]/40">
+                <div class="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="ri-user-3-line text-primary-500 text-xs"></i>
+                </div>
+                <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Información Personal</h3>
+              </div>
+              <div class="divide-y divide-gray-50 dark:divide-[#172036]">
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">Fecha de Nacimiento</span>
+                  <span class="text-sm font-semibold text-black dark:text-white">{{ formatDate(paciente.fecha_nacimiento) }}</span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">Edad</span>
+                  <span class="text-sm font-semibold text-black dark:text-white">{{ calcAge(paciente.fecha_nacimiento) }}</span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">Género</span>
+                  <span class="text-sm font-semibold text-black dark:text-white">
+                    {{ paciente.sexo === 'M' ? 'Masculino' : paciente.sexo === 'F' ? 'Femenino' : paciente.sexo || '—' }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">Tipo de Sangre</span>
+                  @if (paciente.tipo_sangre) {
+                    <span class="px-2 py-0.5 rounded-full bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 text-xs font-bold">
+                      {{ paciente.tipo_sangre }}
+                    </span>
+                  } @else {
+                    <span class="text-sm font-semibold text-black dark:text-white">—</span>
+                  }
+                </div>
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">N° Documento</span>
+                  <span class="text-sm font-semibold text-black dark:text-white">{{ paciente.numero_documento || '—' }}</span>
+                </div>
+                <div class="flex items-center justify-between px-5 py-3.5">
+                  <span class="text-xs text-gray-400 dark:text-gray-500">Estado</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    [ngClass]="paciente.state === 'A'
+                      ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400'
+                      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'">
+                    {{ paciente.state === 'A' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contacto -->
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-50 dark:border-[#172036] bg-gray-50/60 dark:bg-[#0a0e19]/40">
+                <div class="w-7 h-7 rounded-lg bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center">
+                  <i class="ri-phone-line text-secondary-500 text-xs"></i>
+                </div>
+                <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contacto</h3>
+              </div>
+              <div class="divide-y divide-gray-50 dark:divide-[#172036]">
+                <div class="flex items-start justify-between px-5 py-3.5 gap-4">
+                  <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">Teléfono</span>
+                  @if (paciente.telefono) {
+                    <a [href]="'tel:' + paciente.telefono" class="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline text-right">
+                      {{ paciente.telefono }}
+                    </a>
+                  } @else {
+                    <span class="text-sm font-semibold text-black dark:text-white">—</span>
+                  }
+                </div>
+                <div class="flex items-start justify-between px-5 py-3.5 gap-4">
+                  <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">Correo</span>
+                  @if (paciente.correo) {
+                    <a [href]="'mailto:' + paciente.correo" class="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline text-right truncate max-w-[180px]">
+                      {{ paciente.correo }}
+                    </a>
+                  } @else {
+                    <span class="text-sm font-semibold text-black dark:text-white">—</span>
+                  }
+                </div>
+                <div class="flex items-start justify-between px-5 py-3.5 gap-4">
+                  <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">Dirección</span>
+                  <span class="text-sm font-semibold text-black dark:text-white text-right">{{ paciente.direccion || '—' }}</span>
+                </div>
+              </div>
+
+              <!-- Emergencia -->
+              <div class="flex items-center gap-3 px-5 py-4 border-y border-gray-50 dark:border-[#172036] bg-danger-50/40 dark:bg-danger-900/10 mt-0">
+                <div class="w-7 h-7 rounded-lg bg-danger-100 dark:bg-danger-900/30 flex items-center justify-center">
+                  <i class="ri-first-aid-kit-line text-danger-500 text-xs"></i>
+                </div>
+                <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contacto de Emergencia</h3>
+              </div>
+              <div class="divide-y divide-gray-50 dark:divide-[#172036]">
+                <div class="flex items-start justify-between px-5 py-3.5 gap-4">
+                  <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">Nombre</span>
+                  <span class="text-sm font-semibold text-black dark:text-white text-right">{{ paciente.contacto_emergencia || '—' }}</span>
+                </div>
+                <div class="flex items-start justify-between px-5 py-3.5 gap-4">
+                  <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">Teléfono</span>
+                  @if (paciente.telefono_emergencia) {
+                    <a [href]="'tel:' + paciente.telefono_emergencia" class="text-sm font-semibold text-danger-600 dark:text-danger-400 hover:underline">
+                      {{ paciente.telefono_emergencia }}
+                    </a>
+                  } @else {
+                    <span class="text-sm font-semibold text-black dark:text-white">—</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Acceso app móvil / acciones -->
+            <div class="space-y-4">
+              <!-- Acciones rápidas -->
+              <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm p-5">
+                <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">Acciones rápidas</h3>
+                <div class="space-y-2.5">
+                  <button (click)="startEdit()"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 dark:border-[#172036] hover:border-primary-200 dark:hover:border-primary-800/50 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group text-left">
+                    <div class="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center group-hover:bg-primary-100 dark:group-hover:bg-primary-900/40 transition-colors flex-shrink-0">
+                      <i class="ri-pencil-line text-primary-500 text-sm"></i>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-black dark:text-white">Editar datos</p>
+                      <p class="text-xs text-gray-400">Actualizar información del paciente</p>
+                    </div>
+                  </button>
+                  <a [routerLink]="['/dashboard/nutricion/pacientes', paciente.id]"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 dark:border-[#172036] hover:border-secondary-200 dark:hover:border-secondary-800/50 hover:bg-secondary-50 dark:hover:bg-secondary-900/10 transition-all group text-left">
+                    <div class="w-8 h-8 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center group-hover:bg-secondary-100 dark:group-hover:bg-secondary-900/40 transition-colors flex-shrink-0">
+                      <i class="ri-leaf-line text-secondary-500 text-sm"></i>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-black dark:text-white">Perfil nutricional</p>
+                      <p class="text-xs text-gray-400">Ver dietas, menús y progreso</p>
+                    </div>
+                  </a>
+                  <button (click)="setTab('imagenes')"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 dark:border-[#172036] hover:border-purple-200 dark:hover:border-purple-800/50 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all group text-left">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors flex-shrink-0">
+                      <i class="ri-image-add-line text-purple-500 text-sm"></i>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-black dark:text-white">Subir imágenes</p>
+                      <p class="text-xs text-gray-400">Fotos de evolución del paciente</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Última cita -->
+              @if (citas.length > 0) {
+                <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm p-5">
+                  <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">Última cita</h3>
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center flex-shrink-0">
+                      <i class="ri-calendar-check-line text-primary-500"></i>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-black dark:text-white">{{ formatDate(citas[0].fecha) }}</p>
+                      <p class="text-xs text-gray-400 truncate">{{ citas[0].tipo_cita?.nombre || 'Consulta' }} · {{ citas[0].hora?.substring(0,5) }}</p>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+          </div>
+
+        } @else {
+          <!-- Formulario de edición -->
+          <div class="max-w-2xl">
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm overflow-hidden">
+              <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-[#172036] bg-gray-50/60 dark:bg-[#0a0e19]/40">
+                <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="ri-pencil-line text-primary-500"></i>
+                </div>
+                <h2 class="text-sm font-bold text-black dark:text-white">Editar datos del paciente</h2>
+              </div>
+              <div class="p-6">
+                @if (errorMsg) {
+                  <div class="mb-5 px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+                    <i class="ri-error-warning-line flex-shrink-0"></i> {{ errorMsg }}
+                  </div>
+                }
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Nombres</label>
+                    <input [(ngModel)]="form.nombres" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Apellidos</label>
+                    <input [(ngModel)]="form.apellidos" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Teléfono</label>
+                    <input [(ngModel)]="form.telefono" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Correo</label>
+                    <input [(ngModel)]="form.correo" type="email" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contacto Emergencia</label>
+                    <input [(ngModel)]="form.contacto_emergencia" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Tel. Emergencia</label>
+                    <input [(ngModel)]="form.telefono_emergencia" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Dirección</label>
+                    <input [(ngModel)]="form.direccion" type="text" class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-[#0c1427] transition-all">
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-[#172036] bg-gray-50/60 dark:bg-[#0a0e19]/40">
+                <button (click)="cancelEdit()" class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] rounded-xl transition-all">
+                  Cancelar
+                </button>
+                <button (click)="save()" [disabled]="isSaving"
+                  class="flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 shadow-sm">
+                  @if (isSaving) {
+                    <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  }
+                  {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      <!-- ── Tab: Historia clínica ───────────────────────────────────────── -->
+      @if (activeTab === 'historias') {
+        <div class="space-y-3">
+
+          @if (historiasLoading) {
+            <div class="flex flex-col items-center justify-center py-24 gap-3">
+              <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-sm text-gray-400">Cargando historias...</span>
+            </div>
+
+          } @else if (historiaGroups.length === 0) {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-16 shadow-sm text-center">
+              <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4">
+                <i class="ri-file-list-3-line text-3xl text-primary-400"></i>
+              </div>
+              <p class="text-sm font-semibold text-black dark:text-white mb-1">Sin historias clínicas</p>
+              <p class="text-xs text-gray-400">Aún no hay registros para este paciente.</p>
+            </div>
+
+          } @else {
+            <div class="flex items-center gap-3 px-1 mb-1">
+              <span class="text-sm text-gray-500 dark:text-gray-400">
+                <span class="font-bold text-black dark:text-white">{{ historiaGroups.length }}</span>
+                {{ historiaGroups.length === 1 ? 'formulario registrado' : 'formularios registrados' }}
+              </span>
+            </div>
+
+            @for (grupo of historiaGroups; track grupo.id) {
+              <div class="bg-white dark:bg-[#0c1427] rounded-2xl border shadow-sm overflow-hidden transition-all"
+                   [ngClass]="expandedHistorias.has(grupo.id) ? 'border-primary-200 dark:border-primary-800/50' : 'border-gray-100 dark:border-[#172036]'">
+                <button type="button" (click)="toggleHistoria(grupo.id)"
+                        class="w-full flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors text-left">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                       [ngClass]="expandedHistorias.has(grupo.id) ? 'bg-primary-500 text-white' : 'bg-primary-50 dark:bg-primary-900/20 text-primary-500'">
+                    <i [class]="historiaBadgeIcon(grupo.nombre) + ' text-base'"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-black dark:text-white">{{ grupo.nombre }}</p>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <i class="ri-calendar-line text-xs text-gray-400"></i>
+                      <span class="text-xs text-gray-400">{{ formatDate(grupo.fecha) }}</span>
+                      <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                      <span class="text-xs text-gray-400">{{ countNonEmpty(grupo) }} respuestas</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 flex-shrink-0">
+                    @if (!expandedHistorias.has(grupo.id)) {
+                      <span class="text-xs font-medium bg-gray-100 dark:bg-[#172036] text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full">Ver</span>
+                    }
+                    <i class="ri-arrow-down-s-line text-lg text-gray-400 transition-transform duration-200"
+                       [ngClass]="expandedHistorias.has(grupo.id) ? 'rotate-180' : ''"></i>
+                  </div>
+                </button>
+                @if (expandedHistorias.has(grupo.id)) {
+                  <div class="border-t border-gray-100 dark:border-[#172036]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y divide-gray-50 dark:divide-[#172036] md:divide-y-0">
+                      @for (row of grupo.respuestas; track row.orden_pregunta; let odd = $odd) {
+                        @if (!isRespuestaEmpty(row)) {
+                          <div class="flex flex-col gap-1 px-6 py-4 hover:bg-gray-50/60 dark:hover:bg-[#0a0e19]/60 transition-colors"
+                               [ngClass]="odd ? 'md:border-l md:border-gray-50 dark:md:border-[#172036]' : ''">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 truncate">{{ row.pregunta }}</p>
+                            @if (row.multiple) {
+                              <span class="inline-flex self-start items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-secondary-50 dark:bg-secondary-900/20 text-secondary-700 dark:text-secondary-400 border border-secondary-200 dark:border-secondary-800/40">
+                                <i class="ri-tag-line text-xs"></i> {{ formatRespuesta(row) }}
+                              </span>
+                            } @else {
+                              <p class="text-sm font-semibold text-black dark:text-white">{{ formatRespuesta(row) }}</p>
+                            }
+                          </div>
+                        }
+                      }
+                    </div>
+                    <div class="border-t border-gray-100 dark:border-[#172036] px-6 py-3 flex justify-center">
+                      <button type="button" (click)="toggleHistoria(grupo.id)"
+                              class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-primary-500 transition-colors">
+                        <i class="ri-arrow-up-s-line text-base"></i> Colapsar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- ── Tab: Nutrición ─────────────────────────────────────────────── -->
+      @if (activeTab === 'nutricion') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-black dark:text-white">Planes de dieta</h2>
+            <a [routerLink]="['/dashboard/nutricion/pacientes', pacienteId]"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-secondary-500 hover:bg-secondary-600 text-white transition-all shadow-sm">
+              <i class="ri-leaf-line"></i> Ver perfil nutricional completo
+            </a>
+          </div>
+
+          @if (dietasLoading) {
+            <div class="flex flex-col items-center justify-center py-24 gap-3">
+              <div class="w-8 h-8 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-sm text-gray-400">Cargando planes...</span>
+            </div>
+          } @else if (dietas.length === 0) {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-16 shadow-sm text-center">
+              <div class="w-16 h-16 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center mx-auto mb-4">
+                <i class="ri-leaf-line text-3xl text-secondary-400"></i>
+              </div>
+              <p class="text-sm font-semibold text-black dark:text-white mb-1">Sin planes de dieta</p>
+              <p class="text-xs text-gray-400">Crea un plan nutricional desde el perfil nutricional.</p>
+              <a [routerLink]="['/dashboard/nutricion/pacientes', pacienteId]"
+                class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl text-sm font-semibold bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 transition-all">
+                <i class="ri-external-link-line"></i> Ir al perfil nutricional
+              </a>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (dieta of dietas; track dieta.id) {
+                <a [routerLink]="['/dashboard/nutricion/pacientes', pacienteId, 'menu-builder', dieta.id]"
+                  class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] hover:border-secondary-200 dark:hover:border-secondary-800/50 hover:shadow-md transition-all p-5 group flex flex-col gap-3">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center flex-shrink-0">
+                        <i class="ri-leaf-line text-secondary-500"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-sm font-semibold text-black dark:text-white truncate">{{ dieta.nombre }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Inicio: {{ formatDate(dieta.fecha_inicio) }}</p>
+                      </div>
+                    </div>
+                    <span [ngClass]="dietaEstadoClass(dieta.estado)" class="px-2.5 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
+                      {{ dieta.estado }}
+                    </span>
+                  </div>
+                  @if (dieta.calorias_dia_objetivo) {
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#0a0e19]">
+                      <i class="ri-fire-line text-warning-500 text-sm"></i>
+                      <span class="text-xs text-gray-600 dark:text-gray-300 font-medium">{{ dieta.calorias_dia_objetivo }} kcal / día objetivo</span>
+                    </div>
+                  }
+                  <div class="flex items-center justify-end">
+                    <span class="text-xs text-secondary-500 group-hover:text-secondary-600 flex items-center gap-1 font-medium">
+                      Ver menú <i class="ri-arrow-right-line"></i>
+                    </span>
+                  </div>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── Tab: Citas ─────────────────────────────────────────────────── -->
+      @if (activeTab === 'citas') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-black dark:text-white">Historial de citas</h2>
+            @if (citas.length > 0) {
+              <span class="text-xs text-gray-400">{{ citas.length }} {{ citas.length === 1 ? 'cita' : 'citas' }}</span>
+            }
+          </div>
+
+          @if (citasLoading) {
+            <div class="flex flex-col items-center justify-center py-24 gap-3">
+              <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-sm text-gray-400">Cargando citas...</span>
+            </div>
+          } @else if (citas.length === 0) {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-16 shadow-sm text-center">
+              <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4">
+                <i class="ri-calendar-line text-3xl text-primary-400"></i>
+              </div>
+              <p class="text-sm font-semibold text-black dark:text-white mb-1">Sin citas registradas</p>
+              <p class="text-xs text-gray-400">No hay historial de citas para este paciente.</p>
+            </div>
+          } @else {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm overflow-hidden">
+              <!-- Table header -->
+              <div class="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-gray-50 dark:bg-[#0a0e19] border-b border-gray-100 dark:border-[#172036]">
+                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Tipo / Motivo</span>
+                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Fecha</span>
+                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Hora</span>
+                <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Estado</span>
+              </div>
+              @for (cita of citas; track cita.id) {
+                <div class="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 border-b border-gray-50 dark:border-[#172036] last:border-0 hover:bg-gray-50 dark:hover:bg-[#0a0e19]/60 transition-colors">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center flex-shrink-0">
+                      <i class="ri-calendar-check-line text-primary-500 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-black dark:text-white truncate">{{ cita.tipo_cita?.nombre || 'Consulta' }}</p>
+                      @if (cita.motivo) {
+                        <p class="text-xs text-gray-400 truncate">{{ cita.motivo }}</p>
+                      }
+                    </div>
+                  </div>
+                  <span class="text-sm text-gray-600 dark:text-gray-300">{{ formatDate(cita.fecha) }}</span>
+                  <span class="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">{{ cita.hora?.substring(0,5) }}</span>
+                  @if (cita.estado_cita) {
+                    <span [ngClass]="ESTADO_COLORS[cita.estado_cita.codigo]" class="px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
+                      {{ ESTADO_LABELS[cita.estado_cita.codigo] || cita.estado_cita.nombre }}
+                    </span>
+                  } @else {
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">—</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── Tab: Imágenes ──────────────────────────────────────────────── -->
+      @if (activeTab === 'imagenes') {
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-semibold text-black dark:text-white">Galería de imágenes</h2>
+              <p class="text-xs text-gray-400 mt-0.5">Fotos de evolución, antropometría y documentos visuales</p>
+            </div>
+            <label for="imagenPacienteInput"
+              class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all shadow-sm"
+              [ngClass]="isUploadingImagen
+                ? 'bg-gray-100 dark:bg-[#172036] text-gray-400 cursor-not-allowed'
+                : 'bg-primary-500 hover:bg-primary-600 text-white'">
+              @if (isUploadingImagen) {
+                <span class="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                Subiendo...
+              } @else {
+                <i class="ri-image-add-line"></i> Subir imagen
+              }
+            </label>
+            <input #imagenInput id="imagenPacienteInput" type="file" accept="image/*" class="hidden" (change)="onImagenChange($event)">
+          </div>
+
+          @if (imagenesLoading) {
+            <div class="flex flex-col items-center justify-center py-24 gap-3">
+              <div class="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-sm text-gray-400">Cargando imágenes...</span>
+            </div>
+          } @else if (imagenes.length === 0) {
+            <div class="bg-white dark:bg-[#0c1427] rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#172036] p-16 text-center">
+              <div class="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-4">
+                <i class="ri-image-line text-3xl text-purple-400"></i>
+              </div>
+              <p class="text-sm font-semibold text-black dark:text-white mb-1">Sin imágenes aún</p>
+              <p class="text-xs text-gray-400 mb-4">Sube fotos de evolución, medidas corporales o documentos visuales</p>
+              <label for="imagenPacienteInput"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all">
+                <i class="ri-image-add-line"></i> Seleccionar imagen
+              </label>
+            </div>
+          } @else {
+            <!-- Grid de imágenes -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              @for (img of imagenes; track img.id) {
+                <div class="group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] aspect-square shadow-sm hover:shadow-md transition-all">
+                  <img [src]="imageUrl(img.url_archivo)" [alt]="img.descripcion || 'Imagen paciente'"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <!-- Overlay on hover -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-3">
+                    @if (img.descripcion) {
+                      <p class="text-xs text-white font-medium truncate">{{ img.descripcion }}</p>
+                    }
+                    <p class="text-[10px] text-white/70">{{ formatDate(img.creado_en) }}</p>
+                  </div>
+                  <!-- Open button -->
+                  <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a [href]="imageUrl(img.url_archivo)" target="_blank"
+                      class="w-7 h-7 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:text-primary-600 shadow-sm"
+                      (click)="$event.stopPropagation()">
+                      <i class="ri-external-link-line text-xs"></i>
+                    </a>
+                  </div>
+                </div>
+              }
+              <!-- Add more cell -->
+              <label for="imagenPacienteInput"
+                class="flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#172036] cursor-pointer hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-all group">
+                <i class="ri-image-add-line text-2xl text-gray-300 dark:text-gray-600 group-hover:text-purple-400 transition-colors"></i>
+                <span class="text-[10px] text-gray-400 mt-1.5 group-hover:text-purple-500 transition-colors font-medium">Añadir más</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-400 text-center">{{ imagenes.length }} {{ imagenes.length === 1 ? 'imagen' : 'imágenes' }} registradas</p>
+          }
+        </div>
+      }
+
+    </div>
+  }
+</div>

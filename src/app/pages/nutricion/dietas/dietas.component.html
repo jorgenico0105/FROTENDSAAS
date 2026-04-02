@@ -1,0 +1,292 @@
+<div class="p-4 md:p-6">
+
+  <!-- ── Header ────────────────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-black dark:text-white">Dietas</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        {{ dietasFiltradas.length }} dieta{{ dietasFiltradas.length !== 1 ? 's' : '' }}
+      </p>
+    </div>
+    <button (click)="abrirCrearDieta()"
+      class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
+      <i class="ri-add-line text-base"></i> Nueva dieta
+    </button>
+  </div>
+
+  <!-- ── Alertas ─────────────────────────────────────────────────────────────── -->
+  @if (successMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i> {{ successMsg }}
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+      <i class="ri-error-warning-line"></i> {{ errorMsg }}
+    </div>
+  }
+
+  <!-- ── Filtros ─────────────────────────────────────────────────────────────── -->
+  <div class="flex flex-wrap items-center gap-3 mb-5">
+    <div class="flex items-center gap-1 bg-gray-100 dark:bg-[#0a0e19] rounded-xl p-1">
+      @for (e of [
+        {val:'',          label:'Todas'},
+        {val:'ACTIVA',    label:'Activas'},
+        {val:'PAUSADA',   label:'Pausadas'},
+        {val:'COMPLETADA',label:'Completadas'},
+        {val:'CANCELADA', label:'Canceladas'}
+      ]; track e.val) {
+        <button (click)="filtroEstado = e.val"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+          [ngClass]="filtroEstado === e.val
+            ? 'bg-white dark:bg-[#0c1427] text-black dark:text-white shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'">
+          {{ e.label }}
+        </button>
+      }
+    </div>
+    <div class="relative ml-auto">
+      <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+      <input [(ngModel)]="search" type="text" placeholder="Buscar paciente o dieta..."
+        class="h-9 pl-8 pr-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white outline-none focus:border-primary-500 w-52">
+    </div>
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────────── -->
+  @if (isLoading) {
+    <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+      <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <span class="text-sm">Cargando dietas y menús...</span>
+    </div>
+  }
+
+  <!-- ── Empty ───────────────────────────────────────────────────────────────── -->
+  @if (!isLoading && dietasFiltradas.length === 0) {
+    <div class="flex flex-col items-center justify-center py-24 text-center">
+      <div class="w-20 h-20 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-5">
+        <i class="ri-restaurant-line text-4xl text-primary-400"></i>
+      </div>
+      <h3 class="text-base font-semibold text-black dark:text-white mb-1">Sin dietas</h3>
+      <p class="text-sm text-gray-400 dark:text-gray-500 max-w-xs">Crea una dieta para un paciente y luego usa el menu builder para asignar alimentos</p>
+    </div>
+  }
+
+  <!-- ── Grid de dietas ──────────────────────────────────────────────────────── -->
+  @if (!isLoading && dietasFiltradas.length > 0) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      @for (dieta of dietasFiltradas; track dieta.id) {
+
+        @let menu = menuActivo(dieta);
+        @let diasRest = diasRestantes(dieta);
+
+        <div class="group bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm hover:shadow-lg hover:border-primary-200 dark:hover:border-primary-800/40 transition-all duration-200 flex flex-col overflow-hidden">
+
+          <!-- Accent top bar coloreado por estado -->
+          <div class="h-1 w-full flex-shrink-0"
+            [ngClass]="{
+              'bg-gradient-to-r from-success-400 to-success-500': dieta.estado === 'ACTIVA',
+              'bg-gradient-to-r from-warning-400 to-warning-500': dieta.estado === 'PAUSADA',
+              'bg-gradient-to-r from-gray-300 to-gray-400': dieta.estado === 'COMPLETADA',
+              'bg-gradient-to-r from-danger-400 to-danger-500': dieta.estado === 'CANCELADA'
+            }">
+          </div>
+
+          <!-- Cuerpo de la card -->
+          <div class="p-4 flex-1 flex flex-col gap-3">
+
+            <!-- Fila: paciente + estado -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center text-xs font-bold bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-sm">
+                  {{ inicialesPaciente(dieta) }}
+                </div>
+                <p class="text-sm font-semibold text-black dark:text-white truncate">{{ nombrePaciente(dieta) }}</p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                [ngClass]="estadoBadge(dieta.estado)">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="estadoDot(dieta.estado)"></span>
+                {{ dieta.estado }}
+              </span>
+            </div>
+
+            <!-- Nombre y objetivo -->
+            <div>
+              <h3 class="text-sm font-bold text-black dark:text-white leading-snug mb-0.5">{{ dieta.nombre }}</h3>
+              @if (dieta.objetivo) {
+                <p class="text-xs text-gray-400 dark:text-gray-500 line-clamp-1">{{ dieta.objetivo }}</p>
+              }
+            </div>
+
+            <!-- Macros pills -->
+            @if (dieta.calorias_dia_objetivo || dieta.proteinas_g_dia || dieta.carbohidratos_g_dia || dieta.grasas_g_dia) {
+              <div class="flex flex-wrap gap-1.5">
+                @if (dieta.calorias_dia_objetivo) {
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
+                    <i class="ri-fire-line text-xs"></i>{{ dieta.calorias_dia_objetivo | number:'1.0-0' }} kcal
+                  </span>
+                }
+                @if (dieta.proteinas_g_dia) {
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                    P {{ dieta.proteinas_g_dia | number:'1.0-0' }}g
+                  </span>
+                }
+                @if (dieta.carbohidratos_g_dia) {
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400">
+                    C {{ dieta.carbohidratos_g_dia | number:'1.0-0' }}g
+                  </span>
+                }
+                @if (dieta.grasas_g_dia) {
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                    G {{ dieta.grasas_g_dia | number:'1.0-0' }}g
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- ── Menú activo ──────────────────────────────────────────── -->
+            <div class="rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden">
+              <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#0a0e19] border-b border-gray-100 dark:border-[#172036]">
+                <i class="ri-calendar-2-line text-xs text-primary-500"></i>
+                <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Menú activo</span>
+                @if (menu) {
+                  <span class="ml-auto text-[11px] font-medium text-primary-500 bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded-full">
+                    Sem. {{ menu.semana_numero }}
+                  </span>
+                }
+              </div>
+
+              @if (menu) {
+                <div class="px-3 py-2.5">
+                  <p class="text-xs font-semibold text-black dark:text-white mb-1 truncate">{{ menu.nombre || ('Semana ' + menu.semana_numero) }}</p>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                      <i class="ri-calendar-line mr-0.5"></i>
+                      {{ formatDateShort(menu.fecha_inicio) }}
+                      @if (menu.fecha_inicio) {
+                        — {{ formatDateShort(addDays(menu.fecha_inicio, 6)) }}
+                      }
+                    </span>
+                    <span class="text-[11px] text-gray-400 dark:text-gray-500">
+                      {{ (dieta.menus?.length ?? 0) }} menú{{ (dieta.menus?.length ?? 0) !== 1 ? 's' : '' }} total
+                    </span>
+                  </div>
+                </div>
+              } @else {
+                <div class="px-3 py-3 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                  <i class="ri-add-circle-line text-sm text-gray-300 dark:text-gray-600"></i>
+                  Sin menú asignado aún
+                </div>
+              }
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="px-4 py-3 border-t border-gray-100 dark:border-[#172036] bg-gray-50/50 dark:bg-[#0a0e19]/40">
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+              <div class="text-xs text-gray-400 dark:text-gray-500">
+                <span>{{ formatDate(dieta.fecha_inicio) }}</span>
+                @if (dieta.estado === 'ACTIVA' && diasRest !== null) {
+                  <span class="ml-1.5 text-primary-500 font-medium">· {{ diasRest }}d restantes</span>
+                }
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="verDetalle(dieta)"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold border border-gray-200 dark:border-[#172036] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#172036] px-3 py-1.5 rounded-xl transition-all">
+                <i class="ri-eye-line"></i> Ver detalle
+              </button>
+              <button (click)="abrirMenuBuilder(dieta)"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold bg-primary-500 hover:bg-primary-600 text-white px-3 py-1.5 rounded-xl transition-all shadow-sm">
+                <i class="ri-edit-box-line"></i> Menu builder
+              </button>
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- ── Modal crear dieta ──────────────────────────────────────────────────────── -->
+@if (showDietaModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="showDietaModal = false"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl border border-gray-100 dark:border-[#172036] w-full max-w-md">
+
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#172036]">
+        <div>
+          <h3 class="text-base font-semibold text-black dark:text-white">Nueva dieta</h3>
+          <p class="text-xs text-gray-400 mt-0.5">Completa los datos para crear el plan</p>
+        </div>
+        <button (click)="showDietaModal = false" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] transition-all">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        @if (errorMsg) {
+          <div class="px-3 py-2 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm">
+            {{ errorMsg }}
+          </div>
+        }
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Paciente *</label>
+          <select [(ngModel)]="selectedPacienteId"
+            class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+            <option [value]="0">— Selecciona paciente —</option>
+            @for (p of pacientes; track p.id) {
+              <option [value]="p.id">{{ p.nombres }} {{ p.apellidos }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Nombre de la dieta *</label>
+          <input [(ngModel)]="dietaForm.nombre" type="text" placeholder="Ej. Plan hipocalórico mes 1"
+            class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Fecha inicio *</label>
+            <input [(ngModel)]="dietaForm.fecha_inicio" type="date"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Duración (días)</label>
+            <input [(ngModel)]="dietaForm.duracion_dias" type="number" min="1" max="365"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Comidas/día</label>
+            <input [(ngModel)]="dietaForm.num_comidas" type="number" min="1" max="10"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Calorías/día objetivo</label>
+            <input [(ngModel)]="dietaForm.calorias_dia_objetivo" type="number" min="0"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-sm text-black dark:text-white outline-none focus:border-primary-500">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="showDietaModal = false" class="px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button (click)="saveDieta()" [disabled]="isSubmitting"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 shadow-sm">
+          @if (isSubmitting) { <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> }
+          <i class="ri-save-3-line"></i> Crear dieta
+        </button>
+      </div>
+    </div>
+  </div>
+}

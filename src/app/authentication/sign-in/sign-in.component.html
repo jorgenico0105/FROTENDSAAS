@@ -1,0 +1,168 @@
+<div class="login-wrapper min-h-screen flex items-center justify-center relative overflow-hidden">
+
+  <!-- WebGL fluid background -->
+  <app-fluid-bg></app-fluid-bg>
+
+  <!-- Login Card -->
+  <div class="login-card relative z-10 w-full mx-4">
+
+    <!-- Top accent bar -->
+    <div class="login-accent-bar"></div>
+
+    <!-- Two-column layout: branding | form -->
+    <div class="login-inner">
+
+      <!-- Left: branding panel -->
+      <div class="login-brand">
+        <div class="brand-icon-wrap">
+          <i class="ri-hospital-fill brand-icon"></i>
+        </div>
+        <h1 class="brand-title">KOI</h1>
+        <p class="brand-desc">Sistema de Gestión Clínica Inteligente</p>
+
+        <div class="brand-features">
+          <div class="brand-feature">
+            <i class="ri-calendar-check-line"></i>
+            <span>Agenda y citas</span>
+          </div>
+          <div class="brand-feature">
+            <i class="ri-heart-pulse-line"></i>
+            <span>Historia clínica</span>
+          </div>
+          <div class="brand-feature">
+            <i class="ri-team-line"></i>
+            <span>Multi-clínica</span>
+          </div>
+          <div class="brand-feature">
+            <i class="ri-leaf-line"></i>
+            <span>Nutrición y bienestar</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: form panel -->
+      <div class="login-form-panel">
+
+        <!-- Error message -->
+        @if (errorMessage) {
+          <div class="login-error">
+            <i class="ri-error-warning-line"></i>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <!-- STEP 1: Credentials -->
+        @if (step === 'credentials') {
+          <div class="form-header">
+            <h2 class="form-title">Bienvenido</h2>
+            <p class="form-subtitle">Ingresa tus credenciales para continuar</p>
+          </div>
+
+          <form (ngSubmit)="onSubmitCredentials()" class="space-y-5">
+
+            <div class="field-group">
+              <label class="field-label">Correo electrónico</label>
+              <div class="field-wrap">
+                <i class="ri-mail-line field-icon"></i>
+                <input
+                  type="email"
+                  [(ngModel)]="username"
+                  name="email"
+                  class="field-input"
+                  placeholder="tu@correo.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Contraseña</label>
+              <div class="field-wrap">
+                <i class="ri-lock-password-line field-icon"></i>
+                <input
+                  [type]="isPasswordVisible ? 'text' : 'password'"
+                  [(ngModel)]="password"
+                  name="password"
+                  class="field-input field-input-pw"
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                  required
+                />
+                <button type="button" class="field-eye" (click)="togglePasswordVisibility()">
+                  <i [class]="isPasswordVisible ? 'ri-eye-line' : 'ri-eye-off-line'"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <label class="remember-label">
+                <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" class="remember-check" />
+                <span>Recordarme</span>
+              </label>
+              <a routerLink="/authentication/forgot-password" class="forgot-link">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="submit-btn" [disabled]="isLoading">
+              @if (!isLoading) {
+                <i class="ri-arrow-right-circle-line"></i>
+                <span>Iniciar Sesión</span>
+              } @else {
+                <span class="btn-spinner"></span>
+                <span>Verificando...</span>
+              }
+            </button>
+
+          </form>
+        }
+
+        <!-- STEP 2: Select Clinic -->
+        @if (step === 'selectClinic') {
+          <div class="form-header">
+            <h2 class="form-title">Selecciona tu Clínica</h2>
+            <p class="form-subtitle">Tu cuenta está asociada a múltiples centros</p>
+          </div>
+
+          <div class="clinic-list">
+            @for (clinica of clinicas; track clinica.id) {
+              <button
+                type="button"
+                class="clinic-item"
+                [class.selected]="selectedClinicaId === clinica.id"
+                (click)="onSelectClinica(clinica.id)"
+                [disabled]="isLoading"
+              >
+                <div class="clinic-avatar">
+                  <i class="ri-hospital-line"></i>
+                </div>
+                <div class="clinic-info">
+                  <span class="clinic-name">{{ clinica.nombre }}</span>
+                  @if (clinica.ciudad) {
+                    <span class="clinic-city">{{ clinica.ciudad }}</span>
+                  }
+                </div>
+                @if (selectedClinicaId === clinica.id && isLoading) {
+                  <span class="btn-spinner ml-auto"></span>
+                } @else {
+                  <i class="ri-arrow-right-s-line ml-auto clinic-arrow"></i>
+                }
+              </button>
+            }
+          </div>
+
+          <button type="button" class="back-btn" (click)="goBack()" [disabled]="isLoading">
+            <i class="ri-arrow-left-line"></i>
+            <span>Volver</span>
+          </button>
+        }
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <span>Sistema de Gestión Clínica · v1.0</span>
+    </div>
+
+  </div>
+</div>

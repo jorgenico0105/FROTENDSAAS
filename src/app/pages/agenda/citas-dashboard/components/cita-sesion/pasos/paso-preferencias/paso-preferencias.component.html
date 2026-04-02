@@ -1,0 +1,116 @@
+<div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+
+  <!-- Header -->
+  <div class="bg-primary-500 px-5 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <i class="ri-heart-3-line text-white text-base"></i>
+        <h4 class="font-semibold text-white text-sm">Preferencias alimentarias</h4>
+        <span class="text-white text-xs opacity-75">· Se guardan automáticamente</span>
+      </div>
+      @if (preferencias.length > 0) {
+        <span class="text-white text-xs font-bold opacity-75">{{ preferencias.length }} registrada{{ preferencias.length !== 1 ? 's' : '' }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="p-5 flex flex-col gap-4">
+
+    <!-- Leyenda de tipos -->
+    <div class="flex flex-wrap gap-2">
+      @for (tag of prefTags; track tag.tipo) {
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium"
+              [ngClass]="tag.activeClass">
+          <i [class]="tag.icon + ' text-xs'"></i> {{ tag.label }}
+        </span>
+      }
+    </div>
+
+    <!-- Buscador -->
+    <div class="relative">
+      <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+      <input type="text" [(ngModel)]="alimentoSearch" (input)="onAlimentoSearchInput()"
+             placeholder="Buscar alimento para etiquetar..."
+             class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all" />
+      @if (isLoadingAlimentos) {
+        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      }
+    </div>
+
+    <!-- Resultados de búsqueda -->
+    @if (!isLoadingAlimentos && alimentos.length > 0) {
+      <div class="rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden divide-y divide-gray-100 dark:divide-[#172036] max-h-72 overflow-y-auto">
+        @for (a of alimentos; track a.id) {
+          <div class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#0c1427] hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors">
+
+            <!-- Info del alimento -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <p class="text-sm font-semibold text-black dark:text-white truncate">{{ a.nombre }}</p>
+                @if (a.categoria) {
+                  <span class="text-[11px] text-gray-400 bg-gray-100 dark:bg-[#0a0e19] px-1.5 py-0.5 rounded-md flex-shrink-0">{{ a.categoria }}</span>
+                }
+              </div>
+              <p class="text-xs text-gray-400">
+                <span class="font-medium text-gray-500 dark:text-gray-400">{{ a.calorias }} kcal</span>
+                <span class="mx-1.5 text-gray-200 dark:text-gray-700">·</span>P {{ a.proteinas_g }}g
+                <span class="mx-1.5 text-gray-200 dark:text-gray-700">·</span>C {{ a.carbohidratos_g }}g
+                <span class="mx-1.5 text-gray-200 dark:text-gray-700">·</span>G {{ a.grasas_g }}g
+              </p>
+            </div>
+
+            <!-- Botones de preferencia (icono) -->
+            <div class="flex gap-1 flex-shrink-0">
+              @for (tag of prefTags; track tag.tipo) {
+                <button (click)="togglePreferencia(a, tag.tipo)"
+                        [disabled]="savingPrefId === a.id"
+                        [title]="tag.label"
+                        class="w-8 h-8 rounded-lg border text-sm transition-all disabled:opacity-40 flex items-center justify-center"
+                        [ngClass]="tipoPreferencia(a.id) === tag.tipo
+                          ? tag.activeClass
+                          : 'border-gray-200 dark:border-[#172036] text-gray-400 hover:bg-gray-100 dark:hover:bg-[#0a0e19] hover:text-gray-600'">
+                  <i [class]="tag.icon"></i>
+                </button>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Preferencias registradas -->
+    @if (preferencias.length > 0) {
+      <div class="pt-3 border-t border-gray-100 dark:border-[#172036]">
+        <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Etiquetados</p>
+        <div class="flex flex-wrap gap-2">
+          @for (pref of preferencias; track pref.id) {
+            <span class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg text-xs font-medium border"
+                  [ngClass]="getPrefChipClass(pref.tipo)">
+              <i [class]="getTipoIcon(pref.tipo) + ' text-xs'"></i>
+              {{ pref.nombre_libre ?? ('Alimento #' + pref.alimento_id) }}
+              <span class="opacity-50 mx-0.5">·</span>
+              <span class="opacity-70">{{ getTipoLabel(pref.tipo) }}</span>
+              <button (click)="removePreferencia(pref)"
+                      class="ml-0.5 w-4 h-4 rounded flex items-center justify-center hover:opacity-60 transition-all">
+                <i class="ri-close-line text-xs"></i>
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Estado vacío -->
+    @if (preferencias.length === 0 && !isLoadingPreferencias && alimentos.length === 0) {
+      <div class="py-6 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-[#0a0e19] flex items-center justify-center mx-auto mb-3">
+          <i class="ri-heart-3-line text-xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <p class="text-sm text-gray-400 dark:text-gray-500">Busca un alimento y etiquétalo</p>
+        <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">Mínimo 2 caracteres para buscar</p>
+      </div>
+    }
+
+  </div>
+</div>

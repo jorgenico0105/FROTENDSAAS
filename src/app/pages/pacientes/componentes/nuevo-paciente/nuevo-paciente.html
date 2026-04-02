@@ -1,0 +1,105 @@
+@if (isOpen) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="close()"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100 dark:border-[#172036] max-h-[90vh] flex flex-col">
+
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+        <h3 class="font-semibold text-black dark:text-white">{{ isEditing ? 'Editar Paciente' : 'Nuevo Paciente' }}</h3>
+        <button (click)="close()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto flex-1">
+        @if (errorMsg) {
+          <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 text-sm">{{ errorMsg }}</div>
+        }
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombres *</label>
+            <input [(ngModel)]="form.nombres" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Nombres">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Apellidos *</label>
+            <input [(ngModel)]="form.apellidos" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Apellidos">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Documento</label>
+            <input [(ngModel)]="form.numero_documento" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Nro. de documento">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de Nacimiento</label>
+            <input [(ngModel)]="form.fecha_nacimiento" type="date"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sexo</label>
+            <select [(ngModel)]="form.sexo"
+                    class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+              <option value="">— Seleccionar —</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de Sangre</label>
+            <select [(ngModel)]="form.tipo_sangre"
+                    class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+              <option value="">— Seleccionar —</option>
+              <option value="A+">A+</option><option value="A-">A-</option>
+              <option value="B+">B+</option><option value="B-">B-</option>
+              <option value="AB+">AB+</option><option value="AB-">AB-</option>
+              <option value="O+">O+</option><option value="O-">O-</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+            <input [(ngModel)]="form.telefono" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Teléfono">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo</label>
+            <input [(ngModel)]="form.correo" type="email"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="correo@ejemplo.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contacto Emergencia</label>
+            <input [(ngModel)]="form.contacto_emergencia" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Nombre del contacto">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tel. Emergencia</label>
+            <input [(ngModel)]="form.telefono_emergencia" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Teléfono de emergencia">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+            <input [(ngModel)]="form.direccion" type="text"
+                   class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                   placeholder="Dirección completa">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="close()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancelar</button>
+        <button (click)="save()" [disabled]="isLoading"
+                class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400 disabled:opacity-50">
+          {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear Paciente') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

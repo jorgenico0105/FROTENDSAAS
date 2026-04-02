@@ -1,0 +1,124 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-black dark:text-white">Roles y Permisos</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestión de roles del sistema y sus transacciones</p>
+    </div>
+    <button (click)="openCreate()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-400 transition-all text-sm font-medium">
+      <i class="ri-add-line text-lg"></i> Nuevo Rol
+    </button>
+  </div>
+
+  @if (successMsg) {
+    <div class="mb-4 p-3 rounded-lg bg-success-50 dark:bg-success-900/20 text-success-600 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i>{{ successMsg }}
+    </div>
+  }
+
+  <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-[#0a0e19]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descripción</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-[#172036]">
+          @for (rol of roles; track rol.id) {
+            <tr class="hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors">
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">#{{ rol.id }}</td>
+              <td class="px-4 py-3 font-medium text-black dark:text-white">
+                <span class="inline-flex items-center gap-2">
+                  <i class="ri-shield-user-line text-primary-500"></i>{{ rol.nombre }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ rol.descripcion || '—' }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <button (click)="openPermisos(rol)" class="p-1.5 text-warning-500 hover:bg-warning-50 dark:hover:bg-warning-900/20 rounded transition-colors" title="Gestionar permisos">
+                    <i class="ri-key-2-line text-base"></i>
+                  </button>
+                  <button (click)="openEdit(rol)" class="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors" title="Editar">
+                    <i class="ri-pencil-line text-base"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading) {
+              <tr>
+                <td colspan="4" class="px-4 py-12 text-center text-gray-400 dark:text-gray-600">No hay roles registrados</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rol -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-[#172036]">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+        <h3 class="font-semibold text-black dark:text-white">{{ isEditing ? 'Editar Rol' : 'Nuevo Rol' }}</h3>
+        <button (click)="closeModal()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded"><i class="ri-close-line text-xl"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        @if (errorMsg) {
+          <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 text-sm">{{ errorMsg }}</div>
+        }
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+          <input [(ngModel)]="form.nombre" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="nombre_rol">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
+          <input [(ngModel)]="form.descripcion" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Descripción del rol">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">Cancelar</button>
+        <button (click)="save()" [disabled]="isLoading" class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400 disabled:opacity-50">
+          {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Permisos -->
+@if (showPermisosModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closePermisosModal()"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-[#172036] max-h-[80vh] flex flex-col">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+        <h3 class="font-semibold text-black dark:text-white">Permisos — {{ selectedRol?.nombre }}</h3>
+        <button (click)="closePermisosModal()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded"><i class="ri-close-line text-xl"></i></button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Selecciona las transacciones (secciones del menú) que tendrá acceso este rol:</p>
+        <div class="space-y-2">
+          @for (t of transacciones; track t.id) {
+            <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+              [ngClass]="isTransaccionSelected(t.id) ? 'border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/10' : 'border-gray-100 dark:border-[#172036] hover:bg-gray-50 dark:hover:bg-[#0a0e19]'">
+              <input type="checkbox" [checked]="isTransaccionSelected(t.id)" (change)="toggleTransaccion(t.id)" class="w-4 h-4 accent-primary-500">
+              <i [class]="'ri-' + (t.icono || 'menu-line') + ' text-primary-500 text-base'"></i>
+              <span class="text-sm text-black dark:text-white">{{ t.nombre }}</span>
+              <span class="ml-auto text-xs text-gray-400 dark:text-gray-600">{{ t.ruta || t.tipo }}</span>
+            </label>
+          }
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+        <button (click)="closePermisosModal()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancelar</button>
+        <button (click)="savePermisos()" class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400">Guardar Permisos</button>
+      </div>
+    </div>
+  </div>
+}

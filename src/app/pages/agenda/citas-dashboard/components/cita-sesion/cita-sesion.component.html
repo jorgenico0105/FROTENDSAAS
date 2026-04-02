@@ -1,0 +1,291 @@
+<div class="max-w-4xl mx-auto space-y-4">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PRIMERA CONSULTA (tipo_cita_id === 2) → Wizard 3 pasos
+  ═══════════════════════════════════════════════════════════════════════ -->
+  @if (esPrimeraConsulta) {
+
+    <!-- ── Info de la cita ─────────────────────────────────────────────── -->
+    <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] p-5 shadow-sm">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-sm shadow-sm"
+             [ngClass]="pacienteId > 0
+               ? 'bg-gradient-to-br from-secondary-400 to-secondary-600 text-white'
+               : 'bg-gray-100 dark:bg-gray-800 text-gray-400'">
+          @if (cita.paciente) {
+            {{ cita.paciente.nombres.charAt(0) }}{{ cita.paciente.apellidos.charAt(0) }}
+          } @else { ? }
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-black dark:text-white text-base">{{ nombrePaciente() }}</h3>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-xs bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 px-2 py-0.5 rounded-full font-medium">
+              <i class="ri-user-star-line mr-0.5"></i>Primera consulta
+            </span>
+            @if (cita.motivo) {
+              <span class="text-xs text-gray-400 dark:text-gray-500 italic truncate">{{ cita.motivo }}</span>
+            }
+          </div>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="text-sm font-semibold text-black dark:text-white">{{ cita.hora.substring(0,5) }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ cita.duracion_min }} min</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Crear paciente (cita anónima) ────────────────────────────────── -->
+    @if (cita.id_paciente === 0 && pacienteId === 0) {
+      <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-warning-200 dark:border-warning-800/40 p-8 text-center shadow-sm">
+        <div class="w-16 h-16 rounded-2xl bg-warning-50 dark:bg-warning-900/20 flex items-center justify-center mx-auto mb-4">
+          <i class="ri-user-question-line text-3xl text-warning-500"></i>
+        </div>
+        <h4 class="font-semibold text-black dark:text-white mb-1 text-base">Cita sin paciente asignado</h4>
+        <p class="text-sm text-gray-400 dark:text-gray-500 mb-5 max-w-xs mx-auto">Para registrar la primera consulta debes vincular un paciente primero</p>
+        <button (click)="isCrearPacienteOpen = true"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold transition-all shadow-sm">
+          <i class="ri-user-add-line"></i> Crear y vincular paciente
+        </button>
+        <div class="mt-4">
+          <button (click)="finalizarSesion()"
+                  class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all">
+            Omitir y marcar como atendida
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── Wizard (sólo si hay paciente) ────────────────────────────────── -->
+    @if (pacienteId > 0) {
+
+      <!-- ── Step indicator (4 pasos) ──────────────────────────────────── -->
+      <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] px-6 py-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          @for (s of stepsFirstVisit; track s; let idx = $index) {
+            <div class="flex items-center flex-1">
+              <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all"
+                     [ngClass]="paso > s
+                       ? 'bg-success-500 text-white shadow-sm'
+                       : paso === s
+                         ? 'bg-secondary-500 text-white shadow-sm ring-4 ring-secondary-500/20'
+                         : 'bg-gray-100 dark:bg-[#0a0e19] text-gray-400'">
+                  @if (paso > s) { <i class="ri-check-line text-sm"></i> } @else { {{ s }} }
+                </div>
+                <span class="text-xs font-medium hidden sm:block"
+                      [ngClass]="paso === s
+                        ? 'text-secondary-600 dark:text-secondary-400'
+                        : paso > s
+                          ? 'text-success-600 dark:text-success-400'
+                          : 'text-gray-400 dark:text-gray-500'">
+                  {{ labelsFirstVisit[idx] }}
+                </span>
+              </div>
+              @if (s < 4) {
+                <div class="flex-1 h-0.5 mx-2 mb-4 rounded-full transition-all"
+                     [ngClass]="paso > s ? 'bg-success-400' : 'bg-gray-200 dark:bg-[#172036]'"></div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Alert -->
+      @if (errorMsg) {
+        <div class="px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+          <i class="ri-error-warning-line text-base flex-shrink-0"></i> {{ errorMsg }}
+        </div>
+      }
+
+      <!-- ── Pasos ──────────────────────────────────────────────────────── -->
+      <app-paso-historia
+        [class.hidden]="paso !== 1"
+        [pacienteId]="pacienteId"
+        [medicoId]="medicoId"
+        (guardadoOk)="onHistoriaGuardada()"
+        (guardadoError)="onHistoriaError($event)">
+      </app-paso-historia>
+
+      <app-paso-mediciones
+        [class.hidden]="paso !== 2"
+        [activo]="paso === 2"
+        [pacienteId]="pacienteId"
+        [medicoId]="medicoId"
+        (guardadoOk)="onMedicionesGuardadas()"
+        (guardadoError)="onMedicionesError($event)"
+        (caloriasCalculadas)="onCaloriasCalculadas($event)"
+        (datosNutricionales)="onDatosNutricionales($event)">
+      </app-paso-mediciones>
+
+      <app-paso-dieta
+        [class.hidden]="paso !== 3"
+        [activo]="paso === 3"
+        [pacienteId]="pacienteId"
+        [medicoId]="medicoId"
+        [(caloriasObjetivo)]="caloriasObjetivo"
+        [datosNutricionales]="datosNutricion"
+        (guardadoOk)="onDietaGuardada($event)"
+        (guardadoError)="onDietaError($event)">
+      </app-paso-dieta>
+
+      <app-paso-preferencias
+        [class.hidden]="paso !== 3"
+        [pacienteId]="pacienteId">
+      </app-paso-preferencias>
+
+      <!-- ── Paso 4: Imágenes del paciente ─────────────────────────────── -->
+      @if (paso === 4) {
+        <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] shadow-sm overflow-hidden">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#172036]">
+            <div>
+              <h3 class="text-base font-semibold text-black dark:text-white">Imágenes del paciente</h3>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Sube fotos de evolución, antropometría o documentos visuales</p>
+            </div>
+            <label for="imagenCitaInputEl"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-all shadow-sm"
+              [ngClass]="isUploadingImagen
+                ? 'bg-gray-100 dark:bg-[#172036] text-gray-400 cursor-not-allowed'
+                : 'bg-primary-500 hover:bg-primary-600 text-white'">
+              @if (isUploadingImagen) {
+                <span class="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                Subiendo...
+              } @else {
+                <i class="ri-image-add-line"></i> Subir imagen
+              }
+            </label>
+            <input #imagenCitaInput id="imagenCitaInputEl" type="file" accept="image/*" class="hidden"
+              (change)="onImagenCitaChange($event)">
+          </div>
+
+          <div class="p-6">
+            @if (uploadedImages.length === 0) {
+              <!-- Drop hint -->
+              <div class="border-2 border-dashed border-gray-200 dark:border-[#172036] rounded-2xl py-12 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-3">
+                  <i class="ri-image-line text-2xl text-primary-400"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sin imágenes aún</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">Haz clic en "Subir imagen" para añadir fotos del paciente</p>
+                <label for="imagenCitaInputEl"
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all">
+                  <i class="ri-image-add-line"></i> Seleccionar archivo
+                </label>
+              </div>
+            } @else {
+              <!-- Grid de imágenes subidas -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                @for (img of uploadedImages; track img.id) {
+                  <div class="group relative rounded-xl overflow-hidden border border-gray-100 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] aspect-square">
+                    <img [src]="imageUrl(img.url_archivo)" alt="Imagen paciente" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all flex items-end p-2">
+                      <span class="text-[10px] text-white/80">{{ img.nombre_archivo }}</span>
+                    </div>
+                    <!-- Check badge -->
+                    <div class="absolute top-1.5 right-1.5">
+                      <div class="w-5 h-5 rounded-full bg-success-500 flex items-center justify-center shadow">
+                        <i class="ri-check-line text-white text-[10px]"></i>
+                      </div>
+                    </div>
+                  </div>
+                }
+                <!-- Añadir más -->
+                <label for="imagenCitaInputEl"
+                  class="flex flex-col items-center justify-center aspect-square rounded-xl border-2 border-dashed border-gray-200 dark:border-[#172036] cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/40 dark:hover:bg-primary-900/10 transition-all group">
+                  <i class="ri-image-add-line text-2xl text-gray-300 dark:text-gray-600 group-hover:text-primary-400 transition-colors"></i>
+                  <span class="text-[10px] text-gray-400 dark:text-gray-500 mt-1 group-hover:text-primary-500 transition-colors">Añadir más</span>
+                </label>
+              </div>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">
+                {{ uploadedImages.length }} {{ uploadedImages.length === 1 ? 'imagen subida' : 'imágenes subidas' }}
+              </p>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── Barra de navegación ────────────────────────────────────────── -->
+      <div class="flex items-center justify-between bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] px-5 py-3.5 shadow-sm">
+        <div class="flex items-center gap-3">
+          @if (paso === 1) {
+            <button (click)="omitirHistoria()"
+                    class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all flex items-center gap-1.5">
+              <i class="ri-skip-right-line"></i> Omitir formulario
+            </button>
+          }
+          @if (paso > 1) {
+            <button (click)="irAnterior()"
+                    class="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#0a0e19]">
+              <i class="ri-arrow-left-line"></i> Anterior
+            </button>
+          }
+          @if (paso === 2) {
+            <button (click)="omitirMediciones()"
+                    class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all flex items-center gap-1.5">
+              <i class="ri-skip-right-line"></i> Omitir
+            </button>
+          }
+          @if (paso === 3) {
+            <button (click)="omitirDieta()"
+                    class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all flex items-center gap-1.5">
+              <i class="ri-skip-right-line"></i> Omitir dieta
+            </button>
+          }
+          @if (paso === 4) {
+            <button (click)="finalizarSesion()" [disabled]="isFinalizando"
+                    class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all flex items-center gap-1.5">
+              <i class="ri-skip-right-line"></i> Omitir imágenes
+            </button>
+          }
+        </div>
+
+        @if (paso < 4) {
+          <button (click)="irASiguiente()"
+                  [disabled]="isNavBusy"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-secondary-500 hover:bg-secondary-600 text-white transition-all disabled:opacity-50 shadow-sm">
+            @if (isNavBusy) {
+              <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            }
+            @if (navShowSave) {
+              <i class="ri-save-3-line"></i> Guardar y siguiente
+            } @else {
+              Siguiente <i class="ri-arrow-right-line"></i>
+            }
+          </button>
+        }
+
+        @if (paso === 4) {
+          <button (click)="finalizarSesion()" [disabled]="isFinalizando || isNavBusy"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-success-500 hover:bg-success-600 text-white transition-all disabled:opacity-50 shadow-sm">
+            @if (isFinalizando || isNavBusy) {
+              <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            }
+            <i class="ri-checkbox-circle-line"></i> Finalizar primera consulta
+          </button>
+        }
+      </div>
+
+    }
+
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CONSULTA DE SEGUIMIENTO (tipo_cita_id !== 2) → Vista completa paciente
+  ═══════════════════════════════════════════════════════════════════════ -->
+  @if (!esPrimeraConsulta) {
+    <app-sesion-seguimiento
+      [cita]="cita"
+      [sesion]="sesion"
+      [medicoId]="medicoId"
+      (sesionCompletada)="sesionCompletada.emit($event)">
+    </app-sesion-seguimiento>
+  }
+
+</div>
+
+<!-- Modal crear paciente -->
+<app-nuevo-paciente
+  [isOpen]="isCrearPacienteOpen"
+  (closed)="isCrearPacienteOpen = false"
+  (pacienteGuardado)="onPacienteCreado($event)">
+</app-nuevo-paciente>

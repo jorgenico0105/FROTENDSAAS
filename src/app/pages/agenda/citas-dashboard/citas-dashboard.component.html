@@ -1,0 +1,124 @@
+<div class="p-4 md:p-6">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-black dark:text-white">
+        @if (vista === 'lista')      { Agenda de Citas }
+        @if (vista === 'calendario') { Calendario }
+        @if (vista === 'sesion')     { Sesión Clínica }
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        @if (vista === 'lista')      { Gestiona y filtra tus citas }
+        @if (vista === 'calendario') { Vista mensual }
+        @if (vista === 'sesion' && sesionCita) {
+          {{ sesionCita.tipo_cita?.nombre ?? 'Consulta' }} · {{ sesionCita.hora.substring(0,5) }}
+        }
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      @if (vista === 'sesion') {
+        <button (click)="setVista('lista')"
+                class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#15203c]">
+          <i class="ri-arrow-left-line"></i> Volver
+        </button>
+      }
+
+      @if (vista === 'lista' || vista === 'calendario') {
+        <!-- Toggle lista / calendario -->
+        <div class="flex items-center bg-gray-100 dark:bg-[#0a0e19] rounded-xl p-1 gap-1">
+          <button (click)="setVista('lista')"
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                  [ngClass]="vista === 'lista'
+                    ? 'bg-white dark:bg-[#0c1427] text-black dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'">
+            <i class="ri-list-unordered mr-1.5"></i>Lista
+          </button>
+          <button (click)="setVista('calendario')"
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                  [ngClass]="vista === 'calendario'
+                    ? 'bg-white dark:bg-[#0c1427] text-black dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'">
+            <i class="ri-calendar-2-line mr-1.5"></i>Calendario
+          </button>
+        </div>
+
+        <button (click)="abrirNuevaCita()"
+                class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
+          <i class="ri-calendar-add-line text-base"></i>
+          <span class="hidden sm:inline">Nueva Cita</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Mensajes globales ────────────────────────────────────────────────── -->
+  @if (successMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+      <i class="ri-checkbox-circle-line"></i> {{ successMsg }}
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+      <i class="ri-error-warning-line"></i> {{ errorMsg }}
+    </div>
+  }
+
+  <!-- ── Vistas ───────────────────────────────────────────────────────────── -->
+
+  @if (vista === 'lista') {
+    <app-citas-lista
+      [citas]="citas"
+      [isLoading]="isLoading"
+      [totalItems]="totalItems"
+      [statHoy]="statHoy"
+      [statPendientes]="statPendientes"
+      [statConfirmadas]="statConfirmadas"
+      [statAtendidas]="statAtendidas"
+      (confirmar)="onConfirmar($event)"
+      (cancelar)="onCancelar($event)"
+      (iniciarSesion)="onIniciarSesion($event)"
+      (eliminar)="onEliminar($event)">
+    </app-citas-lista>
+  }
+
+  @if (vista === 'calendario') {
+    <app-citas-calendario
+      [medicoId]="medicoId"
+      [clinicaId]="clinicaId"
+      (nuevaCitaFecha)="abrirNuevaCita($event)"
+      (iniciarSesion)="onIniciarSesion($event)">
+    </app-citas-calendario>
+  }
+
+  @if (isSesionLoading) {
+    <div class="flex flex-col items-center justify-center py-24 gap-3">
+      <div class="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm text-gray-400 dark:text-gray-500">Iniciando sesión clínica...</p>
+    </div>
+  }
+
+  @if (vista === 'sesion' && sesionCita && !isSesionLoading) {
+    <app-cita-sesion
+      [cita]="sesionCita"
+      [sesion]="sesionActiva"
+      [medicoId]="medicoId"
+      (back)="setVista('lista')"
+      (sesionCompletada)="onSesionCompletada($event)"
+      (citaActualizada)="onCitaActualizada($event)">
+    </app-cita-sesion>
+  }
+
+</div>
+
+<!-- ── Modal nueva cita ──────────────────────────────────────────────────── -->
+<app-nueva-cita-modal
+  [isOpen]="isNuevaCitaOpen"
+  [tiposCita]="tiposCita"
+  [medicoId]="medicoId"
+  [clinicaId]="clinicaId"
+  [initialFecha]="initialFecha"
+  (closed)="isNuevaCitaOpen = false"
+  (citaCreada)="onCitaCreada($event)">
+</app-nueva-cita-modal>

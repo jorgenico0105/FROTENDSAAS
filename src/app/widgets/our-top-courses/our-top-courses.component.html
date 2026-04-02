@@ -1,0 +1,144 @@
+<div class="trezo-card bg-secondary-500 p-[20px] md:p-[25px] rounded-md relative overflow-hidden z-[2]">
+    <div class="trezo-card-header mb-[20px] flex items-center justify-between">
+        <div class="trezo-card-title">
+            <h5 class="!mb-0 !text-white">
+                Our Top Courses
+            </h5>
+        </div>
+    </div>
+    <div class="trezo-card-content relative" id="ourTopCoursesSlides">
+        <owl-carousel-o [options]="ourTopCoursesSlides">
+            <ng-template carouselSlide>
+                <div class="flex items-center">
+                    <div class="w-[120px] rounded-md shrink">
+                        <img src="images/courses/course1.jpg" alt="course-image" class="rounded-md">
+                    </div>
+                    <div class="grow-0 ltr:ml-[15px] rtl:mr-[15px]">
+                        <span class="block text-white">
+                            Basic Python
+                        </span>
+                        <div class="font-semibold text-white text-[20px] mt-[3px]">
+                            $35.99
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-[10px]">
+                    <span class="block font-semibold text-white text-md mb-[2px]">
+                        Course content
+                    </span>
+                    <ul class="text-white">
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            10 sections
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            45 lectures
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            25h 50m
+                        </li>
+                    </ul>
+                    <div class="ltr:text-right rtl:text-left">
+                        <a routerLink="/dashboard/lms-page/course-details" class="inline-block rounded-md mt-[18px] px-[13px] py-[6px] text-white border border-white transition-all hover:bg-white hover:text-black">
+                            <span class="inline-block relative ltr:pl-[22px] rtl:pr-[22px]">
+                                <i class="material-symbols-outlined !text-[22px] absolute ltr:-left-[4px] rtl:-right-[4px] top-1/2 -translate-y-1/2">
+                                    add
+                                </i>
+                                View Details
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template carouselSlide>
+                <div class="flex items-center">
+                    <div class="w-[120px] rounded-md shrink">
+                        <img src="images/courses/course2.jpg" alt="course-image" class="rounded-md">
+                    </div>
+                    <div class="grow-0 ltr:ml-[15px] rtl:mr-[15px]">
+                        <span class="block text-white">
+                            HTML Developer
+                        </span>
+                        <div class="font-semibold text-white text-[20px] mt-[3px]">
+                            $49.99
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-[10px]">
+                    <span class="block font-semibold text-white text-md mb-[2px]">
+                        Course content
+                    </span>
+                    <ul class="text-white">
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            12 sections
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            54 lectures
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            35h 40m
+                        </li>
+                    </ul>
+                    <div class="ltr:text-right rtl:text-left">
+                        <a routerLink="/dashboard/lms-page/course-details" class="inline-block rounded-md mt-[18px] px-[13px] py-[6px] text-white border border-white transition-all hover:bg-white hover:text-black">
+                            <span class="inline-block relative ltr:pl-[22px] rtl:pr-[22px]">
+                                <i class="material-symbols-outlined !text-[22px] absolute ltr:-left-[4px] rtl:-right-[4px] top-1/2 -translate-y-1/2">
+                                    add
+                                </i>
+                                View Details
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template carouselSlide>
+                <div class="flex items-center">
+                    <div class="w-[120px] rounded-md shrink">
+                        <img src="images/courses/course3.jpg" alt="course-image" class="rounded-md">
+                    </div>
+                    <div class="grow-0 ltr:ml-[15px] rtl:mr-[15px]">
+                        <span class="block text-white">
+                            Basic Angular
+                        </span>
+                        <div class="font-semibold text-white text-[20px] mt-[3px]">
+                            $55.99
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-[10px]">
+                    <span class="block font-semibold text-white text-md mb-[2px]">
+                        Course content
+                    </span>
+                    <ul class="text-white">
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            12 sections
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            <span class="top-1/2 -translate-y-1/2 absolute w-[4px] h-[4px] ltr:-right-[11px] rtl:-left-[11px] mt-px rounded-full bg-white"></span>
+                            48 lectures
+                        </li>
+                        <li class="inline-block relative ltr:mr-[13px] rtl:ml-[13px] ltr:last:mr-0 last:rtl:ml-0">
+                            29h 30m
+                        </li>
+                    </ul>
+                    <div class="ltr:text-right rtl:text-left">
+                        <a routerLink="/dashboard/lms-page/course-details" class="inline-block rounded-md mt-[18px] px-[13px] py-[6px] text-white border border-white transition-all hover:bg-white hover:text-black">
+                            <span class="inline-block relative ltr:pl-[22px] rtl:pr-[22px]">
+                                <i class="material-symbols-outlined !text-[22px] absolute ltr:-left-[4px] rtl:-right-[4px] top-1/2 -translate-y-1/2">
+                                    add
+                                </i>
+                                View Details
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </ng-template>
+        </owl-carousel-o>
+    </div>
+    <div class="absolute -top-[80px] -z-[1] ltr:-right-[80px] rtl:-left-[80px] w-[169px] h-[169px] rounded-full bg-secondary-600"></div>
+    <div class="absolute -top-[75px] -z-[2] ltr:-right-[75px] rtl:-left-[75px] w-[169px] h-[169px] rounded-full bg-secondary-400"></div>
+</div>

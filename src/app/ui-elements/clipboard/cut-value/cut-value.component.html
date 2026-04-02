@@ -1,0 +1,6 @@
+<div class="relative">
+    <input type="text" class="h-[55px] rounded-md text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] px-[20px] block w-full outline-0 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-primary-500" [(ngModel)]="copyText" #inputField />
+    <button (click)="cutToClipboard(inputField)" class="absolute text-lg ltr:right-[20px] rtl:left-[20px] bottom-[14px] transition-all hover:text-primary-500">
+        <i [ngClass]="{'ri-check-line': copied, 'ri-scissors-line': !copied}"></i>
+    </button>
+</div>

@@ -1,0 +1,15 @@
+<div class="relative inline-block">
+    <button 
+        type="button" 
+        class="inline-block py-[10px] px-[30px] bg-primary-500 text-white transition-all hover:bg-primary-400 rounded-md border border-primary-500 hover:border-primary-400 custom-popover"
+        (click)="togglePopover($event, 'Hey, Hello World!')"
+        [attr.data-text]="'Hey, Hello World!'"
+    >
+        Toggle Popover
+    </button>
+    @if (popoverVisible) {
+        <span class="popover-text bottom-popover">
+            {{ popoverText }}
+        </span>
+    }
+</div>

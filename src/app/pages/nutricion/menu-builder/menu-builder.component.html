@@ -228,9 +228,13 @@
                           class="rounded-xl border-2 min-h-[72px] p-1.5 transition-all cursor-pointer"
                           [ngClass]="cell.isDragOver
                             ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20 scale-[1.02]'
-                            : cell.alimentos.length > 0
-                              ? 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] hover:border-primary-300 dark:hover:border-primary-800'
-                              : 'border-dashed border-gray-200 dark:border-[#1e2e44] hover:border-primary-300 dark:hover:border-primary-800'"
+                            : cellStatus(cell) === 'ok'
+                              ? 'border-success-400 dark:border-success-600 bg-white dark:bg-[#0c1427] hover:border-success-300'
+                              : cellStatus(cell) === 'warn'
+                                ? 'border-danger-400 dark:border-danger-600 bg-white dark:bg-[#0c1427] hover:border-danger-300'
+                                : cell.alimentos.length > 0
+                                  ? 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] hover:border-primary-300 dark:hover:border-primary-800'
+                                  : 'border-dashed border-gray-200 dark:border-[#1e2e44] hover:border-primary-300 dark:hover:border-primary-800'"
                           (dragover)="onDragOver($event, cell)"
                           (dragleave)="onDragLeave(cell)"
                           (drop)="onDrop($event, cell)"
@@ -284,10 +288,18 @@
 
                           @if (cell.alimentos.length > 0) {
                             <div class="mt-1 pt-1 border-t border-gray-100 dark:border-[#172036] flex gap-2 text-[10px] text-gray-400">
-                              <span class="font-semibold text-orange-500">{{ cell.calorias | number:'1.0-0' }}</span>
-                              <span class="text-blue-400">P{{ cell.proteinas_g | number:'1.0-0' }}</span>
-                              <span class="text-amber-400">C{{ cell.carbohidratos_g | number:'1.0-0' }}</span>
-                              <span class="text-orange-300">G{{ cell.grasas_g | number:'1.0-0' }}</span>
+                              <span class="font-semibold text-orange-500">{{ cell.calorias | number:'1.0-0' }}
+                                @if (cell.caloriasTarget != null) {<span class="text-gray-300 dark:text-gray-700">/{{ cell.caloriasTarget | number:'1.0-0' }}</span>}
+                              </span>
+                              <span class="text-blue-400">P{{ cell.proteinas_g | number:'1.0-0' }}
+                                @if (cell.proteinasTarget != null) {<span class="text-gray-300 dark:text-gray-700">/{{ cell.proteinasTarget | number:'1.0-0' }}</span>}
+                              </span>
+                              <span class="text-amber-400">C{{ cell.carbohidratos_g | number:'1.0-0' }}
+                                @if (cell.carbohidratosTarget != null) {<span class="text-gray-300 dark:text-gray-700">/{{ cell.carbohidratosTarget | number:'1.0-0' }}</span>}
+                              </span>
+                              <span class="text-orange-300">G{{ cell.grasas_g | number:'1.0-0' }}
+                                @if (cell.grasasTarget != null) {<span class="text-gray-300 dark:text-gray-700">/{{ cell.grasasTarget | number:'1.0-0' }}</span>}
+                              </span>
                             </div>
                           }
                         </div>

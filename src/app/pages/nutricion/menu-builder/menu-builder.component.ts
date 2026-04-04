@@ -35,6 +35,10 @@ interface GridCell {
   carbohidratos_g: number;
   grasas_g: number;
   isDragOver: boolean;
+  caloriasTarget?: number;
+  proteinasTarget?: number;
+  carbohidratosTarget?: number;
+  grasasTarget?: number;
 }
 
 const ALL_DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -174,6 +178,10 @@ export class MenuBuilderComponent implements OnInit {
       const cell = this.getCell(detalle.dia_numero, detalle.tipo_comida_id);
       if (!cell) continue;
       cell.detalle_id = detalle.id;
+      cell.caloriasTarget = detalle.calorias_total;
+      cell.proteinasTarget = detalle.proteinas_g_total;
+      cell.carbohidratosTarget = detalle.carbohidratos_g_total;
+      cell.grasasTarget = detalle.grasas_g_total;
       for (const da of detalle.alimentos ?? []) {
         const alim = da.Alimento;
         if (!alim) continue;
@@ -382,6 +390,21 @@ export class MenuBuilderComponent implements OnInit {
           (a.categoria || '').toLowerCase().includes(q)
         )
       : [...this.alimentos];
+  }
+
+  // ─── Macro comparison ─────────────────────────────────────────────────────
+
+  cellStatus(cell: GridCell): 'ok' | 'warn' | 'empty' {
+    if (cell.alimentos.length === 0) return 'empty';
+    if (cell.tipo_comida_id === 2 || cell.tipo_comida_id === 4) return 'ok';
+    const hasTargets = cell.proteinasTarget != null || cell.carbohidratosTarget != null;
+    if (!hasTargets) return 'empty';
+    const TOLERANCE = 10;
+    const within = (real: number, target?: number) =>
+      target == null || Math.abs(real - target) <= TOLERANCE;
+    const ok = within(cell.proteinas_g, cell.proteinasTarget)
+      && within(cell.carbohidratos_g, cell.carbohidratosTarget);
+    return ok ? 'ok' : 'warn';
   }
 
   // ─── Cell modal ───────────────────────────────────────────────────────────

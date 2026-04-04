@@ -8,13 +8,14 @@ import { CitasListaComponent }      from './components/citas-lista/citas-lista.c
 import { CitasCalendarioComponent } from './components/citas-calendario/citas-calendario.component';
 import { CitaSesionComponent }      from './components/cita-sesion/cita-sesion.component';
 import { NuevaCitaModalComponent }  from './components/nueva-cita-modal/nueva-cita-modal.component';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 type Vista = 'lista' | 'calendario' | 'sesion';
 
 @Component({
   selector: 'app-citas-dashboard',
   standalone: true,
-  imports: [NgClass, CitasListaComponent, CitasCalendarioComponent, CitaSesionComponent, NuevaCitaModalComponent],
+  imports: [NgClass, CitasListaComponent, CitasCalendarioComponent, CitaSesionComponent, NuevaCitaModalComponent, SkeletonComponent],
   templateUrl: './citas-dashboard.component.html'
 })
 export class CitasDashboardComponent implements OnInit {

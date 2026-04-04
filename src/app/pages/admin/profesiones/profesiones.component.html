@@ -15,6 +15,8 @@
     </div>
   }
 
+  @if (isLoading) { <app-skeleton [type]="'table'" [rows]="5" /> }
+
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     @for (p of profesiones; track p.id) {
       <div class="bg-white dark:bg-[#0c1427] rounded-xl p-5 border border-gray-100 dark:border-[#172036] shadow-sm hover:shadow-md transition-shadow">

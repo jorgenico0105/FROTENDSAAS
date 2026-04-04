@@ -1,19 +1,20 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { NgClass, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Cita, Sesion } from '../../../../../../core/models/agenda.model';
 import { NutricionService } from '../../../../../../core/services/nutricion.service';
 import { FormulariosService } from '../../../../../../core/services/formularios.service';
 import {
   NutricionDietaPaciente, NutricionProgreso, CreateProgresoRequest,
   NutricionRegistroComida, NutricionRegistroEjercicio,
-  NutricionPacienteXP, NutricionLogroPaciente, PacienteImagen
+  NutricionPreferencia, NutricionMenu, PacienteImagen
 } from '../../../../../../core/models/nutricion.model';
 import { AgendaService } from '../../../../../../core/services/agenda.service';
 import { environment } from '../../../../../../../environments/environment';
 
-type Tab = 'resumen' | 'dieta' | 'registros' | 'progreso' | 'logros' | 'imagenes';
+type Tab = 'dieta' | 'registros' | 'progreso' | 'imagenes';
 
 @Component({
   selector: 'app-sesion-seguimiento',
@@ -28,19 +29,19 @@ export class SesionSeguimientoComponent implements OnInit {
 
   @Output() sesionCompletada = new EventEmitter<Cita>();
 
-  activeTab: Tab = 'resumen';
+  activeTab: Tab = 'dieta';
   isLoading = false;
   isFinalizando = false;
   errorMsg = '';
   successMsg = '';
 
   // Datos del paciente
-  dietasActivas: NutricionDietaPaciente[] = [];
+  dietaActiva: NutricionDietaPaciente | null = null;
+  menuActivo: NutricionMenu | null = null;
   progreso: NutricionProgreso[] = [];
   registrosComida: NutricionRegistroComida[] = [];
   registrosEjercicio: NutricionRegistroEjercicio[] = [];
-  xp: NutricionPacienteXP | null = null;
-  logros: NutricionLogroPaciente[] = [];
+  preferencias: NutricionPreferencia[] = [];
   imagenes: PacienteImagen[] = [];
   imagenesLoading = false;
 
@@ -68,42 +69,35 @@ export class SesionSeguimientoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadResumen();
+    this.loadDietas();
   }
 
   setTab(tab: Tab): void {
     this.activeTab = tab;
-    if (tab === 'dieta'      && this.dietasActivas.length === 0)   this.loadDietas();
-    if (tab === 'progreso'   && this.progreso.length === 0)        this.loadProgreso();
-    if (tab === 'registros'  && this.registrosComida.length === 0) this.loadRegistros();
-    if (tab === 'logros'     && this.logros.length === 0)          this.loadLogros();
-    if (tab === 'imagenes'   && this.imagenes.length === 0)        this.loadImagenes();
-  }
-
-  // ── Carga inicial (resumen) ───────────────────────────────────────────────
-
-  private loadResumen(): void {
-    if (!this.pacienteId) return;
-    this.isLoading = true;
-    forkJoin({
-      dietas:    this.nutricionSvc.listDietasByPaciente(this.pacienteId),
-      progreso:  this.nutricionSvc.listProgreso(this.pacienteId),
-      xp:        this.nutricionSvc.getXP(this.pacienteId),
-    }).subscribe({
-      next: res => {
-        this.dietasActivas = res.dietas.filter(d => d.estado === 'ACTIVA');
-        this.progreso      = res.progreso.slice(0, 5);
-        this.xp            = res.xp;
-        this.isLoading     = false;
-      },
-      error: () => { this.isLoading = false; }
-    });
+    if (tab === 'dieta'     && !this.dietaActiva)                  this.loadDietas();
+    if (tab === 'progreso'  && this.progreso.length === 0)         this.loadProgreso();
+    if (tab === 'registros' && this.registrosComida.length === 0)  this.loadRegistros();
+    if (tab === 'imagenes'  && this.imagenes.length === 0)         this.loadImagenes();
   }
 
   private loadDietas(): void {
+    if (!this.pacienteId) return;
     this.isLoading = true;
     this.nutricionSvc.listDietasByPaciente(this.pacienteId).subscribe({
-      next: d => { this.dietasActivas = d; this.isLoading = false; },
+      next: dietas => {
+        this.dietaActiva = dietas.find(d => d.estado === 'ACTIVA') ?? null;
+        if (this.dietaActiva) {
+          this.nutricionSvc.listMenusByDieta(this.pacienteId, this.dietaActiva.id)
+            .pipe(catchError(() => of([])))
+            .subscribe(menus => {
+              const hoy = new Date().toISOString().split('T')[0];
+              this.menuActivo = menus.find(m => m.fecha_inicio <= hoy && m.fecha_fin >= hoy)
+                ?? menus.sort((a, b) => b.semana_numero - a.semana_numero)[0]
+                ?? null;
+            });
+        }
+        this.isLoading = false;
+      },
       error: () => { this.isLoading = false; }
     });
   }
@@ -119,25 +113,16 @@ export class SesionSeguimientoComponent implements OnInit {
   private loadRegistros(): void {
     this.isLoading = true;
     forkJoin({
-      comida:    this.nutricionSvc.listRegistrosComida(this.pacienteId),
-      ejercicio: this.nutricionSvc.listRegistrosEjercicio(this.pacienteId),
+      comida:       this.nutricionSvc.listRegistrosComida(this.pacienteId),
+      ejercicio:    this.nutricionSvc.listRegistrosEjercicio(this.pacienteId),
+      preferencias: this.nutricionSvc.listPreferencias(this.pacienteId).pipe(catchError(() => of([]))),
     }).subscribe({
       next: res => {
         this.registrosComida    = res.comida;
         this.registrosEjercicio = res.ejercicio;
+        this.preferencias       = res.preferencias;
         this.isLoading = false;
       },
-      error: () => { this.isLoading = false; }
-    });
-  }
-
-  private loadLogros(): void {
-    this.isLoading = true;
-    forkJoin({
-      logros: this.nutricionSvc.listLogros(this.pacienteId),
-      xp:     this.nutricionSvc.getXP(this.pacienteId),
-    }).subscribe({
-      next: res => { this.logros = res.logros; this.xp = res.xp; this.isLoading = false; },
       error: () => { this.isLoading = false; }
     });
   }
@@ -221,8 +206,13 @@ export class SesionSeguimientoComponent implements OnInit {
     return this.progreso.length > 0 ? this.progreso[0] : null;
   }
 
-  get dietaActual(): NutricionDietaPaciente | null {
-    return this.dietasActivas.find(d => d.estado === 'ACTIVA') ?? null;
+  get comidasFueraDePlan(): NutricionRegistroComida[] {
+    return this.registrosComida.filter(r => r.fuera_de_plan);
+  }
+
+  get preferenciasConSintoma(): NutricionPreferencia[] {
+    const tiposSintoma = ['ALERGIA', 'INTOLERANCIA', 'SINTOMA', 'EVITAR', 'NO_GUSTA', 'CAUSA_SINTOMA'];
+    return this.preferencias.filter(p => tiposSintoma.includes(p.tipo.toUpperCase()));
   }
 
   estadoBadge(estado: string): string {
@@ -233,6 +223,14 @@ export class SesionSeguimientoComponent implements OnInit {
       PAUSADA:    'bg-warning-50 text-warning-600 dark:bg-warning-900/20 dark:text-warning-400',
     };
     return map[estado] ?? 'bg-gray-100 text-gray-600';
+  }
+
+  tipoPreferenciaLabel(tipo: string): string {
+    const map: Record<string, string> = {
+      ALERGIA: 'Alergia', INTOLERANCIA: 'Intolerancia', SINTOMA: 'Síntoma',
+      EVITAR: 'Evitar', NO_GUSTA: 'No le gusta', CAUSA_SINTOMA: 'Causa síntoma',
+    };
+    return map[tipo.toUpperCase()] ?? tipo;
   }
 
   formatDate(d?: string): string {
@@ -250,12 +248,5 @@ export class SesionSeguimientoComponent implements OnInit {
       return (this.cita.paciente.nombres.charAt(0) + this.cita.paciente.apellidos.charAt(0)).toUpperCase();
     }
     return '?';
-  }
-
-  xpNivelPct(): number {
-    if (!this.xp) return 0;
-    const baseXp = (this.xp.nivel - 1) * 100;
-    const nextXp = this.xp.nivel * 100;
-    return Math.min(100, Math.round(((this.xp.xp_total - baseXp) / (nextXp - baseXp)) * 100));
   }
 }

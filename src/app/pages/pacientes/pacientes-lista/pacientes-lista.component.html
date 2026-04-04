@@ -28,6 +28,8 @@
     </span>
   </div>
 
+  @if (isLoading) { <app-skeleton [type]="'table'" [rows]="6" /> }
+
   <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">

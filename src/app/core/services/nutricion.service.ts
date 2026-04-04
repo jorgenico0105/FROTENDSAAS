@@ -18,7 +18,8 @@ import {
   NutricionMenuConDetalles,
   NutricionArchivoPDF, NutricionTipoRecurso,
   NutricionRegistroComida,
-  NutricionRegistroEjercicio
+  NutricionRegistroEjercicio,
+  MenuRequiereCambio
 } from '../models/nutricion.model';
 
 interface ApiResponse<T> {
@@ -48,6 +49,11 @@ export class NutricionService {
       .pipe(map(r => r.data));
   }
 
+  updateAlimento(id: number, data: CreateAlimentoRequest): Observable<NutricionAlimento> {
+    return this.http.put<ApiResponse<NutricionAlimento>>(`${this.base}/alimentos/${id}`, data)
+      .pipe(map(r => r.data));
+  }
+
   listEjerciciosCatalogo(): Observable<NutricionEjercicioCatalogo[]> {
     return this.http.get<ApiResponse<NutricionEjercicioCatalogo[]>>(`${this.base}/ejercicios-catalogo`)
       .pipe(map(r => r.data ?? []));
@@ -63,9 +69,10 @@ export class NutricionService {
       .pipe(map(r => r.data ?? []));
   }
 
-  listDietasRequierenCambio(): Observable<NutricionDietaPaciente[]> {
-    return this.http.get<ApiResponse<NutricionDietaPaciente[]>>(`${this.base}/menus/requieren-cambio`)
-      .pipe(map(r => r.data ?? []));
+  listDietasRequierenCambio(): Observable<MenuRequiereCambio[]> {
+    return this.http.get<ApiResponse<MenuRequiereCambio[]>>(`${this.base}/menus/requieren-cambio`)
+      .pipe(map(r => { console.log(r.data) 
+        return r.data ?? []}));
   }
 
   // ─── Dietas del paciente ───────────────────────────────────────────────────
@@ -203,7 +210,9 @@ export class NutricionService {
 
   listPreferencias(pacienteId: number): Observable<NutricionPreferencia[]> {
     return this.http.get<ApiResponse<NutricionPreferencia[]>>(`${this.base}/pacientes/${pacienteId}/preferencias`)
-      .pipe(map(r => r.data ?? []));
+      .pipe(map(r => {
+        console.log(r.data)
+        return r.data ?? []}));
   }
 
   addPreferencia(pacienteId: number, data: CreatePreferenciaRequest): Observable<NutricionPreferencia> {

@@ -35,6 +35,7 @@
     "@iplab/ngx-file-upload": "^20.0.0",
     "@tailwindcss/postcss": "^4.1.11",
     "apexcharts": "^5.3.3",
+    "boneyard-js": "^1.6.0",
     "express": "^5.1.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",

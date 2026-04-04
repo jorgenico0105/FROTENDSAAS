@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PacientesService } from '../../../core/services/pacientes.service';
 import { Paciente } from '../../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-pacientes-nutricion',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, SkeletonComponent],
   templateUrl: './pacientes-nutricion.component.html'
 })
 export class PacientesNutricionComponent implements OnInit {

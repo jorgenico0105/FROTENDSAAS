@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { Profesion, CreateProfesionRequest } from '../../../core/models/admin.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-profesiones',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, SkeletonComponent],
   templateUrl: './profesiones.component.html'
 })
 export class ProfesionesComponent implements OnInit {

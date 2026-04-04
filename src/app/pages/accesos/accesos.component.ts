@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { PacientesService } from '../../core/services/pacientes.service';
 import { Paciente, Aplicacion, PacienteAplicacion, CreateAplicacionRequest } from '../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../common/skeleton/skeleton.component';
 
 interface PacienteConAccesos extends Paciente {
   accesos: PacienteAplicacion[];
@@ -13,7 +14,7 @@ interface PacienteConAccesos extends Paciente {
 @Component({
   selector: 'app-accesos',
   standalone: true,
-  imports: [NgClass, FormsModule],
+  imports: [NgClass, FormsModule, SkeletonComponent],
   templateUrl: './accesos.component.html',
 })
 export class AccesosComponent implements OnInit {

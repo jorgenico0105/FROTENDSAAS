@@ -84,6 +84,17 @@ export interface UpdateFormularioRequest {
   preguntas?: CreatePreguntaRequest[];
 }
 
+export interface CreateTipoFormularioRequest {
+  codigo: string;       // exactly 3 chars, uppercase
+  nombre: string;       // max 100
+  descripcion?: string; // max 255
+}
+
+export interface UpdateTipoFormularioRequest {
+  nombre?: string;
+  descripcion?: string;
+}
+
 export interface CreateHistoriaRespuestaRequest {
   pregunta_id: number;
   respuesta_texto?: string;

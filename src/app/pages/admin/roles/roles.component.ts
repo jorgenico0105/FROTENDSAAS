@@ -3,11 +3,12 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { Rol, CreateRolRequest, Transaccion } from '../../../core/models/admin.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [NgClass, FormsModule],
+  imports: [NgClass, FormsModule, SkeletonComponent],
   templateUrl: './roles.component.html'
 })
 export class RolesComponent implements OnInit {

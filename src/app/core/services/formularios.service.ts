@@ -5,7 +5,8 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Formulario, FormularioDetalle, TipoFormulario,
-  CreateFormularioRequest, UpdateFormularioRequest, CreateHistoriaRequest
+  CreateFormularioRequest, UpdateFormularioRequest, CreateHistoriaRequest,
+  CreateTipoFormularioRequest, UpdateTipoFormularioRequest
 } from '../models/formulario.model';
 import { PacienteImagen } from '../models/nutricion.model';
 
@@ -20,6 +21,19 @@ export class FormulariosService {
   listTipos(): Observable<TipoFormulario[]> {
     return this.http.get<ApiWrapper<TipoFormulario[]>>(`${this.base}/tipos-formulario`)
       .pipe(map(r => r.data ?? []));
+  }
+
+  createTipo(req: CreateTipoFormularioRequest): Observable<TipoFormulario> {
+    return this.http.post<ApiWrapper<TipoFormulario>>(`${this.base}/tipos-formulario`, req)
+      .pipe(map(r => r.data));
+  }
+
+  updateTipo(id: number, req: UpdateTipoFormularioRequest): Observable<void> {
+    return this.http.put<void>(`${this.base}/tipos-formulario/${id}`, req);
+  }
+
+  deleteTipo(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/tipos-formulario/${id}`);
   }
 
   list(tipoId?: number): Observable<Formulario[]> {

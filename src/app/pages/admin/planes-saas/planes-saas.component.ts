@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { PlanSaas, CreatePlanSaasRequest } from '../../../core/models/admin.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-planes-saas',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, SkeletonComponent],
   templateUrl: './planes-saas.component.html'
 })
 export class PlanesSaasComponent implements OnInit {

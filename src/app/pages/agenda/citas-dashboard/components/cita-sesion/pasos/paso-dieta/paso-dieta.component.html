@@ -34,12 +34,21 @@
       </div>
     </div>
 
-    <!-- Objetivo -->
-    <div>
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Objetivo del plan</label>
-      <textarea [(ngModel)]="objetivo" rows="2"
-                placeholder="Ej: Reducción de peso corporal y mejora de composición corporal en 30 días..."
-                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all resize-none placeholder:text-gray-300 dark:placeholder:text-gray-600"></textarea>
+    <!-- Objetivo + Peso objetivo -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="sm:col-span-2">
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Objetivo del plan</label>
+        <textarea [(ngModel)]="objetivo" rows="2"
+                  placeholder="Ej: Reducción de peso corporal y mejora de composición corporal en 30 días..."
+                  class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all resize-none placeholder:text-gray-300 dark:placeholder:text-gray-600"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Peso objetivo (kg)</label>
+        <input type="number" [(ngModel)]="resultadoEsperado" min="0" max="300"
+               placeholder="70"
+               class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+        <p class="text-xs text-gray-400 mt-1">Resultado esperado al finalizar</p>
+      </div>
     </div>
 
     <!-- Calorías + comidas -->

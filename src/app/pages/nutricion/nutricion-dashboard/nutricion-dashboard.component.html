@@ -38,6 +38,8 @@
 
 <div class="lg:px-[30px] 2xl:px-[80px] mt-[25px] relative z-[1]">
 
+  @if (isLoading) { <app-skeleton [type]="'dashboard'" [rows]="5" /> }
+
   <!-- ── Stats ──────────────────────────────────────────────────────────── -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[25px] mb-[25px]">
     <div class="trezo-card bg-white dark:bg-[#0c1427] p-[20px] md:p-[25px] rounded-md">
@@ -213,14 +215,14 @@
           </div>
           <div class="trezo-card-content grid grid-cols-1 sm:grid-cols-2 gap-3">
             @for (d of requierenCambio; track d.id) {
-              <a [routerLink]="['/dashboard/nutricion/pacientes', d.paciente_id]"
+              <a [routerLink]="['/dashboard/nutricion/pacientes', d.dieta.paciente_id]"
                  class="flex items-center gap-3 p-3 rounded-xl border border-warning-100 dark:border-warning-900/30 bg-warning-50/50 dark:bg-warning-900/10 hover:bg-warning-50 dark:hover:bg-warning-900/20 transition-all">
                 <div class="w-9 h-9 rounded-xl bg-warning-100 dark:bg-warning-900/40 flex items-center justify-center flex-shrink-0">
                   <i class="ri-alarm-warning-line text-warning-500 text-base"></i>
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-black dark:text-white truncate">{{ d.nombre }}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ d.duracion_dias }} días · Pac. #{{ d.paciente_id }}</p>
+                   <p class="text-xs text-gray-500 dark:text-gray-400">{{ d.dieta.Paciente.nombres }} </p>
                 </div>
                 <i class="ri-arrow-right-s-line text-gray-400 flex-shrink-0"></i>
               </a>
@@ -228,7 +230,6 @@
           </div>
         </div>
       }
-
     </div>
 
     <!-- Right col: Horario del día -->

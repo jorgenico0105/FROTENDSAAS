@@ -16,11 +16,7 @@
     </div>
   }
 
-  @if (isLoading && clinicas.length === 0) {
-    <div class="text-center py-12">
-      <div class="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  }
+  @if (isLoading && clinicas.length === 0) { <app-skeleton [type]="'table'" [rows]="5" /> }
 
   @if (!isLoading || clinicas.length > 0) {
     <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">

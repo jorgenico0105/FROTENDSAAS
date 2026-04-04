@@ -10,20 +10,29 @@
         </button>
       }
       <h1 class="text-xl font-bold text-black dark:text-white">
-        @if (vista === 'lista')                      { Formularios clínicos }
-        @if (vista === 'editor' && !editingId)       { Nuevo formulario }
-        @if (vista === 'editor' && editingId)        { Editar formulario }
-        @if (vista === 'detalle')                    { Vista previa }
+        @if (vista === 'lista')                { Formularios clínicos }
+        @if (vista === 'editor' && !editingId) { Nuevo formulario }
+        @if (vista === 'editor' && editingId)  { Editar formulario }
+        @if (vista === 'detalle')              { Vista previa }
+        @if (vista === 'tipos')               { Categorías de formulario }
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-        @if (vista === 'lista')      { {{ formularios.length }} formulario{{ formularios.length !== 1 ? 's' : '' }} configurado{{ formularios.length !== 1 ? 's' : '' }} }
-        @if (vista === 'editor')     { Completa la información y agrega las preguntas }
-        @if (vista === 'detalle')    { Revisa el formulario antes de usarlo en una sesión }
+        @if (vista === 'lista') {
+          {{ formularios.length }} formulario{{ formularios.length !== 1 ? 's' : '' }} · {{ tiposFormulario.length }} categoría{{ tiposFormulario.length !== 1 ? 's' : '' }}
+        }
+        @if (vista === 'editor')  { Completa la información y agrega las preguntas }
+        @if (vista === 'detalle') { Revisa el formulario antes de usarlo en una sesión }
+        @if (vista === 'tipos')  { Crea y administra los tipos de formulario disponibles }
       </p>
     </div>
 
     <div class="flex items-center gap-2">
       @if (vista === 'lista') {
+        <button (click)="abrirGestionTipos()"
+          class="inline-flex items-center gap-2 border border-gray-200 dark:border-[#1b2c4f] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#15203c] text-sm font-medium px-3 py-2.5 rounded-xl transition-all">
+          <i class="ri-price-tag-3-line text-base"></i>
+          <span class="hidden sm:inline">Categorías</span>
+        </button>
         <button (click)="abrirCrear()"
           class="inline-flex items-center gap-2 bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
           <i class="ri-add-line text-base"></i> Nuevo formulario
@@ -33,6 +42,12 @@
         <button (click)="abrirEditar(detalle.formulario)"
           class="inline-flex items-center gap-2 border border-gray-200 dark:border-[#1b2c4f] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#15203c] text-sm font-medium px-3 py-2 rounded-xl transition-all">
           <i class="ri-pencil-line"></i> Editar
+        </button>
+      }
+      @if (vista === 'tipos') {
+        <button (click)="abrirCrear()"
+          class="inline-flex items-center gap-2 bg-secondary-500 hover:bg-secondary-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm">
+          <i class="ri-add-line text-base"></i> Nuevo formulario
         </button>
       }
     </div>
@@ -55,12 +70,28 @@
   ════════════════════════════════════════════════════════════════════════ -->
   @if (vista === 'lista') {
 
+    <!-- Buscador -->
+    <div class="relative mb-5">
+      <i class="ri-search-line absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
+      <input type="text" [(ngModel)]="busqueda"
+        placeholder="Buscar por nombre, descripción o categoría..."
+        class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all shadow-sm" />
+      @if (busqueda) {
+        <button (click)="busqueda = ''"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+          <i class="ri-close-line text-base"></i>
+        </button>
+      }
+    </div>
+
     @if (isLoading) {
       <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
         <div class="w-8 h-8 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
         <span class="text-sm">Cargando formularios...</span>
       </div>
+
     } @else if (formularios.length === 0) {
+      <!-- Estado vacío: sin formularios -->
       <div class="flex flex-col items-center justify-center py-24 text-center">
         <div class="w-20 h-20 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center mb-5">
           <i class="ri-file-list-3-line text-4xl text-secondary-400"></i>
@@ -72,27 +103,48 @@
           <i class="ri-add-line"></i> Crear formulario
         </button>
       </div>
+
+    } @else if (formulariosFiltrados.length === 0) {
+      <!-- Estado vacío: búsqueda sin resultados -->
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-[#0c1427] border border-gray-100 dark:border-[#1b2c4f] flex items-center justify-center mb-4">
+          <i class="ri-search-line text-3xl text-gray-300 dark:text-gray-600"></i>
+        </div>
+        <h3 class="text-sm font-semibold text-black dark:text-white mb-1">Sin resultados</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No se encontraron formularios para <span class="font-medium text-black dark:text-white">"{{ busqueda }}"</span></p>
+        <button (click)="busqueda = ''"
+          class="text-sm font-medium text-secondary-500 hover:text-secondary-600 transition-colors">
+          Limpiar búsqueda
+        </button>
+      </div>
+
     } @else {
+      <!-- Indicador de resultados filtrados -->
+      @if (busqueda) {
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          {{ formulariosFiltrados.length }} resultado{{ formulariosFiltrados.length !== 1 ? 's' : '' }} para
+          <span class="font-semibold text-black dark:text-white">"{{ busqueda }}"</span>
+        </p>
+      }
+
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        @for (f of formularios; track f.id) {
+        @for (f of formulariosFiltrados; track f.id) {
           <div class="group relative bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer overflow-hidden"
                (click)="verDetalle(f)">
 
             <!-- Header coloreado por tipo -->
             <div class="px-5 pt-5 pb-4 flex items-start gap-3"
                  [ngClass]="tipoHeaderClass(tipoCodigo(f.tipo_formulario_id))">
-              <!-- Icono -->
               <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
                    [ngClass]="tipoIconBgClass(tipoCodigo(f.tipo_formulario_id))">
                 <i class="text-xl" [ngClass]="tipoIcono(tipoCodigo(f.tipo_formulario_id))"></i>
               </div>
-              <!-- Tipo + nombre -->
               <div class="flex-1 min-w-0 pt-0.5">
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-widest mb-1"
                   [ngClass]="tipoBadgeClass(tipoCodigo(f.tipo_formulario_id))">
                   {{ tipoCodigo(f.tipo_formulario_id) || 'FORM' }}
                 </span>
-                <p class="text-xs text-gray-400 dark:text-gray-500">{{ tipoNombre(f.tipo_formulario_id) }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ tipoNombre(f.tipo_formulario_id) }}</p>
               </div>
               <!-- Acciones hover -->
               <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
@@ -119,14 +171,14 @@
             </div>
 
             <!-- Footer -->
-            <div class="px-5 pb-4 pt-2 flex items-center justify-between">
+            <div class="px-5 pb-4 pt-2 flex items-center justify-between border-t border-gray-50 dark:border-[#172036]">
               <span class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
                 <i class="ri-calendar-line text-xs"></i>
                 {{ formatFecha(f.creado_en) }}
               </span>
               <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
                 [ngClass]="tipoBadgeClass(tipoCodigo(f.tipo_formulario_id))">
-                <i class="ri-eye-line text-xs"></i> Ver formulario
+                <i class="ri-eye-line text-xs"></i> Ver
               </span>
             </div>
 
@@ -245,7 +297,6 @@
           </div>
 
           <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Nombre -->
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
                 Nombre <span class="text-danger-500">*</span>
@@ -254,21 +305,19 @@
                 class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
             </div>
 
-            <!-- Tipo -->
             <div>
               <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                Tipo <span class="text-danger-500">*</span>
+                Categoría <span class="text-danger-500">*</span>
               </label>
               <select [(ngModel)]="formTipoId"
                 class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all">
-                <option [ngValue]="0" disabled>Seleccionar tipo...</option>
+                <option [ngValue]="0" disabled>Seleccionar categoría...</option>
                 @for (t of tiposFormulario; track t.id) {
-                  <option [ngValue]="t.id">{{ t.nombre }}</option>
+                  <option [ngValue]="t.id">{{ t.codigo }} — {{ t.nombre }}</option>
                 }
               </select>
             </div>
 
-            <!-- Descripción -->
             <div class="sm:col-span-2">
               <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Descripción</label>
               <textarea [(ngModel)]="formDescripcion" rows="2" placeholder="Descripción breve del formulario..."
@@ -309,7 +358,6 @@
             <div class="space-y-3">
               @for (p of preguntas; track p._id; let i = $index) {
                 <div class="rounded-2xl border border-gray-200 dark:border-[#1b2c4f] overflow-hidden bg-gray-50 dark:bg-[#0a0e19]">
-
                   <!-- Barra de control -->
                   <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#0c1427] border-b border-gray-100 dark:border-[#1b2c4f]">
                     <span class="w-6 h-6 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 text-secondary-600 dark:text-secondary-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
@@ -320,18 +368,15 @@
                     </span>
                     <div class="flex items-center gap-0.5 flex-shrink-0">
                       <button (click)="moverArriba(i)" [disabled]="i === 0"
-                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all"
-                        title="Subir">
+                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all" title="Subir">
                         <i class="ri-arrow-up-s-line text-sm"></i>
                       </button>
                       <button (click)="moverAbajo(i)" [disabled]="i === preguntas.length - 1"
-                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all"
-                        title="Bajar">
+                        class="p-1.5 text-gray-400 hover:text-secondary-500 disabled:opacity-25 disabled:cursor-not-allowed rounded-lg hover:bg-gray-100 dark:hover:bg-[#0a0e19] transition-all" title="Bajar">
                         <i class="ri-arrow-down-s-line text-sm"></i>
                       </button>
                       <button (click)="removePregunta(i)"
-                        class="p-1.5 text-gray-400 hover:text-danger-500 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all ml-1"
-                        title="Eliminar pregunta">
+                        class="p-1.5 text-gray-400 hover:text-danger-500 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all ml-1" title="Eliminar pregunta">
                         <i class="ri-delete-bin-line text-sm"></i>
                       </button>
                     </div>
@@ -339,12 +384,10 @@
 
                   <!-- Contenido -->
                   <div class="p-4 space-y-3">
-                    <!-- Texto de la pregunta -->
                     <input type="text" [(ngModel)]="p.pregunta" [name]="'preg_' + p._id"
                       placeholder="Escribe aquí el texto de la pregunta..."
                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
 
-                    <!-- Tipo + Obligatoria (2 columnas en desktop) -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Tipo de respuesta</label>
@@ -372,7 +415,6 @@
                       </div>
                     </div>
 
-                    <!-- Opciones (SELECT / MULTISELECT) -->
                     @if (necesitaOpciones(p.tipo_respuesta)) {
                       <div class="pt-3 border-t border-gray-200 dark:border-[#1b2c4f]">
                         <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
@@ -430,6 +472,159 @@
 
       </div>
     }
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       TIPOS (gestión de categorías)
+  ════════════════════════════════════════════════════════════════════════ -->
+  @if (vista === 'tipos') {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+      <!-- ── Lista de categorías (2/3) ──────────────────────────────────── -->
+      <div class="lg:col-span-2 space-y-3">
+
+        @if (tiposFormulario.length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-[#0c1427] rounded-2xl border border-dashed border-gray-200 dark:border-[#1b2c4f]">
+            <div class="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-[#0a0e19] flex items-center justify-center mb-3">
+              <i class="ri-price-tag-3-line text-2xl text-gray-300 dark:text-gray-600"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sin categorías</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Crea la primera categoría en el formulario</p>
+          </div>
+        }
+
+        @for (t of tiposFormulario; track t.id) {
+          <div class="group bg-white dark:bg-[#0c1427] rounded-2xl border flex items-center gap-4 px-5 py-4 transition-all duration-200 hover:shadow-md"
+            [ngClass]="tipoEditingId === t.id
+              ? 'border-secondary-400 dark:border-secondary-600 shadow-sm'
+              : 'border-gray-100 dark:border-[#1b2c4f]'">
+
+            <!-- Ícono / código -->
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 font-bold text-sm shadow-sm"
+                 [ngClass]="tipoIconBgClass(t.codigo)">
+              {{ t.codigo }}
+            </div>
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-bold text-black dark:text-white truncate">{{ t.nombre }}</p>
+                @if (tipoEditingId === t.id) {
+                  <span class="text-[11px] font-semibold text-secondary-500 bg-secondary-50 dark:bg-secondary-900/20 px-2 py-0.5 rounded-full">Editando</span>
+                }
+              </div>
+              @if (t.descripcion) {
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-1">{{ t.descripcion }}</p>
+              }
+              <p class="text-xs text-gray-300 dark:text-gray-600 mt-0.5">
+                {{ formulariosPorTipo(t.id) }} formulario{{ formulariosPorTipo(t.id) !== 1 ? 's' : '' }}
+              </p>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+              <button (click)="abrirEditarTipo(t)"
+                class="p-2 rounded-xl text-gray-400 hover:text-warning-600 dark:hover:text-warning-400 hover:bg-warning-50 dark:hover:bg-warning-900/20 transition-all" title="Editar categoría">
+                <i class="ri-pencil-line text-sm"></i>
+              </button>
+              <button (click)="eliminarTipo(t)"
+                class="p-2 rounded-xl text-gray-400 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-all" title="Eliminar categoría">
+                <i class="ri-delete-bin-line text-sm"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- ── Formulario crear / editar categoría (1/3) ─────────────────── -->
+      <div class="lg:sticky lg:top-4">
+        <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#1b2c4f] overflow-hidden shadow-sm">
+
+          <!-- Header del panel -->
+          <div class="px-5 py-4 border-b border-gray-50 dark:border-[#172036] flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center"
+                [ngClass]="tipoEditingId ? 'bg-warning-100 dark:bg-warning-900/30' : 'bg-secondary-100 dark:bg-secondary-900/30'">
+                <i class="text-sm"
+                  [ngClass]="tipoEditingId ? 'ri-pencil-line text-warning-600 dark:text-warning-400' : 'ri-add-line text-secondary-600 dark:text-secondary-400'"></i>
+              </div>
+              <h3 class="text-sm font-semibold text-black dark:text-white">
+                {{ tipoEditingId ? 'Editar categoría' : 'Nueva categoría' }}
+              </h3>
+            </div>
+            @if (tipoEditingId) {
+              <button (click)="resetTipoForm()"
+                class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <i class="ri-close-line"></i>
+              </button>
+            }
+          </div>
+
+          <!-- Formulario -->
+          <div class="p-5 space-y-4">
+
+            <!-- Código -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                Código <span class="text-danger-500">*</span>
+                <span class="font-normal normal-case ml-1 text-gray-400">— 3 caracteres</span>
+              </label>
+              <input type="text" [(ngModel)]="tipoFormCodigo"
+                [disabled]="!!tipoEditingId"
+                maxlength="3"
+                placeholder="Ej: HCL"
+                (input)="tipoFormCodigo = tipoFormCodigo.toUpperCase()"
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm font-mono font-bold text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed" />
+              @if (tipoEditingId) {
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">El código no puede modificarse una vez creado.</p>
+              }
+            </div>
+
+            <!-- Nombre -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                Nombre <span class="text-danger-500">*</span>
+              </label>
+              <input type="text" [(ngModel)]="tipoFormNombre"
+                maxlength="100"
+                placeholder="Ej: Historia Clínica"
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+            </div>
+
+            <!-- Descripción -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Descripción</label>
+              <textarea [(ngModel)]="tipoFormDescripcion" rows="3" maxlength="255"
+                placeholder="Descripción opcional..."
+                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] bg-gray-50 dark:bg-[#0a0e19] text-sm text-black dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-2 pt-1">
+              @if (tipoEditingId) {
+                <button (click)="resetTipoForm()" [disabled]="isTipoSubmitting"
+                  class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-[#1b2c4f] text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#15203c] transition-all disabled:opacity-50">
+                  Cancelar
+                </button>
+              }
+              <button (click)="submitTipo()" [disabled]="isTipoSubmitting"
+                class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 shadow-sm"
+                [ngClass]="tipoEditingId
+                  ? 'bg-warning-500 hover:bg-warning-600 text-white'
+                  : 'bg-secondary-500 hover:bg-secondary-600 text-white'">
+                @if (isTipoSubmitting) {
+                  <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                } @else {
+                  <i [ngClass]="tipoEditingId ? 'ri-save-3-line' : 'ri-add-line'"></i>
+                }
+                {{ tipoEditingId ? 'Actualizar' : 'Crear categoría' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   }
 
 </div>

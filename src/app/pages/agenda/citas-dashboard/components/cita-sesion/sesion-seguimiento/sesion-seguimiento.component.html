@@ -33,12 +33,10 @@
   <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
     <div class="flex items-center border-b border-gray-100 dark:border-[#172036] px-2 pt-2 gap-1 overflow-x-auto">
       @for (tab of [
-        {id:'resumen',   icon:'ri-dashboard-3-line',  label:'Resumen'},
-        {id:'dieta',     icon:'ri-restaurant-line',   label:'Dieta activa'},
+        {id:'dieta',     icon:'ri-restaurant-line',     label:'Dieta activa'},
         {id:'registros', icon:'ri-calendar-check-line', label:'Registros'},
-        {id:'progreso',  icon:'ri-line-chart-line',   label:'Progreso'},
-        {id:'logros',    icon:'ri-trophy-line',        label:'Logros'},
-        {id:'imagenes',  icon:'ri-image-line',         label:'Imágenes'}
+        {id:'progreso',  icon:'ri-line-chart-line',     label:'Progreso'},
+        {id:'imagenes',  icon:'ri-image-line',           label:'Imágenes'}
       ]; track tab.id) {
         <button (click)="setTab($any(tab.id))"
           class="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-all -mb-px"
@@ -58,180 +56,189 @@
         </div>
       }
 
-      <!-- RESUMEN ──────────────────────────────────────────────────────────── -->
-      @if (!isLoading && activeTab === 'resumen') {
-        <div class="space-y-4">
-          <!-- Stats row -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Dietas activas</p>
-              <p class="text-2xl font-bold text-black dark:text-white">{{ dietasActivas.length }}</p>
-            </div>
-            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Último peso</p>
-              <p class="text-2xl font-bold text-black dark:text-white">
-                {{ ultimoProgreso?.peso_kg ? (ultimoProgreso!.peso_kg | number:'1.1-1') + ' kg' : '—' }}
-              </p>
-            </div>
-            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">IMC</p>
-              <p class="text-2xl font-bold text-black dark:text-white">
-                {{ ultimoProgreso?.imc ? (ultimoProgreso!.imc | number:'1.1-1') : '—' }}
-              </p>
-            </div>
-            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
-              <p class="text-xs text-primary-500 mb-1">Nivel XP</p>
-              <p class="text-2xl font-bold text-black dark:text-white">{{ xp?.nivel ?? '—' }}</p>
-            </div>
-          </div>
-
-          <!-- XP bar -->
-          @if (xp) {
-            <div class="bg-gradient-to-br from-primary-50 to-primary-100/40 dark:from-primary-900/20 dark:to-primary-900/10 rounded-xl p-4 border border-primary-100 dark:border-primary-900/30">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <i class="ri-medal-line text-primary-500 text-lg"></i>
-                  <span class="text-sm font-semibold text-primary-700 dark:text-primary-300">Nivel {{ xp.nivel }}</span>
-                </div>
-                <span class="text-xs text-primary-500">{{ xp.xp_total }} XP total</span>
-              </div>
-              <div class="h-2 bg-primary-100 dark:bg-primary-900/30 rounded-full overflow-hidden">
-                <div class="h-full bg-primary-500 rounded-full transition-all"
-                     [style.width.%]="xpNivelPct()"></div>
-              </div>
-              <div class="flex items-center justify-between mt-1.5">
-                <span class="text-xs text-primary-400">Racha: {{ xp.racha_actual }} días</span>
-                <span class="text-xs text-primary-400">Máx. racha: {{ xp.racha_maxima }}</span>
-              </div>
-            </div>
-          }
-
-          <!-- Dieta activa resumen -->
-          @if (dietaActual) {
-            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-4 border border-gray-100 dark:border-[#172036]">
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-semibold text-black dark:text-white flex items-center gap-2">
-                  <i class="ri-restaurant-line text-success-500"></i>{{ dietaActual.nombre }}
-                </h4>
-                <span class="text-xs px-2 py-0.5 rounded-full" [ngClass]="estadoBadge(dietaActual.estado)">
-                  {{ dietaActual.estado }}
-                </span>
-              </div>
-              @if (dietaActual.objetivo) {
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ dietaActual.objetivo }}</p>
-              }
-              <div class="flex items-center gap-4 mt-2">
-                @if (dietaActual.calorias_dia_objetivo) {
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
-                    <i class="ri-fire-line text-warning-500 mr-0.5"></i>{{ dietaActual.calorias_dia_objetivo | number:'1.0-0' }} kcal/día
-                  </span>
-                }
-                <span class="text-xs text-gray-400">Inicio: {{ formatDate(dietaActual.fecha_inicio) }}</span>
-              </div>
-            </div>
-          }
-        </div>
-      }
-
       <!-- DIETA ────────────────────────────────────────────────────────────── -->
       @if (!isLoading && activeTab === 'dieta') {
-        @if (dietasActivas.length === 0) {
+        @if (!dietaActiva) {
           <div class="text-center py-10">
             <i class="ri-restaurant-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
-            <p class="text-sm text-gray-400">No tiene dietas activas</p>
+            <p class="text-sm text-gray-400">No tiene dieta activa</p>
           </div>
-        }
-        <div class="space-y-3">
-          @for (dieta of dietasActivas; track dieta.id) {
-            <div class="border border-gray-100 dark:border-[#172036] rounded-xl p-4 hover:border-primary-200 dark:hover:border-primary-800/40 transition-all">
-              <div class="flex items-start justify-between gap-3">
+        } @else {
+          <div class="space-y-4">
+            <!-- Dieta activa -->
+            <div class="border border-success-200 dark:border-success-800/40 bg-success-50/30 dark:bg-success-900/10 rounded-xl p-4">
+              <div class="flex items-start justify-between gap-3 mb-3">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
-                    <p class="text-sm font-semibold text-black dark:text-white">{{ dieta.nombre }}</p>
-                    <span class="text-xs px-2 py-0.5 rounded-full flex-shrink-0" [ngClass]="estadoBadge(dieta.estado)">{{ dieta.estado }}</span>
+                    <i class="ri-restaurant-line text-success-500"></i>
+                    <p class="text-sm font-semibold text-black dark:text-white">{{ dietaActiva.nombre }}</p>
+                    <span class="text-xs px-2 py-0.5 rounded-full flex-shrink-0" [ngClass]="estadoBadge(dietaActiva.estado)">{{ dietaActiva.estado }}</span>
                   </div>
-                  @if (dieta.descripcion) {
-                    <p class="text-xs text-gray-400 mt-0.5 line-clamp-2">{{ dieta.descripcion }}</p>
+                  @if (dietaActiva.objetivo) {
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ dietaActiva.objetivo }}</p>
                   }
-                  <div class="flex flex-wrap items-center gap-3 mt-2">
-                    @if (dieta.calorias_dia_objetivo) {
-                      <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                        <i class="ri-fire-line text-warning-500"></i>{{ dieta.calorias_dia_objetivo | number:'1.0-0' }} kcal
-                      </span>
-                    }
-                    @if (dieta.proteinas_g_dia) {
-                      <span class="text-xs text-gray-500 dark:text-gray-400">P: {{ dieta.proteinas_g_dia | number:'1.0-0' }}g</span>
-                    }
-                    @if (dieta.carbohidratos_g_dia) {
-                      <span class="text-xs text-gray-500 dark:text-gray-400">C: {{ dieta.carbohidratos_g_dia | number:'1.0-0' }}g</span>
-                    }
-                    @if (dieta.grasas_g_dia) {
-                      <span class="text-xs text-gray-500 dark:text-gray-400">G: {{ dieta.grasas_g_dia | number:'1.0-0' }}g</span>
-                    }
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-4">
+                @if (dietaActiva.calorias_dia_objetivo) {
+                  <span class="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                    <i class="ri-fire-line text-warning-500"></i>{{ dietaActiva.calorias_dia_objetivo | number:'1.0-0' }} kcal/día
+                  </span>
+                }
+                @if (dietaActiva.proteinas_g_dia) {
+                  <span class="text-xs text-blue-600 dark:text-blue-400">P: {{ dietaActiva.proteinas_g_dia | number:'1.0-0' }}g</span>
+                }
+                @if (dietaActiva.carbohidratos_g_dia) {
+                  <span class="text-xs text-amber-600 dark:text-amber-400">C: {{ dietaActiva.carbohidratos_g_dia | number:'1.0-0' }}g</span>
+                }
+                @if (dietaActiva.grasas_g_dia) {
+                  <span class="text-xs text-orange-600 dark:text-orange-400">G: {{ dietaActiva.grasas_g_dia | number:'1.0-0' }}g</span>
+                }
+              </div>
+              <div class="flex items-center gap-3 mt-3 pt-3 border-t border-success-200/50 dark:border-success-900/30 text-xs text-gray-400">
+                <span class="flex items-center gap-1"><i class="ri-calendar-line"></i> Inicio: {{ formatDate(dietaActiva.fecha_inicio) }}</span>
+                <span>{{ dietaActiva.duracion_dias }} días · {{ dietaActiva.num_comidas }} comidas/día</span>
+              </div>
+            </div>
+
+            <!-- Menú activo -->
+            @if (menuActivo) {
+              <div>
+                <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <i class="ri-calendar-2-line text-primary-500"></i> Menú activo
+                </h4>
+                <div class="border border-gray-100 dark:border-[#172036] rounded-xl p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm font-semibold text-black dark:text-white">
+                        {{ menuActivo.nombre ?? 'Semana ' + menuActivo.semana_numero }}
+                      </p>
+                      <p class="text-xs text-gray-400 mt-0.5">
+                        {{ formatDate(menuActivo.fecha_inicio) }} → {{ formatDate(menuActivo.fecha_fin) }}
+                      </p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400">
+                      Sem. {{ menuActivo.semana_numero }}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-[#172036]">
-                <span class="text-xs text-gray-400 flex items-center gap-1">
-                  <i class="ri-calendar-line"></i> Inicio: {{ formatDate(dieta.fecha_inicio) }}
-                </span>
-                <span class="text-xs text-gray-400">{{ dieta.duracion_dias }} días · {{ dieta.num_comidas }} comidas</span>
-              </div>
-            </div>
-          }
-        </div>
+            }
+          </div>
+        }
       }
 
       <!-- REGISTROS ────────────────────────────────────────────────────────── -->
       @if (!isLoading && activeTab === 'registros') {
-        <div class="space-y-4">
-          <!-- Comidas -->
+        <div class="space-y-5">
+
+          <!-- Resumen rápido -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xl font-bold text-black dark:text-white">{{ registrosComida.length }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">Comidas</p>
+            </div>
+            <div class="bg-warning-50 dark:bg-warning-900/20 rounded-xl p-3 text-center">
+              <p class="text-xl font-bold text-warning-600 dark:text-warning-400">{{ comidasFueraDePlan.length }}</p>
+              <p class="text-xs text-warning-500 mt-0.5">Fuera del plan</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-[#0a0e19] rounded-xl p-3 text-center">
+              <p class="text-xl font-bold text-black dark:text-white">{{ registrosEjercicio.length }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">Ejercicios</p>
+            </div>
+          </div>
+
+          <!-- Alimentos fuera del plan -->
+          @if (comidasFueraDePlan.length > 0) {
+            <div>
+              <h4 class="text-xs font-semibold text-warning-600 dark:text-warning-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <i class="ri-error-warning-line"></i> Alimentos fuera del plan ({{ comidasFueraDePlan.length }})
+              </h4>
+              <div class="space-y-1.5">
+                @for (r of comidasFueraDePlan.slice(0, 8); track r.id) {
+                  <div class="flex items-center justify-between bg-warning-50/60 dark:bg-warning-900/10 border border-warning-100 dark:border-warning-900/30 rounded-xl px-3 py-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <i class="ri-close-circle-line text-warning-500 text-sm flex-shrink-0"></i>
+                      <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#172036] px-1.5 py-0.5 rounded flex-shrink-0">{{ formatDate(r.fecha) }}</span>
+                      <span class="text-sm text-gray-700 dark:text-gray-200 truncate">{{ r.descripcion_libre || 'Sin descripción' }}</span>
+                    </div>
+                    @if (r.calorias_consumidas) {
+                      <span class="text-xs text-warning-600 dark:text-warning-400 flex-shrink-0 ml-2">{{ r.calorias_consumidas | number:'1.0-0' }} kcal</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Síntomas / preferencias problemáticas -->
+          @if (preferenciasConSintoma.length > 0) {
+            <div>
+              <h4 class="text-xs font-semibold text-danger-600 dark:text-danger-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <i class="ri-heart-pulse-line"></i> Alimentos que causan síntomas ({{ preferenciasConSintoma.length }})
+              </h4>
+              <div class="flex flex-wrap gap-2">
+                @for (p of preferenciasConSintoma; track p.id) {
+                  <div class="flex items-center gap-1.5 bg-danger-50 dark:bg-danger-900/20 border border-danger-100 dark:border-danger-800/40 rounded-xl px-3 py-1.5">
+                    <i class="ri-alert-line text-danger-500 text-xs"></i>
+                    <span class="text-xs font-medium text-danger-700 dark:text-danger-300">{{ p.nombre_libre ?? 'Alimento #' + p.alimento_id }}</span>
+                    <span class="text-xs text-danger-400 bg-danger-100 dark:bg-danger-900/40 px-1.5 py-0.5 rounded-lg">{{ tipoPreferenciaLabel(p.tipo) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Todos los registros de comida -->
           <div>
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-              <i class="ri-restaurant-2-line text-warning-500"></i> Registros de comida ({{ registrosComida.length }})
+              <i class="ri-restaurant-2-line text-warning-500"></i> Últimas comidas
             </h4>
             @if (registrosComida.length === 0) {
               <p class="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Sin registros de comida</p>
             }
-            <div class="space-y-2">
-              @for (r of registrosComida.slice(0,10); track r.id) {
-                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-2.5 text-sm">
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-[#172036] px-2 py-0.5 rounded-lg">{{ formatDate(r.fecha) }}</span>
-                    @if (r.descripcion_libre) { <span class="text-gray-600 dark:text-gray-300 truncate max-w-[160px]">{{ r.descripcion_libre }}</span> }
-                    @if (r.fuera_de_plan) { <span class="text-xs text-warning-500 bg-warning-50 dark:bg-warning-900/20 px-1.5 py-0.5 rounded">Fuera del plan</span> }
+            <div class="space-y-1.5">
+              @for (r of registrosComida.slice(0, 10); track r.id) {
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-3 py-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-[#172036] px-1.5 py-0.5 rounded-lg flex-shrink-0">{{ formatDate(r.fecha) }}</span>
+                    @if (r.descripcion_libre) { <span class="text-sm text-gray-700 dark:text-gray-200 truncate">{{ r.descripcion_libre }}</span> }
+                    @if (r.fuera_de_plan) {
+                      <span class="text-xs text-warning-500 bg-warning-50 dark:bg-warning-900/20 px-1.5 py-0.5 rounded flex-shrink-0">Fuera plan</span>
+                    }
                   </div>
                   @if (r.calorias_consumidas) {
-                    <span class="text-xs text-gray-400 flex-shrink-0">{{ r.calorias_consumidas | number:'1.0-0' }} kcal</span>
+                    <span class="text-xs text-gray-400 flex-shrink-0 ml-2">{{ r.calorias_consumidas | number:'1.0-0' }} kcal</span>
                   }
                 </div>
               }
             </div>
           </div>
 
-          <!-- Ejercicio -->
+          <!-- Ejercicios -->
           <div>
             <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-              <i class="ri-run-line text-success-500"></i> Registros de ejercicio ({{ registrosEjercicio.length }})
+              <i class="ri-run-line text-success-500"></i> Últimos ejercicios ({{ registrosEjercicio.length }})
             </h4>
             @if (registrosEjercicio.length === 0) {
               <p class="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">Sin registros de ejercicio</p>
             }
-            <div class="space-y-2">
-              @for (r of registrosEjercicio.slice(0,10); track r.id) {
-                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-4 py-2.5 text-sm">
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-[#172036] px-2 py-0.5 rounded-lg">{{ formatDate(r.fecha) }}</span>
-                    <span class="text-gray-600 dark:text-gray-300 truncate max-w-[160px]">{{ r.nombre_libre ?? ('Ejercicio #' + r.ejercicio_id) }}</span>
-                    @if (r.duracion_min_real) { <span class="text-xs text-gray-400">{{ r.duracion_min_real }} min</span> }
+            <div class="space-y-1.5">
+              @for (r of registrosEjercicio.slice(0, 8); track r.id) {
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-[#0a0e19] rounded-xl px-3 py-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-[#172036] px-1.5 py-0.5 rounded-lg flex-shrink-0">{{ formatDate(r.fecha) }}</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-200 truncate">{{ r.nombre_libre ?? ('Ejercicio #' + r.ejercicio_id) }}</span>
+                    @if (r.duracion_min_real) { <span class="text-xs text-gray-400 flex-shrink-0">{{ r.duracion_min_real }} min</span> }
                   </div>
                   @if (r.calorias_quemadas) {
-                    <span class="text-xs text-gray-400 flex-shrink-0">{{ r.calorias_quemadas | number:'1.0-0' }} kcal</span>
+                    <span class="text-xs text-success-500 flex-shrink-0 ml-2">{{ r.calorias_quemadas | number:'1.0-0' }} kcal</span>
                   }
                 </div>
               }
             </div>
           </div>
+
         </div>
       }
 
@@ -477,25 +484,6 @@
         </div>
       }
 
-      <!-- LOGROS ───────────────────────────────────────────────────────────── -->
-      @if (!isLoading && activeTab === 'logros') {
-        @if (logros.length === 0) {
-          <div class="text-center py-10">
-            <i class="ri-trophy-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
-            <p class="text-sm text-gray-400">Sin logros obtenidos aún</p>
-          </div>
-        }
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          @for (l of logros; track l.id) {
-            <div class="bg-gradient-to-br from-warning-50 to-warning-100/40 dark:from-warning-900/20 dark:to-warning-900/10 border border-warning-100 dark:border-warning-900/30 rounded-xl p-3 text-center">
-              <div class="text-2xl mb-1">{{ l.logro?.icono ?? '🏆' }}</div>
-              <p class="text-xs font-semibold text-warning-700 dark:text-warning-300">{{ l.logro?.nombre ?? 'Logro' }}</p>
-              <p class="text-xs text-warning-500 mt-0.5">{{ l.puntos_xp }} XP</p>
-              <p class="text-xs text-gray-400 mt-1">{{ formatDate(l.fecha_obtenido) }}</p>
-            </div>
-          }
-        </div>
-      }
 
     </div>
   </div>

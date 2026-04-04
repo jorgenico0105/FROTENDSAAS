@@ -12,6 +12,7 @@ import {
   NutricionMenuAlimentoDetalle,
 } from '../../../core/models/nutricion.model';
 import { Paciente } from '../../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 const ALL_DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MESES_CORTOS  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -46,7 +47,7 @@ interface GridCell {
 @Component({
   selector: 'app-detalle-dieta',
   standalone: true,
-  imports: [NgClass, DecimalPipe],
+  imports: [NgClass, DecimalPipe, SkeletonComponent],
   templateUrl: './detalle-dieta.component.html',
 })
 export class DetalleDietaComponent implements OnInit {

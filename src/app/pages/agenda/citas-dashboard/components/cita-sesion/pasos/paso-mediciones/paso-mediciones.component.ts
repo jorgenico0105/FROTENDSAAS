@@ -7,7 +7,7 @@ import {
   FormularioDetalle, CreateHistoriaRequest, CreateHistoriaRespuestaRequest
 } from '../../../../../../../core/models/formulario.model';
 import {
-  CalcularFormulasRequest, DatosNutricionales, NutricionFormulasResult
+  CalcularFormulasRequest, CreateProgresoRequest, DatosNutricionales, NutricionFormulasResult
 } from '../../../../../../../core/models/nutricion.model';
 
 @Component({
@@ -41,13 +41,25 @@ export class PasoMedicionesComponent implements OnChanges {
   edadPaciente?: number;
   factorActividad = 1.55;
 
-  alturaQId  = 0;
-  pesoQId    = 0;
-  cinturaQId = 0;
-  caderaQId  = 0;
-  imcQId     = 0;
-  iccQId     = 0;
-  rmbQId     = 0;
+  alturaQId       = 0;
+  pesoQId         = 0;
+  cinturaQId      = 0;
+  caderaQId       = 0;
+  imcQId          = 0;
+  iccQId          = 0;
+  rmbQId          = 0;
+  grasaQId        = 0;
+  masaMuscularQId = 0;
+  pechoQId        = 0;
+  brazoQId        = 0;
+  musloQId        = 0;
+
+  // Bienestar fields (not part of the formulario, saved directly to progreso)
+  progresoSueno?: number;
+  progresoHidratacion?: number;
+  progresoEnergia?: number;
+  progresoPctCumplimiento?: number;
+  progresoNotas = '';
 
   get hasFormulario(): boolean { return this.formulario !== null; }
 
@@ -78,15 +90,22 @@ export class PasoMedicionesComponent implements OnChanges {
   private buildRoleMap(form: FormularioDetalle): void {
     this.alturaQId = 0; this.pesoQId = 0; this.cinturaQId = 0;
     this.caderaQId = 0; this.imcQId  = 0; this.iccQId    = 0; this.rmbQId = 0;
+    this.grasaQId = 0; this.masaMuscularQId = 0; this.pechoQId = 0;
+    this.brazoQId = 0; this.musloQId = 0;
     for (const p of form.preguntas) {
       const q = p.pregunta.toLowerCase();
-      if      (q.includes('estatura') || q.includes('altura')) this.alturaQId  = p.id;
-      else if (q.includes('peso'))                              this.pesoQId    = p.id;
-      else if (q.includes('cintura'))                           this.cinturaQId = p.id;
-      else if (q.includes('cadera'))                            this.caderaQId  = p.id;
-      else if (q.includes('imc'))                               this.imcQId     = p.id;
-      else if (q.includes('icc'))                               this.iccQId     = p.id;
-      else if (q.includes('rmb') || q.includes('tmb'))          this.rmbQId     = p.id;
+      if      (q.includes('estatura') || q.includes('altura'))  this.alturaQId       = p.id;
+      else if (q.includes('peso'))                               this.pesoQId         = p.id;
+      else if (q.includes('cintura'))                            this.cinturaQId      = p.id;
+      else if (q.includes('cadera'))                             this.caderaQId       = p.id;
+      else if (q.includes('imc'))                                this.imcQId          = p.id;
+      else if (q.includes('icc'))                                this.iccQId          = p.id;
+      else if (q.includes('rmb') || q.includes('tmb'))           this.rmbQId          = p.id;
+      else if (q.includes('grasa'))                              this.grasaQId        = p.id;
+      else if (q.includes('masa') || q.includes('muscul'))       this.masaMuscularQId = p.id;
+      else if (q.includes('pecho'))                              this.pechoQId        = p.id;
+      else if (q.includes('brazo'))                              this.brazoQId        = p.id;
+      else if (q.includes('muslo'))                              this.musloQId        = p.id;
     }
   }
 
@@ -150,7 +169,10 @@ export class PasoMedicionesComponent implements OnChanges {
   omitir(): void { this.guardado = true; }
 
   iniciarGuardado(): void {
-    if (!this.formulario) { this.guardadoOk.emit(); return; }
+    if (!this.formulario) {
+      this.saveProgreso();
+      return;
+    }
     this.isBusy = true;
     const req: CreateHistoriaRequest = {
       medico_id: this.medicoId,
@@ -159,12 +181,49 @@ export class PasoMedicionesComponent implements OnChanges {
       preguntas: this.buildRespuestas()
     };
     this.formulariosSvc.submitHistoria(this.pacienteId, req).subscribe({
-      next: () => { this.isBusy = false; this.guardado = true; this.guardadoOk.emit(); },
+      next: () => {
+        this.isBusy = false;
+        this.guardado = true;
+        this.saveProgreso();
+      },
       error: (err: { error?: { message?: string } }) => {
         this.isBusy = false;
         this.guardadoError.emit(err?.error?.message || 'Error al guardar las mediciones.');
       }
     });
+  }
+
+  private saveProgreso(): void {
+    if (!this.pacienteId) { this.guardadoOk.emit(); return; }
+    const req = this.buildProgresoRequest();
+    this.nutricionSvc.addProgreso(this.pacienteId, req).subscribe({
+      next: () => this.guardadoOk.emit(),
+      error: () => this.guardadoOk.emit(), // progreso failure shouldn't block the wizard
+    });
+  }
+
+  private buildProgresoRequest(): CreateProgresoRequest {
+    const parseF = (id: number): number | undefined => {
+      const v = parseFloat(this.respuestasMap[id] ?? '');
+      return isNaN(v) ? undefined : v;
+    };
+    return {
+      fecha:                 this.todayStr(),
+      peso_kg:               this.pesoQId         ? parseF(this.pesoQId)         : undefined,
+      altura_cm:             this.alturaQId        ? parseF(this.alturaQId)       : undefined,
+      cintura_cm:            this.cinturaQId       ? parseF(this.cinturaQId)      : undefined,
+      cadera_cm:             this.caderaQId        ? parseF(this.caderaQId)       : undefined,
+      grasa_corporal_pct:    this.grasaQId         ? parseF(this.grasaQId)        : undefined,
+      masa_muscular_kg:      this.masaMuscularQId  ? parseF(this.masaMuscularQId) : undefined,
+      pecho_cm:              this.pechoQId         ? parseF(this.pechoQId)        : undefined,
+      brazo_cm:              this.brazoQId         ? parseF(this.brazoQId)        : undefined,
+      muslo_cm:              this.musloQId         ? parseF(this.musloQId)        : undefined,
+      hidratacion_litros:    this.progresoHidratacion,
+      sueno_horas:           this.progresoSueno,
+      energia_nivel:         this.progresoEnergia,
+      pct_cumplimiento_dieta: this.progresoPctCumplimiento,
+      notas:                 this.progresoNotas || undefined,
+    };
   }
 
   private buildRespuestas(): CreateHistoriaRespuestaRequest[] {

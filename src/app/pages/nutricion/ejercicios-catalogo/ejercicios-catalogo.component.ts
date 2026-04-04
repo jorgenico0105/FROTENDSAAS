@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { NutricionService } from '../../../core/services/nutricion.service';
 import { NutricionEjercicioCatalogo, CreateEjercicioCatalogoRequest } from '../../../core/models/nutricion.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-ejercicios-catalogo',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, SkeletonComponent],
   templateUrl: './ejercicios-catalogo.component.html'
 })
 export class EjerciciosCatalogoComponent implements OnInit {

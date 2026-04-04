@@ -5,10 +5,11 @@ import { NgClass } from '@angular/common';
 import { PacientesService } from '../../../core/services/pacientes.service';
 import { Paciente } from '../../../core/models/pacientes.model';
 import { NuevoPaciente } from '../componentes/nuevo-paciente/nuevo-paciente';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-pacientes-lista',
-  imports: [RouterLink, FormsModule, NgClass, NuevoPaciente],
+  imports: [RouterLink, FormsModule, NgClass, NuevoPaciente, SkeletonComponent],
   templateUrl: './pacientes-lista.component.html'
 })
 export class PacientesListaComponent implements OnInit {

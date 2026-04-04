@@ -8,13 +8,15 @@ import { Paciente } from '../../../core/models/pacientes.model';
 import {
   NutricionDietaPaciente, CreateDietaRequest,
   NutricionProgreso, CreateProgresoRequest,
+  NutricionPreferencia,
 } from '../../../core/models/nutricion.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 type Tab = string;
 
 @Component({
   selector: 'app-detalle-paciente-nutricion',
-  imports: [RouterLink, FormsModule, NgClass, DecimalPipe],
+  imports: [RouterLink, FormsModule, NgClass, DecimalPipe, SkeletonComponent],
   templateUrl: './detalle-paciente-nutricion.component.html'
 })
 export class DetallePacienteNutricionComponent implements OnInit {
@@ -30,8 +32,10 @@ export class DetallePacienteNutricionComponent implements OnInit {
   showDietaModal = false;
   dietaForm: CreateDietaRequest = { nombre: '', fecha_inicio: '', duracion_dias: 7, num_comidas: 5 };
 
+
   // Progreso
   progreso: NutricionProgreso[] = [];
+  preferencias: NutricionPreferencia[] = [];
   showProgresoModal = false;
   progresoForm: CreateProgresoRequest = { fecha: new Date().toISOString().split('T')[0] };
 
@@ -73,6 +77,12 @@ export class DetallePacienteNutricionComponent implements OnInit {
           error: () => { this.isLoading = false; }
         });
         break;
+      case 'prefer':
+        this.nutricionSvc.listPreferencias(this.pacienteId).subscribe({
+          next: (d) => {this.preferencias = d; this.isLoading = false},
+          error: () => {this.isLoading = false}
+        })
+      break;
       default:
         this.isLoading = false;
     }

@@ -6,15 +6,16 @@ import { PacientesService } from '../../../core/services/pacientes.service';
 import { AgendaService } from '../../../core/services/agenda.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { forkJoin } from 'rxjs';
-import { NutricionDietaPaciente } from '../../../core/models/nutricion.model';
+import { MenuRequiereCambio, NutricionDietaPaciente } from '../../../core/models/nutricion.model';
 import { Paciente } from '../../../core/models/pacientes.model';
 import { Cita } from '../../../core/models/agenda.model';
 import { User } from '../../../core/models/user.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-nutricion-dashboard',
   standalone: true,
-  imports: [RouterLink, NgClass],
+  imports: [RouterLink, NgClass, SkeletonComponent],
   templateUrl: './nutricion-dashboard.component.html'
 })
 export class NutricionDashboardComponent implements OnInit {
@@ -23,8 +24,9 @@ export class NutricionDashboardComponent implements OnInit {
 
   totalPacientes = 0;
   dietasActivas  = 0;
-  requierenCambio: NutricionDietaPaciente[] = [];
+  requierenCambio: MenuRequiereCambio[] = [];
   recentPacientes: Paciente[] = [];
+
   citasHoy: Cita[] = [];
   citasHoyTotal = 0;
 

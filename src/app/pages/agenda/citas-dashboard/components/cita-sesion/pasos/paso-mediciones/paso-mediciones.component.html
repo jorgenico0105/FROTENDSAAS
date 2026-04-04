@@ -61,6 +61,75 @@
   </div>
 }
 
+<!-- Bienestar & Seguimiento -->
+<div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
+  <div class="px-5 py-3 bg-gray-50 dark:bg-[#0a0e19] border-b border-gray-100 dark:border-[#172036] flex items-center gap-2">
+    <i class="ri-heart-pulse-line text-secondary-500 text-sm"></i>
+    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Bienestar & Seguimiento</span>
+    <span class="text-xs text-gray-400 ml-1">· Se registrará automáticamente en el historial de progreso</span>
+  </div>
+  <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <!-- Sueño -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+        <i class="ri-moon-line mr-1"></i>Sueño (horas)
+      </label>
+      <div class="relative">
+        <input type="number" [(ngModel)]="progresoSueno" min="0" max="24" step="0.5" placeholder="—"
+               class="w-full px-3 py-2 pr-8 rounded-lg border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">h</span>
+      </div>
+    </div>
+    <!-- Hidratación -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+        <i class="ri-drop-line mr-1"></i>Hidratación (litros)
+      </label>
+      <div class="relative">
+        <input type="number" [(ngModel)]="progresoHidratacion" min="0" max="10" step="0.1" placeholder="—"
+               class="w-full px-3 py-2 pr-6 rounded-lg border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">L</span>
+      </div>
+    </div>
+    <!-- % Cumplimiento dieta -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+        <i class="ri-pie-chart-line mr-1"></i>% Cumplimiento dieta
+      </label>
+      <div class="relative">
+        <input type="number" [(ngModel)]="progresoPctCumplimiento" min="0" max="100" placeholder="—"
+               class="w-full px-3 py-2 pr-7 rounded-lg border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all" />
+        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+      </div>
+    </div>
+    <!-- Nivel de energía -->
+    <div>
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+        <i class="ri-flashlight-line mr-1"></i>Nivel de energía
+      </label>
+      <div class="flex gap-1">
+        @for (n of [1,2,3,4,5]; track n) {
+          <button type="button" (click)="progresoEnergia = (progresoEnergia === n ? undefined : n)"
+                  class="flex-1 py-2 rounded-lg text-xs font-bold transition-all border"
+                  [ngClass]="progresoEnergia === n
+                    ? 'bg-secondary-500 border-secondary-500 text-white'
+                    : 'bg-gray-50 dark:bg-[#0a0e19] border-gray-200 dark:border-[#172036] text-gray-400 hover:border-secondary-400 hover:text-secondary-500'">
+            {{ n }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+  <!-- Notas de progreso -->
+  <div class="px-5 pb-4">
+    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+      <i class="ri-sticky-note-line mr-1"></i>Notas de progreso
+    </label>
+    <textarea [(ngModel)]="progresoNotas" rows="2" placeholder="Observaciones sobre el progreso del paciente..."
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-[#172036] bg-gray-50 dark:bg-[#0a0e19] text-black dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-secondary-500/30 focus:border-secondary-500 transition-all"></textarea>
+  </div>
+</div>
+
 @if (!isLoading && formulario) {
   <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
     <!-- Card header -->

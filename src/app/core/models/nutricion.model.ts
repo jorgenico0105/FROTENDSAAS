@@ -68,12 +68,61 @@ export interface NutricionDietaPaciente {
   creado_en: string;
   actualizado_en: string;
 }
+export interface MenuRequiereCambio {
+  id:                number;
+  dieta_paciente_id: number;
+  semana_numero:     number;
+  fecha_inicio:      Date;
+  fecha_fin:         Date;
+  nombre:            string;
+  estado:            string;
+  state:             string;
+  creado_en:         Date;
+  actualizado_en:    Date;
+  detalles:          null | any;
+  dieta:  DietaCambio
+}
+
+export interface DietaCambio {
+  id:                    number;
+  paciente_id:           number;
+  medico_id:             number;
+  nombre:                string;
+  objetivo:              string;
+  resultado_esperado:    number;
+  fecha_inicio:          Date;
+  duracion_dias:         number;
+  num_comidas:           number;
+  fecha_fin:             Date;
+  calorias_dia_objetivo: number;
+  proteinas_g_dia:       number;
+  carbohidratos_g_dia:   number;
+  grasas_g_dia:          number;
+  estado:                string;
+  state:                 string;
+  creado_en:             Date;
+  actualizado_en:        Date;
+  Paciente:              Paciente;
+}
+
+export interface Paciente {
+  id:            number;
+  clinica_id:    number;
+  nombres:       string;
+  apellidos:     string;
+  tipo_paciente: number;
+  state:         string;
+  created_by:    number;
+  creado:        Date;
+  updated_at:    Date;
+}
+
 
 export interface CreateDietaRequest {
   nombre: string;
   descripcion?: string;
   objetivo?: string;
-  resultado_esperado?: string;
+  resultado_esperado?: number;
   fecha_inicio: string;
   duracion_dias?: number;
   num_comidas?: number;
@@ -177,6 +226,7 @@ export interface CreateProgresoRequest {
   hidratacion_litros?: number;
   sueno_horas?: number;
   energia_nivel?: number;
+  pct_cumplimiento_dieta?: number;
   notas?: string;
   foto_progreso?: string;
 }
@@ -247,6 +297,7 @@ export interface NutricionPreferencia {
   tipo: string;
   notas?: string;
   state: string;
+  Alimento : NutricionAlimento
 }
 
 export interface CreatePreferenciaRequest {
@@ -341,6 +392,7 @@ export interface NutricionRegistroComida {
   fuera_de_plan: boolean;
   descripcion_libre?: string;
   calorias_consumidas?: number;
+  foto_comida?: string;
   proteinas_g?: number;
   carbohidratos_g?: number;
   grasas_g?: number;

@@ -8,11 +8,11 @@ import {
   TIPO_RESPUESTA_LABELS
 } from '../../core/models/formulario.model';
 
-type Vista = 'lista' | 'editor' | 'detalle';
+type Vista = 'lista' | 'editor' | 'detalle' | 'tipos';
 
 interface PreguntaUI extends CreatePreguntaRequest {
-  _id: number;                    // id local para tracking
-  opcionesTexto: string;          // join de opciones para SELECT/MULTISELECT (etiquetas separadas por coma)
+  _id: number;
+  opcionesTexto: string;
 }
 
 @Component({
@@ -25,8 +25,21 @@ export class FormulariosComponent implements OnInit {
 
   // ── Vista ──────────────────────────────────────────────────────────────────
   vista: Vista = 'lista';
-  errorMsg  = '';
+  errorMsg   = '';
   successMsg = '';
+
+  // ── Búsqueda ───────────────────────────────────────────────────────────────
+  busqueda = '';
+
+  get formulariosFiltrados(): Formulario[] {
+    const q = this.busqueda.toLowerCase().trim();
+    if (!q) return this.formularios;
+    return this.formularios.filter(f =>
+      f.nombre.toLowerCase().includes(q) ||
+      (f.descripcion ?? '').toLowerCase().includes(q) ||
+      this.tipoNombre(f.tipo_formulario_id).toLowerCase().includes(q)
+    );
+  }
 
   // ── Lista ──────────────────────────────────────────────────────────────────
   formularios: Formulario[] = [];
@@ -37,7 +50,7 @@ export class FormulariosComponent implements OnInit {
   isLoadingDetalle = false;
 
   // ── Editor ─────────────────────────────────────────────────────────────────
-  editingId: number | null = null;   // null = crear, número = editar
+  editingId: number | null = null;
   isSubmitting = false;
 
   formNombre      = '';
@@ -52,11 +65,18 @@ export class FormulariosComponent implements OnInit {
   readonly TIPOS_RESPUESTA = Object.entries(TIPO_RESPUESTA_LABELS) as [TipoRespuesta, string][];
   readonly TIPO_LABELS = TIPO_RESPUESTA_LABELS;
 
+  // ── Tipos Formulario CRUD ──────────────────────────────────────────────────
+  tipoEditingId: number | null = null;
+  isTipoSubmitting = false;
+  tipoFormCodigo      = '';
+  tipoFormNombre      = '';
+  tipoFormDescripcion = '';
+
   constructor(private svc: FormulariosService) {}
 
   ngOnInit(): void {
     this.loadList();
-    this.svc.listTipos().subscribe({ next: t => this.tiposFormulario = t });
+    this.loadTipos();
   }
 
   // ── Lista ──────────────────────────────────────────────────────────────────
@@ -67,6 +87,10 @@ export class FormulariosComponent implements OnInit {
       next: data => { this.formularios = data; this.isLoading = false; },
       error: () => { this.isLoading = false; }
     });
+  }
+
+  private loadTipos(): void {
+    this.svc.listTipos().subscribe({ next: t => this.tiposFormulario = t });
   }
 
   // ── Detalle ────────────────────────────────────────────────────────────────
@@ -90,12 +114,12 @@ export class FormulariosComponent implements OnInit {
   // ── Editor: Crear ──────────────────────────────────────────────────────────
 
   abrirCrear(): void {
-    this.editingId      = null;
-    this.formNombre     = '';
+    this.editingId       = null;
+    this.formNombre      = '';
     this.formDescripcion = '';
-    this.formTipoId     = this.tiposFormulario[0]?.id ?? 0;
-    this.preguntas      = [];
-    this.errorMsg       = '';
+    this.formTipoId      = this.tiposFormulario[0]?.id ?? 0;
+    this.preguntas       = [];
+    this.errorMsg        = '';
     this.vista = 'editor';
   }
 
@@ -140,9 +164,7 @@ export class FormulariosComponent implements OnInit {
     });
   }
 
-  removePregunta(idx: number): void {
-    this.preguntas.splice(idx, 1);
-  }
+  removePregunta(idx: number): void { this.preguntas.splice(idx, 1); }
 
   moverArriba(idx: number): void {
     if (idx === 0) return;
@@ -174,11 +196,11 @@ export class FormulariosComponent implements OnInit {
     this.errorMsg = '';
 
     const preguntasReq: CreatePreguntaRequest[] = this.preguntas.map((p, i) => ({
-      pregunta:      p.pregunta.trim(),
+      pregunta:       p.pregunta.trim(),
       tipo_respuesta: p.tipo_respuesta,
-      obligatorio:   p.obligatorio,
-      orden:         i,
-      opciones:      this.necesitaOpciones(p.tipo_respuesta)
+      obligatorio:    p.obligatorio,
+      orden:          i,
+      opciones: this.necesitaOpciones(p.tipo_respuesta)
         ? p.opcionesTexto.split(',').map((e, j) => ({ valor: e.trim().toLowerCase().replace(/\s+/g, '_'), etiqueta: e.trim(), orden: j }))
         : []
     }));
@@ -210,7 +232,7 @@ export class FormulariosComponent implements OnInit {
     setTimeout(() => this.successMsg = '', 4000);
   }
 
-  // ── Eliminar ───────────────────────────────────────────────────────────────
+  // ── Eliminar formulario ────────────────────────────────────────────────────
 
   eliminar(f: Formulario): void {
     if (!confirm(`¿Eliminar "${f.nombre}"? Esta acción no se puede deshacer.`)) return;
@@ -224,11 +246,93 @@ export class FormulariosComponent implements OnInit {
     });
   }
 
+  // ── Tipos: Gestión ─────────────────────────────────────────────────────────
+
+  abrirGestionTipos(): void {
+    this.vista = 'tipos';
+    this.resetTipoForm();
+    this.errorMsg = '';
+  }
+
+  abrirEditarTipo(t: TipoFormulario): void {
+    this.tipoEditingId      = t.id;
+    this.tipoFormCodigo     = t.codigo;
+    this.tipoFormNombre     = t.nombre;
+    this.tipoFormDescripcion = t.descripcion ?? '';
+  }
+
+  resetTipoForm(): void {
+    this.tipoEditingId       = null;
+    this.tipoFormCodigo      = '';
+    this.tipoFormNombre      = '';
+    this.tipoFormDescripcion = '';
+  }
+
+  submitTipo(): void {
+    const codigo = this.tipoFormCodigo.trim().toUpperCase();
+    if (codigo.length !== 3)          { this.errorMsg = 'El código debe tener exactamente 3 caracteres.'; return; }
+    if (!this.tipoFormNombre.trim())  { this.errorMsg = 'El nombre es requerido.'; return; }
+
+    this.isTipoSubmitting = true;
+    this.errorMsg = '';
+
+    if (this.tipoEditingId) {
+      this.svc.updateTipo(this.tipoEditingId, {
+        nombre:      this.tipoFormNombre.trim(),
+        descripcion: this.tipoFormDescripcion.trim() || undefined
+      }).subscribe({
+        next: () => {
+          this.isTipoSubmitting = false;
+          this.loadTipos();
+          this.resetTipoForm();
+          this.successMsg = 'Categoría actualizada';
+          setTimeout(() => this.successMsg = '', 3000);
+        },
+        error: err => { this.errorMsg = err?.error?.message || 'Error al actualizar.'; this.isTipoSubmitting = false; }
+      });
+    } else {
+      this.svc.createTipo({
+        codigo,
+        nombre:      this.tipoFormNombre.trim(),
+        descripcion: this.tipoFormDescripcion.trim() || undefined
+      }).subscribe({
+        next: () => {
+          this.isTipoSubmitting = false;
+          this.loadTipos();
+          this.resetTipoForm();
+          this.successMsg = 'Categoría creada';
+          setTimeout(() => this.successMsg = '', 3000);
+        },
+        error: err => { this.errorMsg = err?.error?.message || 'Error al crear.'; this.isTipoSubmitting = false; }
+      });
+    }
+  }
+
+  eliminarTipo(t: TipoFormulario): void {
+    const count = this.formularios.filter(f => f.tipo_formulario_id === t.id).length;
+    const warn  = count > 0 ? ` (tiene ${count} formulario${count !== 1 ? 's' : ''} asociado${count !== 1 ? 's' : ''})` : '';
+    if (!confirm(`¿Eliminar la categoría "${t.nombre}"${warn}?`)) return;
+    this.svc.deleteTipo(t.id).subscribe({
+      next: () => {
+        this.tiposFormulario = this.tiposFormulario.filter(x => x.id !== t.id);
+        if (this.tipoEditingId === t.id) this.resetTipoForm();
+        this.successMsg = 'Categoría eliminada';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => { this.errorMsg = 'Error al eliminar la categoría.'; }
+    });
+  }
+
+  formulariosPorTipo(tipoId: number): number {
+    return this.formularios.filter(f => f.tipo_formulario_id === tipoId).length;
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   setVista(v: Vista): void {
     this.vista    = v;
     this.errorMsg = '';
+    if (v !== 'tipos') this.resetTipoForm();
   }
 
   tipoNombre(id: number): string {
@@ -247,7 +351,7 @@ export class FormulariosComponent implements OnInit {
       SEG: 'bg-success-50 text-success-600 dark:bg-success-900/20 dark:text-success-400',
       TST: 'bg-info-50 text-info-600 dark:bg-info-900/20 dark:text-info-400',
     };
-    return map[codigo] ?? 'bg-gray-100 text-gray-600';
+    return map[codigo] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
   }
 
   tipoCodigo(id: number): string {

@@ -7,6 +7,7 @@ import { PacientesService } from '../../../core/services/pacientes.service';
 import { forkJoin } from 'rxjs';
 import { NutricionDietaPaciente, NutricionMenu, CreateDietaRequest } from '../../../core/models/nutricion.model';
 import { Paciente } from '../../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 interface DietaConPaciente extends NutricionDietaPaciente {
   paciente?: Paciente;
@@ -16,7 +17,7 @@ interface DietaConPaciente extends NutricionDietaPaciente {
 @Component({
   selector: 'app-dietas',
   standalone: true,
-  imports: [RouterLink, FormsModule, NgClass, DecimalPipe],
+  imports: [RouterLink, FormsModule, NgClass, DecimalPipe, SkeletonComponent],
   templateUrl: './dietas.component.html'
 })
 export class DietasComponent implements OnInit {

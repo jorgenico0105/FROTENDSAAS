@@ -7,6 +7,8 @@ import { NutricionService } from '../../../core/services/nutricion.service';
 import { PacientesService } from '../../../core/services/pacientes.service';
 import { NutricionRegistroComida, NutricionRegistroEjercicio, NutricionProgreso } from '../../../core/models/nutricion.model';
 import { Paciente } from '../../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
+import { environment } from '../../../../environments/environment';
 
 interface AccesoStats {
   paciente_id: number;
@@ -33,7 +35,7 @@ interface DiaBar {
 @Component({
   selector: 'app-registros-dashboard',
   standalone: true,
-  imports: [FormsModule, NgClass, DecimalPipe],
+  imports: [FormsModule, NgClass, DecimalPipe, SkeletonComponent],
   templateUrl: './registros-dashboard.component.html'
 })
 export class RegistrosDashboardComponent implements OnInit {
@@ -55,6 +57,8 @@ export class RegistrosDashboardComponent implements OnInit {
   pacienteProgreso: NutricionProgreso[] = [];
   pacienteSearch = '';
   pacienteDropdownOpen = false;
+  selectedImage: string | null = null;
+  readonly apiBase = environment.apiUrl.replace(/\/api\/v\d+$/, '');
 
   private readonly TIPO_NOMBRES: Record<number, string> = {
     1: 'Desayuno', 2: 'Almuerzo', 3: 'Cena', 4: 'Merienda', 5: 'Snack', 6: 'Otro'
@@ -158,15 +162,15 @@ export class RegistrosDashboardComponent implements OnInit {
     this.isPacienteLoading = true;
     const params = { desde: this.fechaDesde, hasta: this.fechaHasta };
     forkJoin({
-      comidas:    this.nutricionSvc.listRegistrosComida(this.selectedPacienteId, params).pipe(catchError(() => of([]))),
+      comidas: this.nutricionSvc.listRegistrosComida(this.selectedPacienteId, params).pipe(catchError(() => of([]))),
       ejercicios: this.nutricionSvc.listRegistrosEjercicio(this.selectedPacienteId, params).pipe(catchError(() => of([]))),
-      progreso:   this.nutricionSvc.listProgreso(this.selectedPacienteId).pipe(catchError(() => of([]))),
+      progreso: this.nutricionSvc.listProgreso(this.selectedPacienteId).pipe(catchError(() => of([]))),
     }).subscribe({
       next: res => {
-        this.pacienteComidas    = res.comidas;
+        this.pacienteComidas = res.comidas;
         this.pacienteEjercicios = res.ejercicios;
-        this.pacienteProgreso   = res.progreso;
-        this.isPacienteLoading  = false;
+        this.pacienteProgreso = res.progreso;
+        this.isPacienteLoading = false;
       },
       error: () => { this.isPacienteLoading = false; }
     });
@@ -176,21 +180,21 @@ export class RegistrosDashboardComponent implements OnInit {
 
   get pacienteFrecSemana(): DiaBar[] {
     const SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const cArr = [0,0,0,0,0,0,0];
-    const eArr = [0,0,0,0,0,0,0];
+    const cArr = [0, 0, 0, 0, 0, 0, 0];
+    const eArr = [0, 0, 0, 0, 0, 0, 0];
     this.pacienteComidas.forEach(r => {
-      cArr[new Date(r.fecha.substring(0,10) + 'T12:00:00').getDay()]++;
+      cArr[new Date(r.fecha.substring(0, 10) + 'T12:00:00').getDay()]++;
     });
     this.pacienteEjercicios.forEach(r => {
-      eArr[new Date(r.fecha.substring(0,10) + 'T12:00:00').getDay()]++;
+      eArr[new Date(r.fecha.substring(0, 10) + 'T12:00:00').getDay()]++;
     });
-    const totals = SHORT.map((_,i) => cArr[i] + eArr[i]);
-    const max    = Math.max(1, ...totals);
+    const totals = SHORT.map((_, i) => cArr[i] + eArr[i]);
+    const max = Math.max(1, ...totals);
     return SHORT.map((short, i) => ({
       short, comidas: cArr[i], ejercicios: eArr[i], total: totals[i],
-      barH:          Math.max(2, Math.round((totals[i] / max) * 100)),
-      comidasPct:    totals[i] > 0 ? Math.round((cArr[i]    / totals[i]) * 100) : 0,
-      ejerciciosPct: totals[i] > 0 ? Math.round((eArr[i]    / totals[i]) * 100) : 0,
+      barH: Math.max(2, Math.round((totals[i] / max) * 100)),
+      comidasPct: totals[i] > 0 ? Math.round((cArr[i] / totals[i]) * 100) : 0,
+      ejerciciosPct: totals[i] > 0 ? Math.round((eArr[i] / totals[i]) * 100) : 0,
     }));
   }
 
@@ -201,14 +205,14 @@ export class RegistrosDashboardComponent implements OnInit {
     return Object.entries(map)
       .map(([id, count]) => ({
         id: +id, label: this.TIPO_NOMBRES[+id] ?? `Tipo ${id}`, count,
-        pct:   Math.round((count / total) * 100),
+        pct: Math.round((count / total) * 100),
         color: this.TIPO_COLORS[+id] ?? '#6b7280',
       }))
       .sort((a, b) => b.count - a.count);
   }
 
   get pacienteEnPlan(): { enPlan: number; fuera: number; pctEnPlan: number } {
-    const fuera  = this.pacienteComidas.filter(r => r.fuera_de_plan).length;
+    const fuera = this.pacienteComidas.filter(r => r.fuera_de_plan).length;
     const enPlan = this.pacienteComidas.length - fuera;
     const pctEnPlan = this.pacienteComidas.length > 0
       ? Math.round((enPlan / this.pacienteComidas.length) * 100) : 0;
@@ -236,7 +240,7 @@ export class RegistrosDashboardComponent implements OnInit {
   get pacienteKcalTrend(): { fecha: string; kcal: number; x: number; y: number }[] {
     if (!this.fechaDesde || !this.fechaHasta) return [];
     const start = new Date(this.fechaDesde + 'T12:00:00');
-    const end   = new Date(this.fechaHasta + 'T12:00:00');
+    const end = new Date(this.fechaHasta + 'T12:00:00');
     const dates: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       dates.push(d.toISOString().split('T')[0]);
@@ -258,12 +262,12 @@ export class RegistrosDashboardComponent implements OnInit {
   }
 
   get pacienteKcalPolyline(): string { return this.pacienteKcalTrend.map(p => `${p.x},${p.y}`).join(' '); }
-  get pacienteKcalMax(): number      { return Math.max(0, ...this.pacienteKcalTrend.map(p => p.kcal)); }
+  get pacienteKcalMax(): number { return Math.max(0, ...this.pacienteKcalTrend.map(p => p.kcal)); }
   get pacienteKcalArea(): string {
     const pts = this.pacienteKcalTrend;
     if (pts.length < 2) return '';
     const bl = 90 - 10;
-    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length-1].x},${bl} Z`;
+    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length - 1].x},${bl} Z`;
   }
 
   // ── Progreso de peso ─────────────────────────────────────────────────────────
@@ -272,9 +276,9 @@ export class RegistrosDashboardComponent implements OnInit {
     const recs = this.pacienteProgreso.filter(r => r.peso_kg != null)
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
     if (recs.length === 0) return [];
-    if (recs.length === 1) return [{ fecha: recs[0].fecha.substring(0,10), peso: recs[0].peso_kg!, x: 280, y: 45 }];
-    const min   = Math.min(...recs.map(r => r.peso_kg!));
-    const max   = Math.max(...recs.map(r => r.peso_kg!));
+    if (recs.length === 1) return [{ fecha: recs[0].fecha.substring(0, 10), peso: recs[0].peso_kg!, x: 280, y: 45 }];
+    const min = Math.min(...recs.map(r => r.peso_kg!));
+    const max = Math.max(...recs.map(r => r.peso_kg!));
     const range = max - min || 1;
     const W = 560, H = 90, padX = 4, padY = 10;
     return recs.map((r, i) => ({
@@ -289,7 +293,7 @@ export class RegistrosDashboardComponent implements OnInit {
     const pts = this.pacientePesoTrend;
     if (pts.length < 2) return '';
     const bl = 90 - 10;
-    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length-1].x},${bl} Z`;
+    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length - 1].x},${bl} Z`;
   }
   get pacientePesoActual(): number | null {
     const recs = this.pacientePesoTrend;
@@ -312,30 +316,30 @@ export class RegistrosDashboardComponent implements OnInit {
       if (!map[nombre]) map[nombre] = { count: 0, minutos: 0, kcal: 0 };
       map[nombre].count++;
       map[nombre].minutos += r.duracion_min_real ?? 0;
-      map[nombre].kcal    += r.calorias_quemadas ?? 0;
+      map[nombre].kcal += r.calorias_quemadas ?? 0;
     });
     const total = this.pacienteEjercicios.length || 1;
     return Object.entries(map)
       .map(([nombre, v]) => ({
         nombre, count: v.count,
-        pct:    Math.round((v.count / total) * 100),
+        pct: Math.round((v.count / total) * 100),
         minutos: Math.round(v.minutos),
-        kcal:   Math.round(v.kcal),
+        kcal: Math.round(v.kcal),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
   }
 
   get pacienteEsfuerzoDistrib(): { nivel: number; label: string; color: string; count: number; pct: number }[] {
-    const LABELS: Record<number, string> = { 1:'Muy suave', 2:'Suave', 3:'Moderado', 4:'Intenso', 5:'Máximo' };
-    const COLORS: Record<number, string> = { 1:'#10b981', 2:'#3b82f6', 3:'#f59e0b', 4:'#f97316', 5:'#ef4444' };
-    const map: Record<number, number> = {1:0,2:0,3:0,4:0,5:0};
+    const LABELS: Record<number, string> = { 1: 'Muy suave', 2: 'Suave', 3: 'Moderado', 4: 'Intenso', 5: 'Máximo' };
+    const COLORS: Record<number, string> = { 1: '#10b981', 2: '#3b82f6', 3: '#f59e0b', 4: '#f97316', 5: '#ef4444' };
+    const map: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     this.pacienteEjercicios.forEach(r => {
       const n = r.nivel_esfuerzo;
       if (n && n >= 1 && n <= 5) map[n]++;
     });
     const total = this.pacienteEjercicios.length || 1;
-    return [1,2,3,4,5].map(n => ({
+    return [1, 2, 3, 4, 5].map(n => ({
       nivel: n, label: LABELS[n], color: COLORS[n], count: map[n],
       pct: Math.round((map[n] / total) * 100),
     }));
@@ -344,7 +348,7 @@ export class RegistrosDashboardComponent implements OnInit {
   get pacienteKcalQuemadaTrend(): { fecha: string; kcal: number; x: number; y: number }[] {
     if (!this.fechaDesde || !this.fechaHasta) return [];
     const start = new Date(this.fechaDesde + 'T12:00:00');
-    const end   = new Date(this.fechaHasta + 'T12:00:00');
+    const end = new Date(this.fechaHasta + 'T12:00:00');
     const dates: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       dates.push(d.toISOString().split('T')[0]);
@@ -366,18 +370,18 @@ export class RegistrosDashboardComponent implements OnInit {
   }
 
   get pacienteKcalQuemadaPolyline(): string { return this.pacienteKcalQuemadaTrend.map(p => `${p.x},${p.y}`).join(' '); }
-  get pacienteKcalQuemadaMax(): number      { return Math.max(0, ...this.pacienteKcalQuemadaTrend.map(p => p.kcal)); }
+  get pacienteKcalQuemadaMax(): number { return Math.max(0, ...this.pacienteKcalQuemadaTrend.map(p => p.kcal)); }
   get pacienteKcalQuemadaArea(): string {
     const pts = this.pacienteKcalQuemadaTrend;
     if (pts.length < 2) return '';
     const bl = 90 - 10;
-    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length-1].x},${bl} Z`;
+    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length - 1].x},${bl} Z`;
   }
 
   get pacienteDuracionTrend(): { fecha: string; min: number; x: number; y: number }[] {
     if (!this.fechaDesde || !this.fechaHasta) return [];
     const start = new Date(this.fechaDesde + 'T12:00:00');
-    const end   = new Date(this.fechaHasta + 'T12:00:00');
+    const end = new Date(this.fechaHasta + 'T12:00:00');
     const dates: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       dates.push(d.toISOString().split('T')[0]);
@@ -399,12 +403,12 @@ export class RegistrosDashboardComponent implements OnInit {
   }
 
   get pacienteDuracionPolyline(): string { return this.pacienteDuracionTrend.map(p => `${p.x},${p.y}`).join(' '); }
-  get pacienteDuracionMax(): number      { return Math.max(0, ...this.pacienteDuracionTrend.map(p => p.min)); }
+  get pacienteDuracionMax(): number { return Math.max(0, ...this.pacienteDuracionTrend.map(p => p.min)); }
   get pacienteDuracionArea(): string {
     const pts = this.pacienteDuracionTrend;
     if (pts.length < 2) return '';
     const bl = 90 - 10;
-    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length-1].x},${bl} Z`;
+    return `M ${pts[0].x},${bl} ${pts.map(p => `L ${p.x},${p.y}`).join(' ')} L ${pts[pts.length - 1].x},${bl} Z`;
   }
 
   get pacienteEjerciciosRecientes(): NutricionRegistroEjercicio[] {
@@ -421,20 +425,24 @@ export class RegistrosDashboardComponent implements OnInit {
 
   // ── Heatmap ──────────────────────────────────────────────────────────────────
 
-  get pacienteHeatmap(): { date: string; label: string; level: 0|1|2|3 }[] {
+  get pacienteHeatmap(): { date: string; label: string; level: 0 | 1 | 2 | 3 }[] {
     const today = new Date();
-    const result: { date: string; label: string; level: 0|1|2|3 }[] = [];
+    const result: { date: string; label: string; level: 0 | 1 | 2 | 3 }[] = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
-      const cCount  = this.pacienteComidas.filter(r => r.fecha.substring(0,10) === dateStr).length;
-      const eCount  = this.pacienteEjercicios.filter(r => r.fecha.substring(0,10) === dateStr).length;
-      const total   = cCount + eCount;
-      const level: 0|1|2|3 = total === 0 ? 0 : total <= 2 ? 1 : total <= 5 ? 2 : 3;
-      result.push({ date: dateStr, label: `${d.getDate()}/${d.getMonth()+1}: ${total} registros`, level });
+      const cCount = this.pacienteComidas.filter(r => r.fecha.substring(0, 10) === dateStr).length;
+      const eCount = this.pacienteEjercicios.filter(r => r.fecha.substring(0, 10) === dateStr).length;
+      const total = cCount + eCount;
+      const level: 0 | 1 | 2 | 3 = total === 0 ? 0 : total <= 2 ? 1 : total <= 5 ? 2 : 3;
+      result.push({ date: dateStr, label: `${d.getDate()}/${d.getMonth() + 1}: ${total} registros`, level });
     }
     return result;
+  }
+  imageUrl(path: string): string {
+    if (!path || path.startsWith('http')) return path;
+    return `${this.apiBase}/${path}`;
   }
 
   get pacienteComidasRecientes(): NutricionRegistroComida[] {
@@ -443,12 +451,17 @@ export class RegistrosDashboardComponent implements OnInit {
 
   get pacienteDiasActivos(): number {
     const dias = new Set([
-      ...this.pacienteComidas.map(r => r.fecha.substring(0,10)),
-      ...this.pacienteEjercicios.map(r => r.fecha.substring(0,10)),
+      ...this.pacienteComidas.map(r => r.fecha.substring(0, 10)),
+      ...this.pacienteEjercicios.map(r => r.fecha.substring(0, 10)),
     ]);
     return dias.size;
   }
-
+  openImage(url: string) {
+    this.selectedImage = url;
+  }
+  closeImage() {
+    this.selectedImage = null;
+  }
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   nombrePaciente(s: PacienteStats): string {
@@ -472,13 +485,13 @@ export class RegistrosDashboardComponent implements OnInit {
   }
 
   esfuerzoLabel(nivel: number): string {
-    const LABELS: Record<number, string> = { 1:'Muy suave', 2:'Suave', 3:'Moderado', 4:'Intenso', 5:'Máximo' };
+    const LABELS: Record<number, string> = { 1: 'Muy suave', 2: 'Suave', 3: 'Moderado', 4: 'Intenso', 5: 'Máximo' };
     return LABELS[nivel] ?? `Nivel ${nivel}`;
   }
 
-  heatmapColor(level: 0|1|2|3): string {
+  heatmapColor(level: 0 | 1 | 2 | 3): string {
     return ['bg-gray-100 dark:bg-[#172036]', 'bg-primary-200 dark:bg-primary-900/40',
-            'bg-primary-400 dark:bg-primary-700', 'bg-primary-600 dark:bg-primary-500'][level];
+      'bg-primary-400 dark:bg-primary-700', 'bg-primary-600 dark:bg-primary-500'][level];
   }
 
   formatDate(d?: string): string {

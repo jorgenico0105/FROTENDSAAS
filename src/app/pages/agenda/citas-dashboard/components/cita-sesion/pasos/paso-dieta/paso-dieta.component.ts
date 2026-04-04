@@ -29,11 +29,12 @@ export class PasoDietaComponent implements OnChanges {
   @ViewChild('chartPesoEl')        chartPesoEl!:        ElementRef;
   @ViewChild('chartComposicionEl') chartComposicionEl!: ElementRef;
 
-  numComidas   = 3;
-  duracionDias = 30;
-  nombrePlan   = '';
-  objetivo     = '';
-  pctProteinas = 30;
+  numComidas        = 3;
+  duracionDias      = 30;
+  nombrePlan        = '';
+  objetivo          = '';
+  resultadoEsperado = 0;
+  pctProteinas      = 30;
   pctCarbos    = 40;
   pctGrasas    = 30;
 
@@ -90,15 +91,16 @@ export class PasoDietaComponent implements OnChanges {
   iniciarGuardado(): void {
     this.isBusy = true;
     const req: CreateDietaRequest = {
-      nombre:               this.nombrePlan.trim() || `Dieta nutricional ${this.todayStr()}`,
-      objetivo:             this.objetivo,
-      fecha_inicio:         this.todayStr(),
-      num_comidas:          this.numComidas,
-      duracion_dias:        this.duracionDias,
+      nombre:                this.nombrePlan.trim() || `Dieta nutricional ${this.todayStr()}`,
+      objetivo:              this.objetivo,
+      resultado_esperado:    this.resultadoEsperado || undefined,
+      fecha_inicio:          this.todayStr(),
+      num_comidas:           this.numComidas,
+      duracion_dias:         this.duracionDias,
       calorias_dia_objetivo: this.caloriasObjetivo,
-      proteinas_g_dia:      this.proteinasG,
-      carbohidratos_g_dia:  this.carbosG,
-      grasas_g_dia:         this.grasasG,
+      proteinas_g_dia:       this.proteinasG,
+      carbohidratos_g_dia:   this.carbosG,
+      grasas_g_dia:          this.grasasG,
     };
     this.nutricionSvc.createDieta(this.pacienteId, req).subscribe({
       next: (dieta: NutricionDietaPaciente) => {

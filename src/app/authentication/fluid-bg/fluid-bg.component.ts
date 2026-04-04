@@ -13,8 +13,12 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
   private gl: WebGLRenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private startTime = 0;
+  private lastFrame = 0;
   private uTime: WebGLUniformLocation | null = null;
   private uRes: WebGLUniformLocation | null = null;
+
+  // Target ~30fps to save GPU on low-end devices
+  private readonly TARGET_MS = 1000 / 30;
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
@@ -40,18 +44,18 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
       void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
     `;
 
-    // Simplex-noise fluid using the warm organic palette
+    // Simplex-noise fluid — underwater ocean palette, perf-optimised
     const fs = `
-      precision highp float;
+      precision mediump float;
       uniform float u_time;
       uniform vec2  u_res;
 
       // ---- palette ----
-      // #1C1510  ESPRESSO
-      // #3A2920  DARK WALNUT
-      // #D7A49A  DUSTY ROSE
-      // #E4C9B6  NUDE
-      // #8B9E81  SAGE
+      // #B8C4BE  SEAFOAM MIST (lightest)
+      // #879EA0  STEEL GRAY-TEAL
+      // #3D8FAB  OCEAN BLUE
+      // #2A6E8A  DEEP STEEL
+      // #0D2640  NAVY ABYSS (darkest)
 
       // ---- simplex 2D ----
       vec3 _mod289v3(vec3 x){ return x - floor(x*(1.0/289.0))*289.0; }
@@ -84,10 +88,10 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
         return 130.0*dot(m, gv);
       }
 
-      // fbm – fewer octaves so shapes stay large
+      // fbm – 2 octaves only (was 3) for lower GPU load
       float fbm(vec2 p){
         float v = 0.0, a = 0.5;
-        for(int i=0; i<3; i++){
+        for(int i=0; i<2; i++){
           v += a * snoise(p);
           p  = p * 2.0 + vec2(1.7, 9.2);
           a *= 0.5;
@@ -97,38 +101,36 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
 
       void main(){
         vec2 uv = gl_FragCoord.xy / u_res.xy;
-        float t  = u_time * 0.10;
+        // slower drift so motion stays gentle
+        float t  = u_time * 0.06;
 
-        // low-frequency scale = large, close waves
-        vec2 q = vec2(fbm(uv*0.6 + vec2(t*0.4, t*0.25)),
-                      fbm(uv*0.6 + vec2(t*0.3 + 5.2, t*0.45 + 1.3)));
+        // lower scale = larger, calmer blobs
+        vec2 q = vec2(fbm(uv*0.45 + vec2(t*0.25, t*0.15)),
+                      fbm(uv*0.45 + vec2(t*0.20 + 5.2, t*0.30 + 1.3)));
 
-        vec2 r = vec2(fbm(uv*0.55 + 2.5*q + vec2(1.7+t*0.12, 9.2+t*0.08)),
-                      fbm(uv*0.55 + 2.5*q + vec2(8.3+t*0.10, 2.8+t*0.11)));
+        vec2 r = vec2(fbm(uv*0.40 + 2.0*q + vec2(1.7+t*0.08, 9.2+t*0.05)),
+                      fbm(uv*0.40 + 2.0*q + vec2(8.3+t*0.06, 2.8+t*0.07)));
 
-        float f = fbm(uv*0.5 + 2.5*r);
+        float f = fbm(uv*0.38 + 2.0*r);
         f = 0.5 + 0.5*f;   // remap to [0,1]
 
-        // palette stops — white peak added at top
-        vec3 col0 = vec3(0.969, 0.937, 0.910); // #F7EFE8 Linen
-        vec3 col1 = vec3(0.894, 0.788, 0.714); // #E4C9B6 Nude
-        vec3 col2 = vec3(0.843, 0.643, 0.604); // #D7A49A Dusty Rose
-        vec3 col3 = vec3(0.545, 0.620, 0.506); // #8B9E81 Sage
-        vec3 col4 = vec3(0.894, 0.788, 0.714); // #E4C9B6 Nude again
-        vec3 col5 = vec3(1.00,  0.98,  0.97);  // warm white
+        // underwater palette — 5 stops × 0.25 bands
+        vec3 col0 = vec3(0.722, 0.769, 0.745); // #B8C4BE seafoam mist
+        vec3 col1 = vec3(0.529, 0.620, 0.627); // #879EA0 steel gray-teal
+        vec3 col2 = vec3(0.239, 0.561, 0.671); // #3D8FAB ocean blue
+        vec3 col3 = vec3(0.165, 0.431, 0.541); // #2A6E8A deep steel
+        vec3 col4 = vec3(0.051, 0.149, 0.251); // #0D2640 navy abyss
 
-        // gradient across palette (6 stops → 5 bands of 0.2 each)
         vec3 col;
-        if(f < 0.20)      col = mix(col0, col1, f*5.0);
-        else if(f < 0.40) col = mix(col1, col2, (f-0.20)*5.0);
-        else if(f < 0.60) col = mix(col2, col3, (f-0.40)*5.0);
-        else if(f < 0.80) col = mix(col3, col4, (f-0.60)*5.0);
-        else               col = mix(col4, col5, (f-0.80)*5.0);
+        if(f < 0.25)      col = mix(col0, col1, f*4.0);
+        else if(f < 0.50) col = mix(col1, col2, (f-0.25)*4.0);
+        else if(f < 0.75) col = mix(col2, col3, (f-0.50)*4.0);
+        else               col = mix(col3, col4, (f-0.75)*4.0);
 
-        // darken at edges for vignette
+        // soft vignette
         vec2 vd = uv - 0.5;
-        float vig = 1.0 - dot(vd, vd)*1.6;
-        col *= clamp(vig, 0.4, 1.0);
+        float vig = 1.0 - dot(vd, vd)*1.2;
+        col *= clamp(vig, 0.45, 1.0);
 
         gl_FragColor = vec4(col, 1.0);
       }
@@ -164,7 +166,7 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
     this.uRes  = gl.getUniformLocation(prog, 'u_res');
 
     this.startTime = performance.now();
-    this.render();
+    this.animId = requestAnimationFrame((ts) => this.render(ts));
   }
 
   private compileShader(gl: WebGLRenderingContext, type: number, src: string): WebGLShader | null {
@@ -179,15 +181,25 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
     return s;
   }
 
-  private render(): void {
+  private render(now = 0): void {
     const gl = this.gl;
     if (!gl || !this.program) return;
+
+    // Throttle to ~30fps to reduce GPU load on weak devices
+    if (now - this.lastFrame < this.TARGET_MS) {
+      this.animId = requestAnimationFrame((ts) => this.render(ts));
+      return;
+    }
+    this.lastFrame = now;
+
     const canvas = this.canvasRef.nativeElement;
 
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
+    // Render at half resolution, CSS upscales it — halves pixel fill cost
+    const scale = 0.5;
+    const w = Math.floor(canvas.clientWidth  * scale);
+    const h = Math.floor(canvas.clientHeight * scale);
     if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
+      canvas.width  = w;
       canvas.height = h;
       gl.viewport(0, 0, w, h);
     }
@@ -197,6 +209,6 @@ export class FluidBgComponent implements AfterViewInit, OnDestroy {
     gl.uniform2f(this.uRes, canvas.width, canvas.height);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    this.animId = requestAnimationFrame(() => this.render());
+    this.animId = requestAnimationFrame((ts) => this.render(ts));
   }
 }

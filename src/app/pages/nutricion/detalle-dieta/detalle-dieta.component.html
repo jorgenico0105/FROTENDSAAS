@@ -16,10 +16,7 @@
 
   <!-- ── Loading inicial ─────────────────────────────────────────────────────── -->
   @if (isLoading) {
-    <div class="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
-      <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-      <span class="text-sm">Cargando dieta...</span>
-    </div>
+    <app-skeleton [type]="'detail'" [rows]="4" />
   }
 
   @if (!isLoading && dieta) {

@@ -6,6 +6,7 @@ import { PacientesService } from '../../core/services/pacientes.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NutricionArchivoPDF, NutricionTipoRecurso } from '../../core/models/nutricion.model';
 import { Paciente } from '../../core/models/pacientes.model';
+import { SkeletonComponent } from '../../common/skeleton/skeleton.component';
 
 interface ArchivoUI extends NutricionArchivoPDF {
   pacienteNombre?: string;
@@ -23,7 +24,7 @@ const BADGE_PALETTE = [
 @Component({
   selector: 'app-recursos',
   standalone: true,
-  imports: [FormsModule, NgClass],
+  imports: [FormsModule, NgClass, SkeletonComponent],
   templateUrl: './recursos.component.html'
 })
 export class RecursosComponent implements OnInit {

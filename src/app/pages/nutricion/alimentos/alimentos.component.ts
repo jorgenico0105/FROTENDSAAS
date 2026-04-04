@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { NutricionService } from '../../../core/services/nutricion.service';
 import { NutricionAlimento, CreateAlimentoRequest } from '../../../core/models/nutricion.model';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
   selector: 'app-alimentos',
-  imports: [FormsModule, DecimalPipe, NgClass],
+  imports: [FormsModule, DecimalPipe, NgClass, SkeletonComponent],
   templateUrl: './alimentos.component.html'
 })
 export class AlimentosComponent implements OnInit {
@@ -15,6 +16,7 @@ export class AlimentosComponent implements OnInit {
   isLoading = false;
   showModal = false;
   isEditing = false;
+  editingId = 0;
   successMsg = '';
   errorMsg = '';
   search = '';
@@ -88,7 +90,32 @@ export class AlimentosComponent implements OnInit {
 
   openCreate(): void {
     this.isEditing = false;
+    this.editingId = 0;
     this.form = { nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100, desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false };
+    this.errorMsg = '';
+    this.showModal = true;
+  }
+
+  openEdit(a: NutricionAlimento): void {
+    this.isEditing = true;
+    this.editingId = a.id;
+    this.form = {
+      nombre:           a.nombre,
+      descripcion:      a.descripcion,
+      categoria:        a.categoria,
+      gramos_porcion:   a.gramos_porcion,
+      calorias:         a.calorias,
+      proteinas_g:      a.proteinas_g,
+      carbohidratos_g:  a.carbohidratos_g,
+      grasas_g:         a.grasas_g,
+      fibra_g:          a.fibra_g,
+      azucares_g:       a.azucares_g,
+      sodio_mg:         a.sodio_mg,
+      desayuno:         a.desayuno ?? false,
+      media_tarde_mana: a.media_tarde_mana ?? false,
+      almuerzo:         a.almuerzo ?? false,
+      merienda:         a.merienda ?? false,
+    };
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -105,11 +132,22 @@ export class AlimentosComponent implements OnInit {
     }
     this.isLoading = true;
     this.errorMsg = '';
-    this.svc.createAlimento(this.form).subscribe({
-      next: () => {
+    const request$ = this.isEditing
+      ? this.svc.updateAlimento(this.editingId, this.form)
+      : this.svc.createAlimento(this.form);
+
+    request$.subscribe({
+      next: (updated) => {
         this.showModal = false;
-        this.successMsg = 'Alimento creado correctamente.';
-        this.load();
+        this.successMsg = this.isEditing ? 'Alimento actualizado correctamente.' : 'Alimento creado correctamente.';
+        if (this.isEditing) {
+          const idx = this.alimentos.findIndex(a => a.id === this.editingId);
+          if (idx >= 0) this.alimentos[idx] = updated;
+          this.applyFilter();
+          this.isLoading = false;
+        } else {
+          this.load();
+        }
         setTimeout(() => this.successMsg = '', 3000);
       },
       error: (err) => {

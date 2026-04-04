@@ -10,6 +10,7 @@ import { Paciente, CreatePacienteRequest } from '../../../core/models/pacientes.
 import { Cita, ESTADO_COLORS, ESTADO_LABELS } from '../../../core/models/agenda.model';
 import { NutricionDietaPaciente, PacienteImagen } from '../../../core/models/nutricion.model';
 import { environment } from '../../../../environments/environment';
+import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 export type TabId = 'datos' | 'historias' | 'nutricion' | 'citas' | 'imagenes';
 
@@ -22,7 +23,7 @@ export interface HistoriaGroup {
 
 @Component({
   selector: 'app-paciente-detalle',
-  imports: [RouterLink, FormsModule, NgClass],
+  imports: [RouterLink, FormsModule, NgClass, SkeletonComponent],
   templateUrl: './paciente-detalle.component.html'
 })
 export class PacienteDetalleComponent implements OnInit {

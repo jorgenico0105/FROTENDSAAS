@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass, DecimalPipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin } from 'rxjs';
 import { NutricionService } from '../../../core/services/nutricion.service';
 import {
@@ -69,10 +70,14 @@ const TIPOS_COMIDA_DEFAULT = [
   templateUrl: './menu-builder.component.html',
   styleUrl: './menu-builder.component.scss'
 })
-export class MenuBuilderComponent implements OnInit {
+export class MenuBuilderComponent implements OnInit, OnDestroy {
   pacienteId = 0;
   dietaId = 0;
   isLoading = false;
+  isExportingPdf = false;
+  isLoadingPreview = false;
+  pdfPreviewUrl: SafeResourceUrl | null = null;
+  private _pdfBlobUrl: string | null = null;
   successMsg = '';
   errorMsg = '';
 
@@ -99,8 +104,13 @@ export class MenuBuilderComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private svc: NutricionService
+    private svc: NutricionService,
+    private sanitizer: DomSanitizer,
   ) {}
+
+  ngOnDestroy(): void {
+    this._revokePdfUrl();
+  }
 
   ngOnInit(): void {
     this.pacienteId = Number(this.route.snapshot.paramMap.get('pacienteId'));
@@ -405,6 +415,50 @@ export class MenuBuilderComponent implements OnInit {
     const ok = within(cell.proteinas_g, cell.proteinasTarget)
       && within(cell.carbohidratos_g, cell.carbohidratosTarget);
     return ok ? 'ok' : 'warn';
+  }
+
+  exportarPdf(): void {
+    if (!this.selectedMenu || this.isExportingPdf) return;
+    this.isExportingPdf = true;
+    this.svc.generateMenuPdf(this.selectedMenu.id).subscribe({
+      next: (blob) => {
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        const nombre = this.selectedMenu?.nombre ?? `semana-${this.selectedMenu?.semana_numero ?? 1}`;
+        a.href     = url;
+        a.download = `menu-${nombre.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExportingPdf = false;
+      },
+      error: () => { this.isExportingPdf = false; }
+    });
+  }
+
+  previsualizarPdf(): void {
+    if (!this.selectedMenu || this.isLoadingPreview) return;
+    this.isLoadingPreview = true;
+    this.svc.generateMenuPdf(this.selectedMenu.id).subscribe({
+      next: (blob) => {
+        this._revokePdfUrl();
+        this._pdfBlobUrl = URL.createObjectURL(blob);
+        this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this._pdfBlobUrl);
+        this.isLoadingPreview = false;
+      },
+      error: () => { this.isLoadingPreview = false; }
+    });
+  }
+
+  cerrarPreview(): void {
+    this._revokePdfUrl();
+    this.pdfPreviewUrl = null;
+  }
+
+  private _revokePdfUrl(): void {
+    if (this._pdfBlobUrl) {
+      URL.revokeObjectURL(this._pdfBlobUrl);
+      this._pdfBlobUrl = null;
+    }
   }
 
   // ─── Cell modal ───────────────────────────────────────────────────────────

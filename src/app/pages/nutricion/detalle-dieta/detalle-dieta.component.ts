@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass, DecimalPipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin } from 'rxjs';
 import { NutricionService } from '../../../core/services/nutricion.service';
 import { PacientesService } from '../../../core/services/pacientes.service';
@@ -50,12 +51,16 @@ interface GridCell {
   imports: [NgClass, DecimalPipe, SkeletonComponent],
   templateUrl: './detalle-dieta.component.html',
 })
-export class DetalleDietaComponent implements OnInit {
+export class DetalleDietaComponent implements OnInit, OnDestroy {
   pacienteId = 0;
   dietaId = 0;
 
   isLoading = true;
   isLoadingMenu = false;
+  isExportingPdf = false;
+  isLoadingPreview = false;
+  pdfPreviewUrl: SafeResourceUrl | null = null;
+  private _pdfBlobUrl: string | null = null;
 
   paciente: Paciente | null = null;
   dieta: NutricionDietaPaciente | null = null;
@@ -71,7 +76,12 @@ export class DetalleDietaComponent implements OnInit {
     private router: Router,
     private nutricionSvc: NutricionService,
     private pacientesSvc: PacientesService,
+    private sanitizer: DomSanitizer,
   ) {}
+
+  ngOnDestroy(): void {
+    this._revokePdfUrl();
+  }
 
   ngOnInit(): void {
     this.pacienteId = Number(this.route.snapshot.paramMap.get('pacienteId'));
@@ -177,6 +187,50 @@ export class DetalleDietaComponent implements OnInit {
       (acc, d) => ({ cal: acc.cal + d.cal, pro: acc.pro + d.pro, carb: acc.carb + d.carb, fat: acc.fat + d.fat }),
       { cal: 0, pro: 0, carb: 0, fat: 0 }
     );
+  }
+
+  exportarPdf(): void {
+    if (!this.menuSeleccionado || this.isExportingPdf) return;
+    this.isExportingPdf = true;
+    this.nutricionSvc.generateMenuPdf(this.menuSeleccionado.id).subscribe({
+      next: (blob) => {
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        const nombre = this.menuSeleccionado?.nombre ?? `semana-${this.menuSeleccionado?.semana_numero ?? 1}`;
+        a.href     = url;
+        a.download = `menu-${nombre.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.isExportingPdf = false;
+      },
+      error: () => { this.isExportingPdf = false; }
+    });
+  }
+
+  previsualizarPdf(): void {
+    if (!this.menuSeleccionado || this.isLoadingPreview) return;
+    this.isLoadingPreview = true;
+    this.nutricionSvc.generateMenuPdf(this.menuSeleccionado.id).subscribe({
+      next: (blob) => {
+        this._revokePdfUrl();
+        this._pdfBlobUrl = URL.createObjectURL(blob);
+        this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this._pdfBlobUrl);
+        this.isLoadingPreview = false;
+      },
+      error: () => { this.isLoadingPreview = false; }
+    });
+  }
+
+  cerrarPreview(): void {
+    this._revokePdfUrl();
+    this.pdfPreviewUrl = null;
+  }
+
+  private _revokePdfUrl(): void {
+    if (this._pdfBlobUrl) {
+      URL.revokeObjectURL(this._pdfBlobUrl);
+      this._pdfBlobUrl = null;
+    }
   }
 
   irMenuBuilder(): void {

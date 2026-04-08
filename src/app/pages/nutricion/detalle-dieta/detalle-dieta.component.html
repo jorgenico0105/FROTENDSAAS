@@ -7,10 +7,32 @@
       <i class="ri-arrow-left-line"></i> Dietas
     </button>
     @if (dieta) {
-      <button (click)="irMenuBuilder()"
-        class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm">
-        <i class="ri-edit-box-line"></i> Editar en Menu Builder
-      </button>
+      <div class="flex items-center gap-2">
+        @if (menuSeleccionado) {
+          <button (click)="previsualizarPdf()" [disabled]="isLoadingPreview"
+            class="inline-flex items-center gap-2 bg-white dark:bg-[#0c1427] border border-gray-200 dark:border-[#172036] hover:border-primary-400 dark:hover:border-primary-700 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-medium px-4 py-2 rounded-xl transition-all shadow-sm disabled:opacity-60">
+            @if (isLoadingPreview) {
+              <span class="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+              Cargando...
+            } @else {
+              <i class="ri-eye-line text-base"></i> Vista previa
+            }
+          </button>
+          <button (click)="exportarPdf()" [disabled]="isExportingPdf"
+            class="inline-flex items-center gap-2 bg-white dark:bg-[#0c1427] border border-gray-200 dark:border-[#172036] hover:border-primary-400 dark:hover:border-primary-700 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-medium px-4 py-2 rounded-xl transition-all shadow-sm disabled:opacity-60">
+            @if (isExportingPdf) {
+              <span class="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+              Generando...
+            } @else {
+              <i class="ri-file-pdf-2-line text-base"></i> Exportar PDF
+            }
+          </button>
+        }
+        <button (click)="irMenuBuilder()"
+          class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm">
+          <i class="ri-edit-box-line"></i> Editar en Menu Builder
+        </button>
+      </div>
     }
   </div>
 
@@ -261,3 +283,40 @@
   }
 
 </div>
+
+<!-- ── Modal: Vista previa PDF ───────────────────────────────────────────────── -->
+@if (pdfPreviewUrl) {
+  <div class="fixed inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-sm"
+       (click)="cerrarPreview()">
+    <div class="flex items-center justify-between px-4 py-3 bg-[#0c1427] border-b border-[#172036] flex-shrink-0"
+         (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-2">
+        <i class="ri-file-pdf-2-line text-danger-400 text-lg"></i>
+        <span class="text-white font-medium text-sm">
+          {{ menuSeleccionado?.nombre || ('Semana ' + menuSeleccionado?.semana_numero) }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="exportarPdf()" [disabled]="isExportingPdf"
+          class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-all disabled:opacity-60">
+          @if (isExportingPdf) {
+            <span class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          } @else {
+            <i class="ri-download-2-line"></i>
+          }
+          Descargar
+        </button>
+        <button (click)="cerrarPreview()"
+          class="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all">
+          <i class="ri-close-line text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-hidden" (click)="$event.stopPropagation()">
+      <iframe [src]="pdfPreviewUrl"
+        class="w-full h-full border-none"
+        type="application/pdf">
+      </iframe>
+    </div>
+  </div>
+}

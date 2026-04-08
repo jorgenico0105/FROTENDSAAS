@@ -304,4 +304,12 @@ export class NutricionService {
   deleteArchivoPDF(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/archivos-pdf/${id}`);
   }
+
+  // ─── Generación de PDF de menú ────────────────────────────────────────────
+
+  generateMenuPdf(menuId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/generate-menu-pdf/${menuId}`, {
+      responseType: 'blob'
+    });
+  }
 }

@@ -95,6 +95,24 @@ export interface UpdateTipoFormularioRequest {
   descripcion?: string;
 }
 
+// ─── Asignación formulario ↔ tipo de cita ────────────────────────────────────
+
+/** Formulario tal como llega embebido dentro de FormularioCitaAsignacion */
+export interface FormularioCitaItem {
+  id: number;
+  nombre: string;
+  tipo_formulario_id?: number;
+  preguntas: FormularioPregunta[]; // opciones vienen inline en cada pregunta
+}
+
+/** Respuesta de GET /historia/formulario-cita/tipo/:tipoCitaId */
+export interface FormularioCitaAsignacion {
+  id: number;
+  formulario_id: number;
+  tipo_cita_id: number;
+  formulario: FormularioCitaItem;
+}
+
 export interface CreateHistoriaRespuestaRequest {
   pregunta_id: number;
   respuesta_texto?: string;

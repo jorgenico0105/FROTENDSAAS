@@ -6,7 +6,8 @@ import { environment } from '../../../environments/environment';
 import {
   Formulario, FormularioDetalle, TipoFormulario,
   CreateFormularioRequest, UpdateFormularioRequest, CreateHistoriaRequest,
-  CreateTipoFormularioRequest, UpdateTipoFormularioRequest
+  CreateTipoFormularioRequest, UpdateTipoFormularioRequest,
+  FormularioCitaAsignacion
 } from '../models/formulario.model';
 import { PacienteImagen } from '../models/nutricion.model';
 
@@ -66,6 +67,13 @@ export class FormulariosService {
 
   getMedicionesForm(): Observable<FormularioDetalle> {
     return this.get(5);
+  }
+
+  /** GET /historia/formulario-cita/tipo/:tipoCitaId */
+  getFormulariosPorTipoCita(tipoCitaId: number): Observable<FormularioCitaAsignacion[]> {
+    return this.http.get<ApiWrapper<FormularioCitaAsignacion[]>>(
+      `${this.base}/formulario-cita/tipo/${tipoCitaId}`
+    ).pipe(map(r => r.data ?? []));
   }
 
   submitHistoria(pacienteId: number, req: CreateHistoriaRequest): Observable<unknown> {

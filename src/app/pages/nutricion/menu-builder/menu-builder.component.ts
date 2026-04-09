@@ -40,6 +40,11 @@ interface GridCell {
   proteinasTarget?: number;
   carbohidratosTarget?: number;
   grasasTarget?: number;
+  nombre_receta?: string;
+  recetaEdit?: string;
+  editandoReceta?: boolean;
+  savingReceta?: boolean;
+  recetaGuardada?: boolean;
 }
 
 const ALL_DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -192,6 +197,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
       cell.proteinasTarget = detalle.proteinas_g_total;
       cell.carbohidratosTarget = detalle.carbohidratos_g_total;
       cell.grasasTarget = detalle.grasas_g_total;
+      cell.nombre_receta = detalle.nombre_receta;
       for (const da of detalle.alimentos ?? []) {
         const alim = da.Alimento;
         if (!alim) continue;
@@ -466,5 +472,36 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   openCell(cell: GridCell): void {
     this.selectedCell = cell;
     this.showCellModal = true;
+  }
+
+  // ─── Receta ───────────────────────────────────────────────────────────────
+
+  startEditReceta(cell: GridCell): void {
+    cell.recetaEdit = cell.nombre_receta ?? '';
+    cell.editandoReceta = true;
+  }
+
+  cancelEditReceta(cell: GridCell): void {
+    cell.editandoReceta = false;
+    cell.recetaEdit = undefined;
+  }
+
+  saveReceta(cell: GridCell): void {
+    if (!cell.detalle_id || cell.recetaEdit === undefined) return;
+    cell.savingReceta = true;
+    this.svc.updateDetalleReceta(this.pacienteId, cell.detalle_id, cell.recetaEdit).subscribe({
+      next: () => {
+        cell.nombre_receta = cell.recetaEdit;
+        cell.editandoReceta = false;
+        cell.recetaEdit = undefined;
+        cell.savingReceta = false;
+        cell.recetaGuardada = true;
+        setTimeout(() => { cell.recetaGuardada = false; }, 2500);
+      },
+      error: () => {
+        this.errorMsg = 'Error al guardar la receta.';
+        cell.savingReceta = false;
+      }
+    });
   }
 }

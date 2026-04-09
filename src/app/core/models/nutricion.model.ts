@@ -475,6 +475,7 @@ export interface NutricionMenuDetalleConAlimentos {
   dia_numero: number;
   nombre_comida?: string;
   instrucciones?: string;
+  nombre_receta?: string;
   macros_total?: {
     calorias?: number;
     proteinas_g?: number;

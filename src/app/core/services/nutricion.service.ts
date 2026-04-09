@@ -129,6 +129,13 @@ export class NutricionService {
       .pipe(map(r => r.data));
   }
 
+  updateDetalleReceta(pacienteId: number, detalleId: number, receta: string): Observable<any> {
+    return this.http.patch<ApiResponse<any>>(
+      `${this.base}/pacientes/${pacienteId}/menu-detalles/${detalleId}`,
+      { nombre_receta: receta }
+    ).pipe(map(r => r.data));
+  }
+
   // ─── Alimentos de un detalle ───────────────────────────────────────────────
 
   getAlimentosDetalle(pacienteId: number, detalleId: number): Observable<NutricionDietaAlimento[]> {

@@ -6,7 +6,7 @@ export const environment = {
 
   // API Configuration
   // TODO: Cambiar a la URL de producción cuando esté disponible
-  apiUrl: 'https://api.tudominio.com/api',
+  apiUrl: 'https://api.koisaas.lat/api/v1',
 
   // App Configuration
   appName: 'Trezo',

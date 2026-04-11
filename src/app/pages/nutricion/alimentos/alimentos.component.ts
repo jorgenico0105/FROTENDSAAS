@@ -29,7 +29,8 @@ export class AlimentosComponent implements OnInit {
 
   form: CreateAlimentoRequest = {
     nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100,
-    desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false
+    desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false,
+    unidad: false, gramos_unidad: undefined, medida: ''
   };
 
   constructor(private svc: NutricionService) {}
@@ -91,7 +92,7 @@ export class AlimentosComponent implements OnInit {
   openCreate(): void {
     this.isEditing = false;
     this.editingId = 0;
-    this.form = { nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100, desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false };
+    this.form = { nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100, desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false, unidad: false, gramos_unidad: undefined, medida: '' };
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -115,6 +116,9 @@ export class AlimentosComponent implements OnInit {
       media_tarde_mana: a.media_tarde_mana ?? false,
       almuerzo:         a.almuerzo ?? false,
       merienda:         a.merienda ?? false,
+      unidad:           a.unidad ?? false,
+      gramos_unidad:    a.gramos_unidad ?? undefined,
+      medida:           a.medida ?? '',
     };
     this.errorMsg = '';
     this.showModal = true;

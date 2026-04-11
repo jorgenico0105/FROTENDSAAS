@@ -29,7 +29,7 @@ export class HeaderComponent implements OnInit {
     ngOnInit(): void {
         this.toggleService.initializeTheme();
         const user = this.authService.getCurrentUser();
-        console.log(user)
+       
         if (user) {
             this.userName = user.firstName + ' ' + user.lastName;
             this.userInitial = user.firstName?.charAt(0)?.toUpperCase() || '?';

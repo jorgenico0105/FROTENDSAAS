@@ -24,6 +24,9 @@ export interface NutricionAlimento {
   media_tarde_mana?: boolean;
   almuerzo?: boolean;
   merienda?: boolean;
+  unidad: boolean;
+  gramos_unidad: number;
+  medida: string;
   state: string;
   creado_en: string;
 }
@@ -44,6 +47,9 @@ export interface CreateAlimentoRequest {
   media_tarde_mana?: boolean;
   almuerzo?: boolean;
   merienda?: boolean;
+  unidad?: boolean;
+  gramos_unidad?: number;
+  medida?: string;
 }
 
 export interface NutricionDietaPaciente {

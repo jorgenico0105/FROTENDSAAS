@@ -124,6 +124,32 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
     });
   }
 
+  private toFraccion(n: number): string {
+    const FRACS = [
+      { val: 1/8, label: '1/8' },
+      { val: 1/4, label: '1/4' },
+      { val: 1/2, label: '1/2' },
+      { val: 3/4, label: '3/4' },
+    ];
+    const intPart = Math.floor(n);
+    const dec = n - intPart;
+    if (dec < 0.06) return intPart > 0 ? `${intPart}` : '1/8';
+    const closest = FRACS.reduce((a, b) => Math.abs(dec - b.val) < Math.abs(dec - a.val) ? b : a);
+    return intPart > 0 ? `${intPart} ${closest.label}` : closest.label;
+  }
+
+  formatCantidad(alim: NutricionMenuAlimentoDetalle): string {
+    const a = alim.Alimento;
+    if (a?.unidad && a.gramos_unidad && a.gramos_unidad > 0) {
+      const ratio = alim.gramos_asignados / a.gramos_unidad;
+      if (a.medida === 'cuar') return this.toFraccion(ratio);
+      const qty = Math.ceil(ratio);
+      const label = a.medida === 'cdta' ? 'cucharada' : (a.medida ?? 'uni');
+      return `${qty} ${label}`;
+    }
+    return `${alim.gramos_asignados}g`;
+  }
+
   realMacrosAlim(alim: NutricionMenuAlimentoDetalle): { cal: number; pro: number; carb: number; fat: number } {
     if (alim.Alimento && alim.Alimento.gramos_porcion > 0) {
       const r = alim.gramos_asignados / alim.Alimento.gramos_porcion;

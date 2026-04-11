@@ -17,13 +17,18 @@ interface CellAlimento {
   alimento_id: number;
   nombre: string;
   gramos: number;
-  gramosEdit?: number;   // valor temporal mientras se edita
+  gramosEdit?: number;   // valor temporal mientras se edita (modo gramos)
+  unidadesEdit?: number; // valor temporal mientras se edita (modo unidades)
+  cuartoEdit?: string;   // valor temporal para medida 'cuar' (ej: '1/2')
   editando?: boolean;
   saving?: boolean;
   calorias: number;
   proteinas_g: number;
   carbohidratos_g: number;
   grasas_g: number;
+  unidad?: boolean;
+  gramos_unidad?: number;
+  medida?: string;
 }
 
 interface GridCell {
@@ -76,6 +81,13 @@ const TIPOS_COMIDA_DEFAULT = [
   styleUrl: './menu-builder.component.scss'
 })
 export class MenuBuilderComponent implements OnInit, OnDestroy {
+  readonly CUARTOS = [
+    { label: '1/8', val: 0.125 }, { label: '1/4', val: 0.25  },
+    { label: '1/2', val: 0.5   }, { label: '3/4', val: 0.75  },
+    { label: '1',   val: 1     }, { label: '1 1/4', val: 1.25 },
+    { label: '1 1/2', val: 1.5 }, { label: '2',   val: 2     },
+  ];
+
   pacienteId = 0;
   dietaId = 0;
   isLoading = false;
@@ -178,6 +190,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.svc.getMenuConDetalles(this.pacienteId, menu.id).subscribe({
       next: (fullMenu) => {
+        console.log(fullMenu.detalles)
         this.selectedMenu = fullMenu;
         this.dias = fullMenu.fecha_inicio ? diasDesde(fullMenu.fecha_inicio) : DIAS_DEFAULT;
         this.menus = this.menus.map(m => m.id === fullMenu.id ? fullMenu : m);
@@ -190,6 +203,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
 
   private populateGridFromDetalles(menu: NutricionMenuConDetalles): void {
     for (const detalle of menu.detalles ?? []) {
+
       const cell = this.getCell(detalle.dia_numero, detalle.tipo_comida_id);
       if (!cell) continue;
       cell.detalle_id = detalle.id;
@@ -211,7 +225,10 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
           calorias: alim.calorias * ratio,
           proteinas_g: alim.proteinas_g * ratio,
           carbohidratos_g: alim.carbohidratos_g * ratio,
-          grasas_g: alim.grasas_g * ratio
+          grasas_g: alim.grasas_g * ratio,
+          unidad: alim.unidad,
+          gramos_unidad: alim.gramos_unidad,
+          medida: alim.medida,
         });
       }
       this.recalcCell(cell);
@@ -293,7 +310,10 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
             calorias: alimento.calorias * ratio,
             proteinas_g: alimento.proteinas_g * ratio,
             carbohidratos_g: alimento.carbohidratos_g * ratio,
-            grasas_g: alimento.grasas_g * ratio
+            grasas_g: alimento.grasas_g * ratio,
+            unidad: alimento.unidad,
+            gramos_unidad: alimento.gramos_unidad,
+            medida: alimento.medida,
           });
           this.recalcCell(cell);
         },
@@ -334,19 +354,44 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   }
 
   startEditGramos(ca: CellAlimento): void {
-    ca.gramosEdit = ca.gramos;
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      if (ca.medida === 'cuar') {
+        const ratio = ca.gramos / ca.gramos_unidad;
+        const closest = this.CUARTOS.reduce((a, b) =>
+          Math.abs(ratio - b.val) < Math.abs(ratio - a.val) ? b : a
+        );
+        ca.cuartoEdit = closest.label;
+      } else {
+        ca.unidadesEdit = Math.ceil(ca.gramos / ca.gramos_unidad);
+      }
+    } else {
+      ca.gramosEdit = ca.gramos;
+    }
     ca.editando = true;
   }
 
   cancelEditGramos(ca: CellAlimento): void {
     ca.editando = false;
     ca.gramosEdit = undefined;
+    ca.unidadesEdit = undefined;
+    ca.cuartoEdit = undefined;
   }
 
   saveGramos(cell: GridCell, ca: CellAlimento): void {
-    if (!ca.db_id || !cell.detalle_id || !ca.gramosEdit || ca.gramosEdit <= 0) return;
+    let gramosToSave: number;
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      if (ca.medida === 'cuar') {
+        const cuarto = this.CUARTOS.find(c => c.label === ca.cuartoEdit);
+        gramosToSave = (cuarto?.val ?? 1) * ca.gramos_unidad;
+      } else {
+        gramosToSave = (ca.unidadesEdit ?? 1) * ca.gramos_unidad;
+      }
+    } else {
+      gramosToSave = ca.gramosEdit ?? 0;
+    }
+    if (!ca.db_id || !cell.detalle_id || gramosToSave <= 0) return;
     ca.saving = true;
-    this.svc.updateAlimentoDetalle(this.pacienteId, cell.detalle_id, ca.db_id, ca.gramosEdit).subscribe({
+    this.svc.updateAlimentoDetalle(this.pacienteId, cell.detalle_id, ca.db_id, gramosToSave).subscribe({
       next: (res) => {
         ca.gramos = res.gramos_asignados;
         ca.calorias = res.calorias_calc ?? ca.calorias;
@@ -484,6 +529,33 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   cancelEditReceta(cell: GridCell): void {
     cell.editandoReceta = false;
     cell.recetaEdit = undefined;
+  }
+
+  // ─── Formato de cantidad con unidades ────────────────────────────────────
+
+  private toFraccion(n: number): string {
+    const FRACS = [
+      { val: 1/8, label: '1/8' },
+      { val: 1/4, label: '1/4' },
+      { val: 1/2, label: '1/2' },
+      { val: 3/4, label: '3/4' },
+    ];
+    const intPart = Math.floor(n);
+    const dec = n - intPart;
+    if (dec < 0.06) return intPart > 0 ? `${intPart}` : '1/8';
+    const closest = FRACS.reduce((a, b) => Math.abs(dec - b.val) < Math.abs(dec - a.val) ? b : a);
+    return intPart > 0 ? `${intPart} ${closest.label}` : closest.label;
+  }
+
+  formatCantidad(gramos: number, ca: CellAlimento): string {
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      const ratio = gramos / ca.gramos_unidad;
+      if (ca.medida === 'cuar') return this.toFraccion(ratio);
+      const qty = Math.ceil(ratio);
+      const label = ca.medida === 'cdta' ? 'cucharada' : (ca.medida ?? 'uni');
+      return `${qty} ${label}`;
+    }
+    return `${gramos}g`;
   }
 
   saveReceta(cell: GridCell): void {

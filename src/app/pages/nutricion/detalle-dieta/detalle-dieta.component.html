@@ -230,7 +230,7 @@
                                     {{ alim.Alimento?.nombre ?? ('Alimento #' + alim.alimento_id) }}
                                   </p>
                                   <p class="text-gray-400 dark:text-gray-500">
-                                    {{ alim.gramos_asignados }}g
+                                    {{ formatCantidad(alim) }}
                                     @let kcal = realMacrosAlim(alim).cal;
                                     @if (kcal > 0) {
                                       · <span class="text-orange-400">{{ kcal | number:'1.0-0' }} kcal</span>

@@ -212,6 +212,39 @@
           </div>
         </div>
 
+        <!-- Medida por unidad -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">¿Se mide por unidad?</label>
+          <button type="button"
+            (click)="form.unidad = !form.unidad"
+            class="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all mb-3"
+            [ngClass]="form.unidad
+              ? 'bg-primary-50 border-primary-300 text-primary-700 dark:bg-primary-900/20 dark:border-primary-700 dark:text-primary-300'
+              : 'border-gray-200 dark:border-[#172036] text-gray-500 dark:text-gray-400 hover:border-gray-300'">
+            <i class="ri-scales-line text-base"></i>
+            Usar unidades en lugar de gramos
+            @if (form.unidad) {
+              <i class="ri-checkbox-circle-fill text-primary-500 ml-auto"></i>
+            }
+          </button>
+          @if (form.unidad) {
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gramos por unidad</label>
+                <input [(ngModel)]="form.gramos_unidad" type="number" step="0.1" min="0.1"
+                  class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                  placeholder="Ej: 45">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nombre de la unidad</label>
+                <input [(ngModel)]="form.medida" type="text"
+                  class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500"
+                  placeholder="uni, rodaja, cdta…">
+              </div>
+            </div>
+          }
+        </div>
+
         <!-- Tiempos de comida -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tiempos de comida</label>

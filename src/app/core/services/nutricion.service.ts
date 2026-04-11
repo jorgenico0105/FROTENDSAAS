@@ -116,7 +116,9 @@ export class NutricionService {
 
   getMenuConDetalles(pacienteId: number, menuId: number): Observable<NutricionMenuConDetalles> {
     return this.http.get<ApiResponse<NutricionMenuConDetalles>>(`${this.base}/pacientes/${pacienteId}/menus/${menuId}`)
-      .pipe(map(r => r.data));
+      .pipe(map(r => {
+        console.log(r)
+        return r.data}));
   }
 
   getDetallesMenu(pacienteId: number, menuId: number): Observable<NutricionDietaDetalle[]> {
@@ -218,7 +220,7 @@ export class NutricionService {
   listPreferencias(pacienteId: number): Observable<NutricionPreferencia[]> {
     return this.http.get<ApiResponse<NutricionPreferencia[]>>(`${this.base}/pacientes/${pacienteId}/preferencias`)
       .pipe(map(r => {
-        console.log(r.data)
+      
         return r.data ?? []}));
   }
 

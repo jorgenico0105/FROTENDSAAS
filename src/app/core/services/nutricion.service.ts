@@ -19,7 +19,8 @@ import {
   NutricionArchivoPDF, NutricionTipoRecurso,
   NutricionRegistroComida,
   NutricionRegistroEjercicio,
-  MenuRequiereCambio
+  MenuRequiereCambio,
+  NutricionGrupoAlimento
 } from '../models/nutricion.model';
 
 interface ApiResponse<T> {
@@ -35,6 +36,11 @@ export class NutricionService {
   constructor(private http: HttpClient) {}
 
   // ─── Catálogos ─────────────────────────────────────────────────────────────
+
+  listGruposAlimento(): Observable<NutricionGrupoAlimento[]> {
+    return this.http.get<ApiResponse<NutricionGrupoAlimento[]>>(`${this.base}/grupos-alimento`)
+      .pipe(map(r => r.data ?? []));
+  }
 
   listAlimentos(params?: { categoria?: string; search?: string }): Observable<NutricionAlimento[]> {
     let httpParams = new HttpParams();

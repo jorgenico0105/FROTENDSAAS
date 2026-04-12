@@ -1,3 +1,14 @@
+export interface NutricionGrupoAlimento {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  icono?: string;
+  color?: string;
+  orden: number;
+  state: string;
+}
+
 export interface NutricionTipoComida {
   id: number;
   codigo: string;
@@ -12,6 +23,8 @@ export interface NutricionAlimento {
   nombre: string;
   descripcion?: string;
   categoria?: string;
+  grupo_id?: number;
+  grupo?: NutricionGrupoAlimento;
   gramos_porcion: number;
   calorias: number;
   proteinas_g: number;
@@ -35,6 +48,7 @@ export interface CreateAlimentoRequest {
   nombre: string;
   descripcion?: string;
   categoria?: string;
+  grupo_id?: number;
   gramos_porcion?: number;
   calorias: number;
   proteinas_g?: number;

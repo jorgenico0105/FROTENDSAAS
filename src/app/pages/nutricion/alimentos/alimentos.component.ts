@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { NutricionService } from '../../../core/services/nutricion.service';
-import { NutricionAlimento, CreateAlimentoRequest } from '../../../core/models/nutricion.model';
+import { NutricionAlimento, NutricionGrupoAlimento, CreateAlimentoRequest } from '../../../core/models/nutricion.model';
 import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 
 @Component({
@@ -13,6 +13,7 @@ import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 export class AlimentosComponent implements OnInit {
   alimentos: NutricionAlimento[] = [];
   filtered: NutricionAlimento[] = [];
+  grupos: NutricionGrupoAlimento[] = [];
   isLoading = false;
   showModal = false;
   isEditing = false;
@@ -20,8 +21,7 @@ export class AlimentosComponent implements OnInit {
   successMsg = '';
   errorMsg = '';
   search = '';
-  categoriaFilter = '';
-  categorias: string[] = [];
+  grupoFilter = 0;
 
   // Pagination
   page = 1;
@@ -36,6 +36,7 @@ export class AlimentosComponent implements OnInit {
   constructor(private svc: NutricionService) {}
 
   ngOnInit(): void {
+    this.svc.listGruposAlimento().subscribe({ next: g => this.grupos = g });
     this.load();
   }
 
@@ -44,7 +45,6 @@ export class AlimentosComponent implements OnInit {
     this.svc.listAlimentos().subscribe({
       next: (data) => {
         this.alimentos = data;
-        this.categorias = [...new Set(data.map(a => a.categoria).filter((c): c is string => !!c))];
         this.applyFilter();
         this.isLoading = false;
       },
@@ -58,8 +58,8 @@ export class AlimentosComponent implements OnInit {
       const q = this.search.toLowerCase();
       result = result.filter(a => a.nombre.toLowerCase().includes(q));
     }
-    if (this.categoriaFilter) {
-      result = result.filter(a => a.categoria === this.categoriaFilter);
+    if (this.grupoFilter) {
+      result = result.filter(a => a.grupo_id === this.grupoFilter);
     }
     this.filtered = result;
     this.page = 1;
@@ -92,7 +92,11 @@ export class AlimentosComponent implements OnInit {
   openCreate(): void {
     this.isEditing = false;
     this.editingId = 0;
-    this.form = { nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100, desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false, unidad: false, gramos_unidad: undefined, medida: '' };
+    this.form = {
+      nombre: '', calorias: 0, proteinas_g: 0, carbohidratos_g: 0, grasas_g: 0, gramos_porcion: 100,
+      desayuno: false, media_tarde_mana: false, almuerzo: false, merienda: false,
+      unidad: false, gramos_unidad: undefined, medida: ''
+    };
     this.errorMsg = '';
     this.showModal = true;
   }
@@ -103,7 +107,7 @@ export class AlimentosComponent implements OnInit {
     this.form = {
       nombre:           a.nombre,
       descripcion:      a.descripcion,
-      categoria:        a.categoria,
+      grupo_id:         a.grupo_id,
       gramos_porcion:   a.gramos_porcion,
       calorias:         a.calorias,
       proteinas_g:      a.proteinas_g,
@@ -127,6 +131,10 @@ export class AlimentosComponent implements OnInit {
   closeModal(): void {
     this.showModal = false;
     this.errorMsg = '';
+  }
+
+  nombreGrupo(a: NutricionAlimento): string {
+    return a.grupo?.nombre ?? this.grupos.find(g => g.id === a.grupo_id)?.nombre ?? a.categoria ?? '—';
   }
 
   save(): void {

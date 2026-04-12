@@ -23,11 +23,11 @@
         class="h-10 pl-9 pr-4 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white text-sm outline-none focus:border-primary-500 w-60"
         placeholder="Buscar alimento...">
     </div>
-    <select [(ngModel)]="categoriaFilter" (ngModelChange)="applyFilter()"
+    <select [(ngModel)]="grupoFilter" (ngModelChange)="applyFilter()"
       class="h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white text-sm outline-none focus:border-primary-500">
-      <option value="">Todas las categorías</option>
-      @for (cat of categorias; track cat) {
-        <option [value]="cat">{{ cat }}</option>
+      <option [value]="0">Todos los grupos</option>
+      @for (g of grupos; track g.id) {
+        <option [value]="g.id">{{ g.nombre }}</option>
       }
     </select>
     <select [(ngModel)]="pageSize" (ngModelChange)="page = 1"
@@ -48,7 +48,7 @@
         <thead class="bg-gray-50 dark:bg-[#0a0e19]">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alimento</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoría</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grupo</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Porción (g)</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Calorías</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proteínas</th>
@@ -70,11 +70,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                @if (a.categoria) {
-                  <span class="inline-block px-2 py-0.5 bg-gray-100 dark:bg-[#0a0e19] text-gray-600 dark:text-gray-400 rounded text-xs">{{ a.categoria }}</span>
-                } @else {
-                  <span class="text-gray-400">—</span>
-                }
+                <span class="inline-block px-2 py-0.5 bg-gray-100 dark:bg-[#0a0e19] text-gray-600 dark:text-gray-400 rounded text-xs">{{ nombreGrupo(a) }}</span>
               </td>
               <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{{ a.gramos_porcion }}</td>
               <td class="px-4 py-3 text-right font-semibold text-black dark:text-white">{{ a.calorias | number:'1.0-0' }}</td>
@@ -168,12 +164,12 @@
 @if (showModal) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeModal()"></div>
-    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-[#172036]">
-      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036]">
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-[#172036] flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-[#172036] flex-shrink-0">
         <h3 class="font-semibold text-black dark:text-white">{{ isEditing ? 'Editar Alimento' : 'Nuevo Alimento' }}</h3>
         <button (click)="closeModal()" class="p-1.5 text-gray-400 hover:text-gray-600 rounded"><i class="ri-close-line text-xl"></i></button>
       </div>
-      <div class="p-5 space-y-4">
+      <div class="p-5 space-y-4 overflow-y-auto flex-1">
         @if (errorMsg) {
           <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 text-sm">{{ errorMsg }}</div>
         }
@@ -183,8 +179,14 @@
             <input [(ngModel)]="form.nombre" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Ej: Arroz blanco cocido">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
-            <input [(ngModel)]="form.categoria" type="text" class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500" placeholder="Cereales, Proteínas...">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grupo alimenticio</label>
+            <select [(ngModel)]="form.grupo_id"
+              class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+              <option [ngValue]="undefined">Sin grupo</option>
+              @for (g of grupos; track g.id) {
+                <option [ngValue]="g.id">{{ g.nombre }}</option>
+              }
+            </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Porción (g)</label>
@@ -272,7 +274,7 @@
         </div>
 
       </div>
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036]">
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
         <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">Cancelar</button>
         <button (click)="save()" [disabled]="isLoading" class="px-5 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-400 disabled:opacity-50">
           {{ isLoading ? 'Guardando...' : (isEditing ? 'Guardar cambios' : 'Crear Alimento') }}

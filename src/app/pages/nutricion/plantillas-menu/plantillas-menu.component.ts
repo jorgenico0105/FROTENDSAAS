@@ -18,12 +18,17 @@ interface PlantillaGridAlimento {
   nombre: string;
   gramos: number;
   gramosEdit?: number;
+  unidadesEdit?: number;
+  cuartoEdit?: string;
   editando?: boolean;
   saving?: boolean;
   calorias: number;
   proteinas_g: number;
   carbohidratos_g: number;
   grasas_g: number;
+  unidad?: boolean;
+  gramos_unidad?: number;
+  medida?: string;
 }
 
 interface PlantillaGridCell {
@@ -52,6 +57,12 @@ const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 })
 export class PlantillasMenuComponent implements OnInit {
   readonly DIAS = DIAS;
+  readonly CUARTOS = [
+    { label: '1/8', val: 0.125 }, { label: '1/4', val: 0.25  },
+    { label: '1/2', val: 0.5   }, { label: '3/4', val: 0.75  },
+    { label: '1',   val: 1     }, { label: '1 1/4', val: 1.25 },
+    { label: '1 1/2', val: 1.5 }, { label: '2',   val: 2     },
+  ];
 
   plantillas: PlantillaSemana[] = [];
   selectedPlantilla: PlantillaSemana | null = null;
@@ -196,6 +207,9 @@ export class PlantillasMenuComponent implements OnInit {
           proteinas_g: a.proteinas_g_calc,
           carbohidratos_g: a.carbohidratos_g_calc,
           grasas_g: a.grasas_g_calc,
+          unidad: a.Alimento?.unidad,
+          gramos_unidad: a.Alimento?.gramos_unidad,
+          medida: a.Alimento?.medida,
         }));
         return this.makeCell(diaN, tcId, detalle?.id ?? null, alimentos, detalle?.nombre_receta ?? '');
       });
@@ -263,17 +277,41 @@ export class PlantillasMenuComponent implements OnInit {
   // ─── Edición de gramos ────────────────────────────────────────────────────
 
   startEdit(ca: PlantillaGridAlimento): void {
-    ca.gramosEdit = ca.gramos;
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      if (ca.medida === 'cuar') {
+        const ratio = ca.gramos / ca.gramos_unidad;
+        const closest = this.CUARTOS.reduce((a, b) =>
+          Math.abs(ratio - b.val) < Math.abs(ratio - a.val) ? b : a
+        );
+        ca.cuartoEdit = closest.label;
+      } else {
+        ca.unidadesEdit = Math.ceil(ca.gramos / ca.gramos_unidad);
+      }
+    } else {
+      ca.gramosEdit = ca.gramos;
+    }
     ca.editando = true;
   }
 
   cancelEdit(ca: PlantillaGridAlimento): void {
     ca.editando = false;
     ca.gramosEdit = undefined;
+    ca.unidadesEdit = undefined;
+    ca.cuartoEdit = undefined;
   }
 
   saveGramos(cell: PlantillaGridCell, ca: PlantillaGridAlimento): void {
-    const gramos = ca.gramosEdit ?? 0;
+    let gramos: number;
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      if (ca.medida === 'cuar') {
+        const cuarto = this.CUARTOS.find(c => c.label === ca.cuartoEdit);
+        gramos = (cuarto?.val ?? 1) * ca.gramos_unidad;
+      } else {
+        gramos = (ca.unidadesEdit ?? 1) * ca.gramos_unidad;
+      }
+    } else {
+      gramos = ca.gramosEdit ?? 0;
+    }
     if (gramos <= 0 || !ca.id) return;
     ca.saving = true;
     this.svc.updateAlimento(ca.id, gramos).subscribe({
@@ -339,6 +377,9 @@ export class PlantillasMenuComponent implements OnInit {
           proteinas_g: res.proteinas_g_calc ?? alimento.proteinas_g * ratio,
           carbohidratos_g: res.carbohidratos_g_calc ?? alimento.carbohidratos_g * ratio,
           grasas_g: res.grasas_g_calc ?? alimento.grasas_g * ratio,
+          unidad: alimento.unidad,
+          gramos_unidad: alimento.gramos_unidad,
+          medida: alimento.medida,
         });
         this.recalcCell(this.addFoodCell!);
         this.isAddingFood = false;
@@ -403,6 +444,31 @@ export class PlantillasMenuComponent implements OnInit {
       },
       error: () => { this.isDeleting = false; this.errorMsg = 'Error al eliminar.'; }
     });
+  }
+
+  // ─── Formato cantidad con unidades ───────────────────────────────────────
+
+  private toFraccion(n: number): string {
+    const FRACS = [
+      { val: 1/8, label: '1/8' }, { val: 1/4, label: '1/4' },
+      { val: 1/2, label: '1/2' }, { val: 3/4, label: '3/4' },
+    ];
+    const intPart = Math.floor(n);
+    const dec = n - intPart;
+    if (dec < 0.06) return intPart > 0 ? `${intPart}` : '1/8';
+    const closest = FRACS.reduce((a, b) => Math.abs(dec - b.val) < Math.abs(dec - a.val) ? b : a);
+    return intPart > 0 ? `${intPart} ${closest.label}` : closest.label;
+  }
+
+  formatCantidad(gramos: number, ca: PlantillaGridAlimento): string {
+    if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+      const ratio = gramos / ca.gramos_unidad;
+      if (ca.medida === 'cuar') return this.toFraccion(ratio);
+      const qty = Math.ceil(ratio);
+      const label = ca.medida === 'cdta' ? 'cucharada' : (ca.medida ?? 'uni');
+      return `${qty} ${label}`;
+    }
+    return `${gramos}g`;
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

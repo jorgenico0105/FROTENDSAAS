@@ -262,13 +262,30 @@
                                   @if (!ca.editando) {
                                     <button (click)="$event.stopPropagation(); startEdit(ca)"
                                       class="text-gray-400 hover:text-primary-500 flex-shrink-0 text-[10px] font-mono transition-colors"
-                                      title="Editar gramos">{{ ca.gramos }}g</button>
+                                      title="Editar cantidad">{{ formatCantidad(ca.gramos, ca) }}</button>
                                   } @else {
-                                    <input [(ngModel)]="ca.gramosEdit" type="number" min="1"
-                                      (click)="$event.stopPropagation()"
-                                      (keydown.enter)="saveGramos(cell, ca)"
-                                      (keydown.escape)="cancelEdit(ca)"
-                                      class="w-12 text-[10px] px-1 py-0.5 rounded border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                                    @if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+                                      @if (ca.medida === 'cuar') {
+                                        <select [(ngModel)]="ca.cuartoEdit" (click)="$event.stopPropagation()"
+                                          class="w-14 text-[10px] px-1 py-0.5 rounded border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none">
+                                          @for (c of CUARTOS; track c.label) {
+                                            <option [value]="c.label">{{ c.label }}</option>
+                                          }
+                                        </select>
+                                      } @else {
+                                        <input [(ngModel)]="ca.unidadesEdit" type="number" min="1"
+                                          (click)="$event.stopPropagation()"
+                                          (keydown.enter)="saveGramos(cell, ca)"
+                                          (keydown.escape)="cancelEdit(ca)"
+                                          class="w-10 text-[10px] px-1 py-0.5 rounded border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                                      }
+                                    } @else {
+                                      <input [(ngModel)]="ca.gramosEdit" type="number" min="1"
+                                        (click)="$event.stopPropagation()"
+                                        (keydown.enter)="saveGramos(cell, ca)"
+                                        (keydown.escape)="cancelEdit(ca)"
+                                        class="w-12 text-[10px] px-1 py-0.5 rounded border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                                    }
                                     <button (click)="$event.stopPropagation(); saveGramos(cell, ca)" [disabled]="ca.saving"
                                       class="text-success-500 hover:text-success-600 flex-shrink-0 transition-colors">
                                       @if (ca.saving) { <div class="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div> }
@@ -482,13 +499,29 @@
                   @if (!ca.editando) {
                     <button (click)="startEdit(ca)"
                       class="px-2 py-0.5 text-xs font-mono text-gray-500 dark:text-gray-400 hover:text-primary-500 border border-gray-200 dark:border-[#172036] rounded-lg transition-colors">
-                      {{ ca.gramos }}g
+                      {{ formatCantidad(ca.gramos, ca) }}
                     </button>
                   } @else {
-                    <input [(ngModel)]="ca.gramosEdit" type="number" min="1"
-                      (keydown.enter)="saveGramos(selectedCell, ca)"
-                      (keydown.escape)="cancelEdit(ca)"
-                      class="w-16 text-xs px-2 py-0.5 rounded-lg border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                    @if (ca.unidad && ca.gramos_unidad && ca.gramos_unidad > 0) {
+                      @if (ca.medida === 'cuar') {
+                        <select [(ngModel)]="ca.cuartoEdit"
+                          class="w-20 text-xs px-2 py-0.5 rounded-lg border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none">
+                          @for (c of CUARTOS; track c.label) {
+                            <option [value]="c.label">{{ c.label }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <input [(ngModel)]="ca.unidadesEdit" type="number" min="1"
+                          (keydown.enter)="saveGramos(selectedCell, ca)"
+                          (keydown.escape)="cancelEdit(ca)"
+                          class="w-16 text-xs px-2 py-0.5 rounded-lg border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                      }
+                    } @else {
+                      <input [(ngModel)]="ca.gramosEdit" type="number" min="1"
+                        (keydown.enter)="saveGramos(selectedCell, ca)"
+                        (keydown.escape)="cancelEdit(ca)"
+                        class="w-16 text-xs px-2 py-0.5 rounded-lg border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                    }
                     <button (click)="saveGramos(selectedCell, ca)" [disabled]="ca.saving"
                       class="p-1 text-success-500 hover:text-success-600 transition-colors">
                       @if (ca.saving) { <div class="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin"></div> }

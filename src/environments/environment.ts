@@ -14,7 +14,6 @@ export const environment = {
   // Auth Configuration
   tokenRefreshThreshold: 60, // seconds before expiry to refresh token
   sessionTimeout: 3600, // session timeout in seconds (1 hour)
-
   // Feature Flags
   features: {
     enableMockAuth: false, // Enable mock authentication for development

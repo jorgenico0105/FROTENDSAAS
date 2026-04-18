@@ -15,12 +15,15 @@ import { SkeletonComponent } from '../../../common/skeleton/skeleton.component';
 export class PacientesListaComponent implements OnInit {
   pacientes: Paciente[] = [];
   filtered: Paciente[] = [];
-  isLoading  = false;
-  showModal  = false;
-  isEditing  = false;
-  successMsg = '';
-  search     = '';
+  isLoading      = false;
+  showModal      = false;
+  isEditing      = false;
+  successMsg     = '';
+  errorMsg       = '';
+  search         = '';
   selectedPaciente: Paciente | null = null;
+  confirmDeleteId: number | null = null;
+  isDeleting     = false;
 
   // Pagination
   page = 1;
@@ -97,5 +100,33 @@ export class PacientesListaComponent implements OnInit {
     if (!fechaNac) return '—';
     const diff = Date.now() - new Date(fechaNac).getTime();
     return `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25))} años`;
+  }
+
+  confirmDelete(id: number): void {
+    this.confirmDeleteId = id;
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
+  }
+
+  deletePaciente(id: number): void {
+    this.isDeleting = true;
+    this.svc.delete(id).subscribe({
+      next: () => {
+        this.pacientes = this.pacientes.filter(p => p.id !== id);
+        this.applyFilter();
+        this.confirmDeleteId = null;
+        this.isDeleting = false;
+        this.successMsg = 'Paciente eliminado.';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => {
+        this.errorMsg = 'No se pudo eliminar el paciente.';
+        this.confirmDeleteId = null;
+        this.isDeleting = false;
+        setTimeout(() => this.errorMsg = '', 3000);
+      }
+    });
   }
 }

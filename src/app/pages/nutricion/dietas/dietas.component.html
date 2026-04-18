@@ -197,6 +197,24 @@
                 class="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold bg-primary-500 hover:bg-primary-600 text-white px-3 py-1.5 rounded-xl transition-all shadow-sm">
                 <i class="ri-edit-box-line"></i> Menu builder
               </button>
+              @if (confirmDeleteId === dieta.id) {
+                <div class="flex items-center gap-1">
+                  <button (click)="deleteDieta(dieta)" [disabled]="isDeleting"
+                    class="px-2 py-1.5 text-[10px] font-semibold text-white bg-danger-500 hover:bg-danger-600 rounded-xl disabled:opacity-50 transition-colors whitespace-nowrap">
+                    Confirmar
+                  </button>
+                  <button (click)="confirmDeleteId = null"
+                    class="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl transition-colors">
+                    <i class="ri-close-line"></i>
+                  </button>
+                </div>
+              } @else {
+                <button (click)="confirmDeleteId = dieta.id"
+                  class="p-1.5 text-gray-300 dark:text-gray-600 hover:text-danger-500 dark:hover:text-danger-500 rounded-xl transition-colors"
+                  title="Eliminar dieta">
+                  <i class="ri-delete-bin-line text-base"></i>
+                </button>
+              }
             </div>
           </div>
 

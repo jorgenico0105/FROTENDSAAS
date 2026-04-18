@@ -173,7 +173,10 @@ export class CitaSesionComponent implements OnInit {
 
   onDietaError(msg: string): void { this.errorMsg = msg; }
 
-  onCaloriasCalculadas(kcal: number): void  { this.caloriasObjetivo = kcal; }
+  onCaloriasCalculadas(kcal: number): void  { 
+    console.log("calorias",kcal)
+    this.caloriasObjetivo = kcal; 
+  }
   onDatosNutricionales(datos: DatosNutricionales): void { this.datosNutricion = datos; }
 
   // ── Imagen upload (paso 3) ────────────────────────────────────────────────

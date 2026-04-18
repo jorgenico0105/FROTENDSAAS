@@ -32,6 +32,7 @@ import { NutricionDashboardComponent } from './pages/nutricion/nutricion-dashboa
 import { PacientesNutricionComponent } from './pages/nutricion/pacientes-nutricion/pacientes-nutricion.component';
 import { DetallePacienteNutricionComponent } from './pages/nutricion/detalle-paciente-nutricion/detalle-paciente-nutricion.component';
 import { MenuBuilderComponent } from './pages/nutricion/menu-builder/menu-builder.component';
+import { PlantillasMenuComponent } from './pages/nutricion/plantillas-menu/plantillas-menu.component';
 import { AlimentosComponent } from './pages/nutricion/alimentos/alimentos.component';
 import { EjerciciosCatalogoComponent } from './pages/nutricion/ejercicios-catalogo/ejercicios-catalogo.component';
 import { PacientesListaComponent } from './pages/pacientes/pacientes-lista/pacientes-lista.component';
@@ -71,6 +72,7 @@ export const routes: Routes = [
             { path: 'nutricion/pacientes', component: PacientesNutricionComponent },
             { path: 'nutricion/pacientes/:pacienteId', component: DetallePacienteNutricionComponent },
             { path: 'nutricion/pacientes/:pacienteId/menu-builder/:dietaId', component: MenuBuilderComponent },
+            { path: 'nutricion/plantillas-menu', component: PlantillasMenuComponent },
             { path: 'nutricion/alimentos', component: AlimentosComponent },
             { path: 'nutricion/ejercicios', component: EjerciciosCatalogoComponent },
             { path: 'nutricion/dietas', component: DietasComponent },

@@ -124,11 +124,35 @@
           <div class="flex items-center gap-2">
             <span [ngClass]="estadoDietaBadge(d.estado)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{
               d.estado }}</span>
+            <button (click)="openAsignarModal(d)"
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
+              title="Asignar menú desde plantilla">
+              <i class="ri-file-copy-line"></i> Asignar menú
+            </button>
             <a [routerLink]="['/dashboard/nutricion/pacientes', pacienteId, 'menu-builder', d.id]"
               class="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
               title="Constructor de Menú">
               <i class="ri-calendar-2-line text-base"></i>
             </a>
+            <!-- Eliminar dieta -->
+            @if (confirmDeleteDietaId === d.id) {
+              <div class="flex items-center gap-1" (click)="$event.stopPropagation()">
+                <button (click)="deleteDieta(d.id)" [disabled]="isDeletingDieta"
+                  class="px-2 py-1 text-[10px] font-semibold text-white bg-danger-500 hover:bg-danger-600 rounded-lg disabled:opacity-50 transition-colors">
+                  Confirmar
+                </button>
+                <button (click)="confirmDeleteDietaId = null"
+                  class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                  <i class="ri-close-line text-sm"></i>
+                </button>
+              </div>
+            } @else {
+              <button (click)="confirmDeleteDietaId = d.id"
+                class="p-1.5 text-gray-300 dark:text-gray-600 hover:text-danger-500 dark:hover:text-danger-500 rounded transition-colors"
+                title="Eliminar dieta">
+                <i class="ri-delete-bin-line text-base"></i>
+              </button>
+            }
           </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -356,6 +380,210 @@
         <i class="ri-save-3-line"></i> Crear dieta
       </button>
     </div>
+  </div>
+</div>
+}
+
+<!-- Modal Asignar Menú desde Plantilla -->
+@if (showAsignarModal) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="showAsignarModal = false"></div>
+  <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100 dark:border-[#172036] flex flex-col max-h-[90vh]">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#172036] flex-shrink-0">
+      <div>
+        <h3 class="font-semibold text-black dark:text-white">Asignar menú desde plantilla</h3>
+        <div class="flex items-center gap-2 mt-1.5">
+          <span [ngClass]="asignarStep === 1 ? 'bg-primary-500 text-white' : 'bg-gray-200 dark:bg-[#172036] text-gray-500'"
+            class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-all">1</span>
+          <span class="text-xs text-gray-400">Seleccionar plantilla</span>
+          <i class="ri-arrow-right-s-line text-gray-300"></i>
+          <span [ngClass]="asignarStep === 2 ? 'bg-primary-500 text-white' : 'bg-gray-200 dark:bg-[#172036] text-gray-500'"
+            class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-all">2</span>
+          <span class="text-xs text-gray-400">Confirmar y ajustar</span>
+        </div>
+      </div>
+      <button (click)="showAsignarModal = false" class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+        <i class="ri-close-line text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Step 1: Pick plantilla -->
+    @if (asignarStep === 1) {
+      <div class="p-5 overflow-y-auto flex-1">
+
+        <!-- Semana filter + compatibles badge -->
+        <div class="flex items-center gap-3 mb-4 p-3 bg-primary-50/50 dark:bg-primary-900/10 rounded-xl border border-primary-100 dark:border-primary-900/30">
+          <div class="flex-1">
+            <p class="text-xs font-semibold text-primary-700 dark:text-primary-400">
+              Plantillas compatibles con {{ asignarDieta?.num_comidas }} comidas/día
+            </p>
+            <p class="text-[10px] text-primary-500 dark:text-primary-500 mt-0.5">Filtra por número de semana para encontrar la plantilla exacta</p>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <label class="text-xs text-gray-500 dark:text-gray-400">Semana:</label>
+            <input [(ngModel)]="assignForm.semana_numero" type="number" min="1"
+              (ngModelChange)="refetchPlantillasBySemana()"
+              class="w-16 h-8 px-2 rounded-lg border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500 text-center">
+          </div>
+        </div>
+
+        @if (isLoadingPlantillas) {
+          <div class="flex items-center justify-center py-10">
+            <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (plantillas.length === 0) {
+          <div class="text-center py-10">
+            <i class="ri-file-list-3-line text-4xl text-gray-200 dark:text-gray-700 block mb-2"></i>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">No hay plantillas con {{ asignarDieta?.num_comidas }} comidas/día</p>
+            @if (assignForm.semana_numero) {
+              <p class="text-xs text-gray-400 mb-3">para la semana {{ assignForm.semana_numero }}</p>
+            }
+            <a routerLink="/dashboard/nutricion/plantillas-menu"
+              class="inline-flex items-center gap-1.5 text-xs text-primary-500 hover:underline">
+              <i class="ri-external-link-line"></i> Crear una plantilla
+            </a>
+          </div>
+        } @else {
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">{{ plantillas.length }} plantilla(s) encontrada(s) — selecciona la base para el menú:</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            @for (p of plantillas; track p.id) {
+              <button (click)="selectPlantillaForAssign(p.id)"
+                class="text-left p-4 rounded-xl border-2 transition-all"
+                [ngClass]="selectedPlantillaId === p.id
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                  : 'border-gray-100 dark:border-[#172036] hover:border-primary-200 dark:hover:border-primary-800 bg-white dark:bg-[#0a0e19]'">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                    <i class="ri-file-list-3-line text-primary-500"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm text-black dark:text-white truncate">{{ p.nombre }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Sem. {{ p.semana_numero }} · {{ p.num_comidas }} comidas/día</p>
+                    @if (p.notas) {
+                      <p class="text-xs text-gray-400 italic mt-0.5 truncate">{{ p.notas }}</p>
+                    }
+                  </div>
+                  @if (selectedPlantillaId === p.id) {
+                    <i class="ri-checkbox-circle-fill text-primary-500 flex-shrink-0 ml-auto"></i>
+                  }
+                </div>
+                @if (isLoadingPlantillaDetail && selectedPlantillaId === p.id) {
+                  <div class="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+                    <div class="w-3 h-3 border border-primary-400 border-t-transparent rounded-full animate-spin"></div>
+                    Cargando detalles...
+                  </div>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
+      <div class="flex justify-end gap-3 px-5 py-4 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <button (click)="showAsignarModal = false" class="px-4 py-2 text-sm text-gray-500">Cancelar</button>
+        <button (click)="goToAssignStep2()" [disabled]="!selectedPlantillaId || isLoadingPlantillaDetail"
+          class="inline-flex items-center gap-2 px-5 py-2 bg-primary-500 text-white rounded-xl text-sm font-semibold hover:bg-primary-600 disabled:opacity-50 transition-all">
+          Siguiente <i class="ri-arrow-right-line"></i>
+        </button>
+      </div>
+    }
+
+    <!-- Step 2: Preview + adjust + form -->
+    @if (asignarStep === 2) {
+      <div class="p-5 overflow-y-auto flex-1 space-y-4">
+        @if (errorMsg) {
+          <div class="p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 text-sm">{{ errorMsg }}</div>
+        }
+
+        <!-- Assign form -->
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+              Fecha inicio <span class="text-danger-500">*</span>
+            </label>
+            <input [(ngModel)]="assignForm.fecha_inicio" type="date"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Nro. semana</label>
+            <input [(ngModel)]="assignForm.semana_numero" type="number" min="1"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Nombre del menú</label>
+            <input [(ngModel)]="assignForm.nombre" type="text" placeholder="Opcional"
+              class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
+          </div>
+        </div>
+
+        <!-- Preview grid (editable in memory) -->
+        <div>
+          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            Vista previa — ajusta los gramos antes de asignar (no modifica la plantilla)
+          </p>
+          <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-[#172036]">
+            <table class="w-full border-collapse text-xs min-w-[500px]">
+              <thead class="bg-gray-50 dark:bg-[#0a0e19]">
+                <tr>
+                  <th class="px-3 py-2 text-left text-gray-400 font-semibold uppercase tracking-wider w-16">Día</th>
+                  @for (tc of assignTiposComida; track tc.id) {
+                    <th class="px-3 py-2 text-center text-gray-400 font-semibold uppercase tracking-wider">{{ tc.nombre }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 dark:divide-[#172036]">
+                @for (dia of [1,2,3,4,5,6,7]; track dia) {
+                  <tr>
+                    <td class="px-3 py-2 font-semibold text-black dark:text-white align-top">{{ DIAS_NAMES[dia-1] | slice:0:3 }}</td>
+                    @for (tc of assignTiposComida; track tc.id) {
+                      @let cell = getAssignCell(dia, tc.id);
+                      <td class="px-2 py-2 align-top">
+                        @if (cell) {
+                          <div class="space-y-0.5">
+                            @for (ca of cell.alimentos; track ca.alimento_id) {
+                              <div class="flex items-center gap-1 bg-gray-50 dark:bg-[#0a0e19] rounded-lg px-1.5 py-1 border border-gray-100 dark:border-[#172036]">
+                                <span class="flex-1 truncate text-black dark:text-white font-medium text-[10px]">{{ ca.nombre }}</span>
+                                @if (!ca.editando) {
+                                  <button (click)="startEditAssignGramos(ca)"
+                                    class="text-[10px] font-mono text-gray-400 hover:text-primary-500 flex-shrink-0">{{ ca.gramos_asignados }}g</button>
+                                } @else {
+                                  <input [(ngModel)]="ca.gramosEdit" type="number" min="1"
+                                    (keydown.enter)="confirmEditAssignGramos(ca)"
+                                    (keydown.escape)="cancelEditAssignGramos(ca)"
+                                    class="w-14 text-[10px] px-1 py-0.5 rounded border border-primary-400 bg-white dark:bg-[#172036] text-black dark:text-white outline-none font-mono">
+                                  <button (click)="confirmEditAssignGramos(ca)" class="text-success-500"><i class="ri-check-line"></i></button>
+                                  <button (click)="cancelEditAssignGramos(ca)" class="text-gray-300"><i class="ri-close-line"></i></button>
+                                }
+                              </div>
+                            }
+                            @if (cell.alimentos.length === 0) {
+                              <span class="text-[10px] text-gray-300 dark:text-gray-700">—</span>
+                            }
+                          </div>
+                        } @else {
+                          <span class="text-[10px] text-gray-200 dark:text-gray-800">—</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <button (click)="asignarStep = 1" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-[#172036] rounded-xl transition-all">
+          <i class="ri-arrow-left-line"></i> Atrás
+        </button>
+        <button (click)="submitAssign()" [disabled]="isAssigning || !assignForm.fecha_inicio"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-white rounded-xl text-sm font-semibold hover:bg-primary-600 disabled:opacity-50 transition-all shadow-sm">
+          @if (isAssigning) { <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> }
+          <i class="ri-calendar-check-line"></i> Asignar menú
+        </button>
+      </div>
+    }
   </div>
 </div>
 }

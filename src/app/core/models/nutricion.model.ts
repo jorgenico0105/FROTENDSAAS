@@ -473,6 +473,114 @@ export interface NutricionDietaCatalogo {
   state: string;
 }
 
+// ─── Plantillas de menú ───────────────────────────────────────────────────────
+
+export interface PlantillaSemana {
+  id: number;
+  clinica_id: number;
+  medico_id: number;
+  semana_numero: number;
+  num_comidas: number;
+  nombre: string;
+  notas: string;
+  state: string;
+  creado_en: string;
+  actualizado_en: string;
+  detalles?: DetallePlantilla[];
+}
+
+export interface DetallePlantilla {
+  id: number;
+  menu_id: number;
+  tipo_comida_id: number;
+  dia_numero: number;
+  nombre_comida: string;
+  instrucciones: string;
+  nombre_receta: string;
+  calorias_total: number;
+  proteinas_g_total: number;
+  carbohidratos_g_total: number;
+  grasas_g_total: number;
+  state: string;
+  alimentos?: AlimentoPlantilla[];
+}
+
+export interface AlimentoPlantilla {
+  id: number;
+  menu_detalle_id: number;
+  alimento_id: number;
+  gramos_asignados: number;
+  calorias_calc: number;
+  proteinas_g_calc: number;
+  carbohidratos_g_calc: number;
+  grasas_g_calc: number;
+  observacion: string;
+  state: string;
+  Alimento: NutricionAlimento;
+}
+
+export interface CreatePlantillaSemanaRequest {
+  semana_numero: number;
+  num_comidas: number;
+  nombre: string;
+  notas?: string;
+  calorias_dia: number;
+  proteinas_g_dia?: number;
+  carbohidratos_g_dia?: number;
+  grasas_g_dia?: number;
+}
+
+export interface UpdatePlantillaSemanaRequest {
+  nombre?: string;
+  notas?: string;
+  num_comidas?: number;
+}
+
+export interface AddDetallePlantillaRequest {
+  tipo_comida_id: number;
+  dia_numero: number;
+  nombre_comida?: string;
+  instrucciones?: string;
+  nombre_receta?: string;
+}
+
+export interface AddAlimentoPlantillaRequest {
+  alimento_id: number;
+  gramos_asignados: number;
+  observacion?: string;
+}
+
+export interface AssignMenuFromPlantillaRequest {
+  semana_numero: number;
+  fecha_inicio: string;
+  nombre?: string;
+  notas?: string;
+  detalles: PlantillaDetalleInput[];
+}
+
+export interface PlantillaDetalleInput {
+  tipo_comida_id: number;
+  dia_numero: number;
+  nombre_comida?: string;
+  instrucciones?: string;
+  nombre_receta?: string;
+  calorias_total?: number;
+  proteinas_g_total?: number;
+  carbohidratos_g_total?: number;
+  grasas_g_total?: number;
+  alimentos: PlantillaAlimentoInput[];
+}
+
+export interface PlantillaAlimentoInput {
+  alimento_id: number;
+  gramos_asignados: number;
+  calorias_calc?: number;
+  proteinas_g_calc?: number;
+  carbohidratos_g_calc?: number;
+  grasas_g_calc?: number;
+  observacion?: string;
+}
+
 // ─── Menu con detalles (GET /menus/:menuId) ──────────────────────────────────
 
 export interface NutricionMenuAlimentoDetalle {

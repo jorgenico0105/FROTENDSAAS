@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   NutricionAlimento, CreateAlimentoRequest,
   NutricionDietaPaciente, CreateDietaRequest,
-  NutricionMenu, CreateMenuRequest,
+  NutricionMenu, AssignMenuFromPlantillaRequest,
   NutricionDietaDetalle, NutricionDietaAlimento, AddAlimentoDetalleRequest,
   NutricionProgreso, CreateProgresoRequest,
   NutricionEjercicioCatalogo, CreateEjercicioCatalogoRequest,
@@ -103,6 +103,10 @@ export class NutricionService {
       .pipe(map(r => r.data));
   }
 
+  deleteDieta(pacienteId: number, dietaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/pacientes/${pacienteId}/dietas/${dietaId}`);
+  }
+
   // ─── Menús semanales ──────────────────────────────────────────────────────
 
   listMenusByDieta(pacienteId: number, dietaId: number): Observable<NutricionMenu[]> {
@@ -110,7 +114,7 @@ export class NutricionService {
       .pipe(map(r => r.data ?? []));
   }
 
-  createMenu(pacienteId: number, dietaId: number, data: CreateMenuRequest): Observable<NutricionMenu> {
+  assignMenuFromPlantilla(pacienteId: number, dietaId: number, data: AssignMenuFromPlantillaRequest): Observable<NutricionMenu> {
     return this.http.post<ApiResponse<NutricionMenu>>(`${this.base}/pacientes/${pacienteId}/dietas/${dietaId}/menus`, data)
       .pipe(map(r => r.data));
   }

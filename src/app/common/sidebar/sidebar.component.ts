@@ -136,6 +136,7 @@ export class SidebarComponent implements OnInit {
                     { id: 22, nombre: 'Pacientes', orden: 2, tipo: 'ITEM', visible: true, icono: 'ri-user-heart-line', ruta: '/dashboard/nutricion/pacientes' },
                     { id: 23, nombre: 'Alimentos', orden: 3, tipo: 'ITEM', visible: true, icono: 'ri-leaf-line', ruta: '/dashboard/nutricion/alimentos' },
                     { id: 24, nombre: 'Ejercicios', orden: 4, tipo: 'ITEM', visible: true, icono: 'ri-run-line', ruta: '/dashboard/nutricion/ejercicios' },
+                    { id: 25, nombre: 'Plantillas de Menú', orden: 5, tipo: 'ITEM', visible: true, icono: 'ri-file-list-3-line', ruta: '/dashboard/nutricion/plantillas-menu' },
                 ]
             },
             {

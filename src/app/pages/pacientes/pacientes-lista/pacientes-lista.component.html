@@ -14,6 +14,11 @@
       <i class="ri-checkbox-circle-line"></i>{{ successMsg }}
     </div>
   }
+  @if (errorMsg) {
+    <div class="mb-4 p-3 rounded-lg bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 text-sm flex items-center gap-2">
+      <i class="ri-error-warning-line"></i>{{ errorMsg }}
+    </div>
+  }
 
   <!-- Search -->
   <div class="flex items-center gap-3 mb-4">
@@ -74,6 +79,21 @@
                   <button (click)="openEdit(p)" class="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors" title="Editar">
                     <i class="ri-pencil-line text-base"></i>
                   </button>
+                  @if (confirmDeleteId === p.id) {
+                    <span class="text-xs text-gray-500 dark:text-gray-400">¿Eliminar?</span>
+                    <button (click)="deletePaciente(p.id)" [disabled]="isDeleting"
+                      class="p-1.5 text-white bg-danger-500 hover:bg-danger-600 rounded transition-colors disabled:opacity-50" title="Confirmar">
+                      <i class="ri-check-line text-base"></i>
+                    </button>
+                    <button (click)="cancelDelete()"
+                      class="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors" title="Cancelar">
+                      <i class="ri-close-line text-base"></i>
+                    </button>
+                  } @else {
+                    <button (click)="confirmDelete(p.id)" class="p-1.5 text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded transition-colors" title="Eliminar">
+                      <i class="ri-delete-bin-line text-base"></i>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

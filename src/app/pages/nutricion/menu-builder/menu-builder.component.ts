@@ -5,12 +5,41 @@ import { NgClass, DecimalPipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin } from 'rxjs';
 import { NutricionService } from '../../../core/services/nutricion.service';
+import { PlantillaMenuService } from '../../../core/services/plantilla-menu.service';
 import {
   NutricionAlimento,
-  NutricionMenu, CreateMenuRequest,
+  NutricionMenu,
   NutricionPreferencia,
   NutricionMenuConDetalles,
+  NutricionDietaPaciente,
+  PlantillaSemana,
+  AssignMenuFromPlantillaRequest,
+  PlantillaDetalleInput,
+  PlantillaAlimentoInput,
 } from '../../../core/models/nutricion.model';
+
+interface AssignAlimento {
+  alimento_id: number;
+  nombre: string;
+  gramos_asignados: number;
+  calorias_calc: number;
+  proteinas_g_calc: number;
+  carbohidratos_g_calc: number;
+  grasas_g_calc: number;
+}
+
+interface AssignCell {
+  dia_numero: number;
+  tipo_comida_id: number;
+  nombre_comida: string;
+  instrucciones: string;
+  nombre_receta: string;
+  calorias_total: number;
+  proteinas_g_total: number;
+  carbohidratos_g_total: number;
+  grasas_g_total: number;
+  alimentos: AssignAlimento[];
+}
 
 interface CellAlimento {
   db_id?: number;        // NutricionMenuAlimento.ID — necesario para editar/eliminar
@@ -100,8 +129,6 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
 
   menus: NutricionMenu[] = [];
   selectedMenu: NutricionMenuConDetalles | null = null;
-  showMenuModal = false;
-  menuForm: CreateMenuRequest = { semana_numero: 1, fecha_inicio: '' };
 
   grid: GridCell[][] = [];
   dias: string[] = DIAS_DEFAULT;
@@ -119,9 +146,26 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   selectedCell: GridCell | null = null;
   showCellModal = false;
 
+  // Dieta actual
+  dieta: NutricionDietaPaciente | null = null;
+
+  // Asignar semana desde plantilla
+  showAsignarModal = false;
+  asignarStep: 1 | 2 = 1;
+  plantillasAssign: PlantillaSemana[] = [];
+  isLoadingPlantillasAssign = false;
+  isLoadingPlantillaDetail = false;
+  selectedPlantillaId = 0;
+  assignCells: AssignCell[] = [];
+  assignTiposComida: { id: number; nombre: string }[] = [];
+  assignForm = { semana_numero: 1, fecha_inicio: new Date().toISOString().split('T')[0], nombre: '' };
+  isAssigning = false;
+  assignError = '';
+
   constructor(
     private route: ActivatedRoute,
     private svc: NutricionService,
+    private plantillaSvc: PlantillaMenuService,
     private sanitizer: DomSanitizer,
   ) {}
 
@@ -133,14 +177,15 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
     this.pacienteId = Number(this.route.snapshot.paramMap.get('pacienteId'));
     this.dietaId = Number(this.route.snapshot.paramMap.get('dietaId'));
     this.initGrid();
-    this.resetMenuForm(1);
     this.isLoading = true;
     forkJoin({
       menus: this.svc.listMenusByDieta(this.pacienteId, this.dietaId),
       alimentos: this.svc.listAlimentos(),
-      preferencias: this.svc.listPreferencias(this.pacienteId)
+      preferencias: this.svc.listPreferencias(this.pacienteId),
+      dieta: this.svc.getDieta(this.pacienteId, this.dietaId),
     }).subscribe({
       next: (res) => {
+        this.dieta = res.dieta;
         this.preferencias = res.preferencias;
         this.restriccionIds = new Set(
           res.preferencias
@@ -153,22 +198,11 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
         if (res.menus.length > 0) {
           this.selectMenu(res.menus[0]);
         } else {
-          // No menus: show inline form with defaults
-          this.resetMenuForm(1);
           this.isLoading = false;
         }
       },
       error: () => { this.isLoading = false; }
     });
-  }
-
-  private resetMenuForm(semanaNum: number): void {
-    this.menuForm = {
-      semana_numero: semanaNum,
-      fecha_inicio: new Date().toISOString().split('T')[0],
-      nombre: `Semana ${semanaNum}`,
-      notas: ''
-    };
   }
 
   initGrid(): void {
@@ -233,32 +267,6 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
       }
       this.recalcCell(cell);
     }
-  }
-
-  openMenuModal(): void {
-    this.resetMenuForm(this.menus.length + 1);
-    this.errorMsg = '';
-    this.showMenuModal = true;
-  }
-
-  saveMenu(): void {
-    if (!this.menuForm.fecha_inicio) {
-      this.errorMsg = 'La fecha de inicio es requerida.';
-      return;
-    }
-    this.isLoading = true;
-    this.errorMsg = '';
-    this.svc.createMenu(this.pacienteId, this.dietaId, this.menuForm).subscribe({
-      next: (menu) => {
-        this.menus.push(menu);
-        this.showMenuModal = false;
-        this.selectMenu(menu); // auto-fetch full menu + populate grid
-      },
-      error: (err) => {
-        this.errorMsg = err?.error?.message || 'Error al crear menú.';
-        this.isLoading = false;
-      }
-    });
   }
 
   // ─── Grid helpers ─────────────────────────────────────────────────────────
@@ -556,6 +564,145 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
       return `${qty} ${label}`;
     }
     return `${gramos}g`;
+  }
+
+  // ─── Asignar semana desde plantilla ─────────────────────────────────────
+
+  openAsignarModal(): void {
+    this.asignarStep = 1;
+    this.selectedPlantillaId = 0;
+    this.assignCells = [];
+    this.assignError = '';
+    this.assignForm = {
+      semana_numero: (this.menus.length + 1),
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      nombre: '',
+    };
+    this.showAsignarModal = true;
+    this.fetchPlantillas();
+  }
+
+  private fetchPlantillas(): void {
+    if (!this.dieta) return;
+    this.isLoadingPlantillasAssign = true;
+    this.selectedPlantillaId = 0;
+    this.assignCells = [];
+    this.plantillaSvc.list({
+      num_comidas: this.dieta.num_comidas,
+      semana_numero: this.assignForm.semana_numero || undefined,
+    }).subscribe({
+      next: (p) => {
+        this.plantillasAssign = p;
+        this.isLoadingPlantillasAssign = false;
+        if (p.length === 1) this.selectPlantillaForAssign(p[0].id);
+      },
+      error: () => { this.isLoadingPlantillasAssign = false; }
+    });
+  }
+
+  refetchPlantillasBySemana(): void {
+    this.fetchPlantillas();
+  }
+
+  selectPlantillaForAssign(id: number): void {
+    if (this.selectedPlantillaId === id) return;
+    this.selectedPlantillaId = id;
+    this.isLoadingPlantillaDetail = true;
+    this.plantillaSvc.getById(id).subscribe({
+      next: (p) => {
+        this.buildAssignCells(p);
+        this.assignForm.semana_numero = p.semana_numero;
+        this.assignForm.nombre = p.nombre;
+        this.isLoadingPlantillaDetail = false;
+      },
+      error: () => { this.isLoadingPlantillaDetail = false; }
+    });
+  }
+
+  private buildAssignCells(p: PlantillaSemana): void {
+    const TIPOS_MAP: Record<number, string> = {
+      1: 'Desayuno', 2: 'Media Mañana', 3: 'Almuerzo', 4: 'Media Tarde', 5: 'Cena'
+    };
+    const detalles = p.detalles ?? [];
+    const tipoIds = [...new Set(detalles.map(d => d.tipo_comida_id))].sort((a, b) => a - b);
+    this.assignTiposComida = tipoIds.map(id => ({ id, nombre: TIPOS_MAP[id] ?? `Comida ${id}` }));
+    this.assignCells = detalles.map(d => ({
+      dia_numero: d.dia_numero,
+      tipo_comida_id: d.tipo_comida_id,
+      nombre_comida: d.nombre_comida,
+      instrucciones: d.instrucciones,
+      nombre_receta: d.nombre_receta,
+      calorias_total: d.calorias_total,
+      proteinas_g_total: d.proteinas_g_total,
+      carbohidratos_g_total: d.carbohidratos_g_total,
+      grasas_g_total: d.grasas_g_total,
+      alimentos: (d.alimentos ?? []).map(a => ({
+        alimento_id: a.alimento_id,
+        nombre: a.Alimento?.nombre ?? `Alimento #${a.alimento_id}`,
+        gramos_asignados: a.gramos_asignados,
+        calorias_calc: a.calorias_calc,
+        proteinas_g_calc: a.proteinas_g_calc,
+        carbohidratos_g_calc: a.carbohidratos_g_calc,
+        grasas_g_calc: a.grasas_g_calc,
+      })),
+    }));
+  }
+
+  goToAssignStep2(): void {
+    if (!this.selectedPlantillaId) return;
+    this.asignarStep = 2;
+  }
+
+  submitAssign(): void {
+    if (!this.assignForm.fecha_inicio) {
+      this.assignError = 'La fecha de inicio es requerida.';
+      return;
+    }
+    this.isAssigning = true;
+    this.assignError = '';
+    const detalles: PlantillaDetalleInput[] = this.assignCells.map(c => ({
+      tipo_comida_id: c.tipo_comida_id,
+      dia_numero: c.dia_numero,
+      nombre_comida: c.nombre_comida,
+      instrucciones: c.instrucciones,
+      nombre_receta: c.nombre_receta,
+      calorias_total: c.calorias_total,
+      proteinas_g_total: c.proteinas_g_total,
+      carbohidratos_g_total: c.carbohidratos_g_total,
+      grasas_g_total: c.grasas_g_total,
+      alimentos: c.alimentos.map((a): PlantillaAlimentoInput => ({
+        alimento_id: a.alimento_id,
+        gramos_asignados: a.gramos_asignados,
+        calorias_calc: a.calorias_calc,
+        proteinas_g_calc: a.proteinas_g_calc,
+        carbohidratos_g_calc: a.carbohidratos_g_calc,
+        grasas_g_calc: a.grasas_g_calc,
+      })),
+    }));
+    const body: AssignMenuFromPlantillaRequest = {
+      semana_numero: this.assignForm.semana_numero,
+      fecha_inicio: this.assignForm.fecha_inicio,
+      nombre: this.assignForm.nombre || undefined,
+      detalles,
+    };
+    this.svc.assignMenuFromPlantilla(this.pacienteId, this.dietaId, body).subscribe({
+      next: (menu) => {
+        this.menus.push(menu);
+        this.showAsignarModal = false;
+        this.isAssigning = false;
+        this.successMsg = 'Semana asignada correctamente.';
+        setTimeout(() => { this.successMsg = ''; }, 3000);
+        this.selectMenu(menu);
+      },
+      error: (err) => {
+        this.assignError = err?.error?.message || 'Error al asignar el menú.';
+        this.isAssigning = false;
+      }
+    });
+  }
+
+  getAssignCell(diaN: number, tcId: number): AssignCell | undefined {
+    return this.assignCells.find(c => c.dia_numero === diaN && c.tipo_comida_id === tcId);
   }
 
   saveReceta(cell: GridCell): void {

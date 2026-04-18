@@ -34,6 +34,8 @@ export class DietasComponent implements OnInit {
   showDietaModal = false;
   selectedPacienteId = 0;
   isSubmitting = false;
+  confirmDeleteId: number | null = null;
+  isDeleting = false;
   dietaForm: CreateDietaRequest = {
     nombre: '', fecha_inicio: new Date().toISOString().split('T')[0],
     duracion_dias: 28, num_comidas: 5
@@ -158,6 +160,20 @@ export class DietasComponent implements OnInit {
         this.errorMsg = err?.error?.message || 'Error al crear la dieta.';
         this.isSubmitting = false;
       }
+    });
+  }
+
+  deleteDieta(dieta: DietaConPaciente): void {
+    this.isDeleting = true;
+    this.nutricionSvc.deleteDieta(dieta.paciente_id, dieta.id).subscribe({
+      next: () => {
+        this.dietasConPaciente = this.dietasConPaciente.filter(d => d.id !== dieta.id);
+        this.confirmDeleteId = null;
+        this.isDeleting = false;
+        this.successMsg = 'Dieta eliminada.';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => { this.isDeleting = false; this.errorMsg = 'Error al eliminar la dieta.'; }
     });
   }
 

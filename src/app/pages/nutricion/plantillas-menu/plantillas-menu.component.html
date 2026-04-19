@@ -376,7 +376,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Comidas/día</label>
-            <select [(ngModel)]="createForm.num_comidas"
+            <select [ngModel]="createForm.num_comidas" (ngModelChange)="createForm.num_comidas = +$event"
               class="w-full h-10 px-3 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0a0e19] text-black dark:text-white text-sm outline-none focus:border-primary-500">
               <option [value]="3">3 comidas</option>
               <option [value]="4">4 comidas</option>

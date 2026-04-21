@@ -108,4 +108,5 @@ export interface HistoriaRespuestaRow {
   id_historia_clinica: number;
   fecha_registro: string;
   nombre_formulario: string;
+  observacion_general: string | null;
 }

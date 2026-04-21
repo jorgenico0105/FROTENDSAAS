@@ -6,7 +6,7 @@ export const environment = {
 
   // API Configuration
   apiUrl: 'https://api.koisaas.lat/api/v1',
-  //apiUrl :'http://localhost:8080/api/v1',
+ // apiUrl :'http://localhost:8080/api/v1',
   // App Configuration
   appName: 'KOI',
   appVersion: '1.1.0',

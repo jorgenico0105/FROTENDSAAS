@@ -71,11 +71,18 @@
           <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Catálogo de Alimentos
           </p>
-          @if (restriccionIds.size > 0) {
-            <span class="text-xs text-danger-500 dark:text-danger-400 bg-danger-50 dark:bg-danger-900/20 px-2 py-0.5 rounded-full">
-              {{ restriccionIds.size }} restric.
-            </span>
-          }
+          <div class="flex items-center gap-1">
+            @if (restriccionIds.size > 0) {
+              <span class="text-xs text-danger-500 dark:text-danger-400 bg-danger-50 dark:bg-danger-900/20 px-2 py-0.5 rounded-full">
+                <i class="ri-forbid-line text-[9px]"></i> {{ restriccionIds.size }}
+              </span>
+            }
+            @if (disgustoIds.size > 0) {
+              <span class="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
+                <i class="ri-emotion-unhappy-line text-[9px]"></i> {{ disgustoIds.size }}
+              </span>
+            }
+          </div>
         </div>
         <div class="relative">
           <i class="ri-search-line absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -88,20 +95,64 @@
         </p>
       </div>
 
+      <!-- Panel: restricciones y disgustos -->
+      @if (restriccionesAlimentos.length > 0 || disgustosAlimentos.length > 0) {
+        <div class="px-3 py-2.5 border-b border-gray-100 dark:border-[#172036] space-y-2 flex-shrink-0">
+          @if (restriccionesAlimentos.length > 0) {
+            <div>
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-danger-600 dark:text-danger-400 flex items-center gap-1 mb-1">
+                <i class="ri-forbid-line"></i> Restringidos ({{ restriccionesAlimentos.length }})
+              </p>
+              <div class="flex flex-wrap gap-1">
+                @for (r of restriccionesAlimentos; track r.nombre) {
+                  <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-400 border border-danger-200 dark:border-danger-800/40"
+                    [title]="r.notas ?? ''">{{ r.nombre }}</span>
+                }
+              </div>
+            </div>
+          }
+          @if (disgustosAlimentos.length > 0) {
+            <div>
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 flex items-center gap-1 mb-1">
+                <i class="ri-emotion-unhappy-line"></i> No le gustan ({{ disgustosAlimentos.length }})
+              </p>
+              <div class="flex flex-wrap gap-1">
+                @for (d of disgustosAlimentos; track d.nombre) {
+                  <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40"
+                    [title]="d.notas ?? ''">{{ d.nombre }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Scrollable food list -->
       <div class="flex-1 overflow-y-auto p-2 space-y-1">
         @for (a of filteredAlimentos; track a.id) {
           <div
             draggable="true"
             (dragstart)="onDragStart(a)"
-            class="group flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-[#172036] cursor-grab
-                   hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/50 dark:hover:bg-primary-900/10
-                   transition-all active:cursor-grabbing active:scale-95 active:opacity-80">
-            <div class="w-8 h-8 bg-success-50 dark:bg-success-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <i class="ri-restaurant-2-line text-success-500 text-sm"></i>
+            class="group flex items-center gap-2.5 p-2.5 rounded-lg border cursor-grab transition-all active:cursor-grabbing active:scale-95 active:opacity-80"
+            [ngClass]="disgustoIds.has(a.id)
+              ? 'border-amber-200 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-900/10 hover:border-amber-400 dark:hover:border-amber-600'
+              : 'border-gray-100 dark:border-[#172036] hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/50 dark:hover:bg-primary-900/10'">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              [ngClass]="disgustoIds.has(a.id)
+                ? 'bg-amber-50 dark:bg-amber-900/20'
+                : 'bg-success-50 dark:bg-success-900/20'">
+              <i class="text-sm"
+                [ngClass]="disgustoIds.has(a.id)
+                  ? 'ri-emotion-unhappy-line text-amber-500'
+                  : 'ri-restaurant-2-line text-success-500'"></i>
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-xs font-medium text-black dark:text-white truncate">{{ a.nombre }}</p>
+              <div class="flex items-center gap-1.5">
+                <p class="text-xs font-medium text-black dark:text-white truncate">{{ a.nombre }}</p>
+                @if (disgustoIds.has(a.id)) {
+                  <span class="text-[9px] px-1 py-0 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex-shrink-0">no le gusta</span>
+                }
+              </div>
               <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-400 dark:text-gray-600">
                 <span class="font-semibold text-orange-500">{{ a.calorias | number:'1.0-0' }} kcal</span>
                 @if (a.categoria) {
@@ -160,31 +211,152 @@
       @if (!isLoading && selectedMenu) {
         <div class="p-4">
 
-          <!-- Weekly macro summary -->
-          <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] p-4 mb-4 flex flex-wrap gap-5">
-            <div>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Semana</p>
-              <p class="font-semibold text-black dark:text-white text-sm">
-                {{ selectedMenu.nombre || 'Semana ' + selectedMenu.semana_numero }}
-              </p>
-              <p class="text-xs text-gray-400 mt-0.5">{{ selectedMenu.fecha_inicio }}</p>
+          <!-- Weekly macro summary + diff vs dieta objetivo -->
+          @let wk = getWeekTotal();
+          @let avgCal  = wk.cal  / 7;
+          @let avgPro  = wk.pro  / 7;
+          @let avgCarb = wk.carb / 7;
+          @let avgFat  = wk.fat  / 7;
+          @let cSt = diffStatus(avgCal,  dieta?.calorias_dia_objetivo);
+          @let pSt = diffStatus(avgPro,  dieta?.proteinas_g_dia);
+          @let cbSt= diffStatus(avgCarb, dieta?.carbohidratos_g_dia);
+          @let fSt = diffStatus(avgFat,  dieta?.grasas_g_dia);
+
+          <div class="bg-white dark:bg-[#0c1427] rounded-xl border border-gray-100 dark:border-[#172036] mb-4 overflow-hidden">
+            <!-- Fila: semana + totales semanales -->
+            <div class="flex flex-wrap items-center gap-4 px-4 py-3 border-b border-gray-100 dark:border-[#172036]">
+              <div class="min-w-0">
+                <p class="font-semibold text-black dark:text-white text-sm truncate">
+                  {{ selectedMenu.nombre || 'Semana ' + selectedMenu.semana_numero }}
+                </p>
+                <p class="text-xs text-gray-400">{{ selectedMenu.fecha_inicio }} · semana total: <span class="font-semibold text-black dark:text-white">{{ wk.cal | number:'1.0-0' }} kcal</span></p>
+              </div>
+              <div class="ml-auto flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+                <span class="w-2 h-2 rounded-full bg-success-400 inline-block"></span> ≤5%
+                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block ml-1"></span> ≤15%
+                <span class="w-2 h-2 rounded-full bg-danger-400 inline-block ml-1"></span> >15% del objetivo
+              </div>
             </div>
-            <div class="border-l border-gray-100 dark:border-[#172036] pl-5">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Calorías / semana</p>
-              <p class="text-xl font-bold text-black dark:text-white">{{ getWeekTotal().cal | number:'1.0-0' }}</p>
-              <p class="text-xs text-gray-400">kcal · avg {{ (getWeekTotal().cal / 7) | number:'1.0-0' }}/día</p>
-            </div>
-            <div class="border-l border-gray-100 dark:border-[#172036] pl-5">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Proteínas</p>
-              <p class="text-base font-semibold text-blue-600 dark:text-blue-400">{{ getWeekTotal().pro | number:'1.0-0' }}g</p>
-            </div>
-            <div class="border-l border-gray-100 dark:border-[#172036] pl-5">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Carbohidratos</p>
-              <p class="text-base font-semibold text-amber-600 dark:text-amber-400">{{ getWeekTotal().carb | number:'1.0-0' }}g</p>
-            </div>
-            <div class="border-l border-gray-100 dark:border-[#172036] pl-5">
-              <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Grasas</p>
-              <p class="text-base font-semibold text-orange-600 dark:text-orange-400">{{ getWeekTotal().fat | number:'1.0-0' }}g</p>
+
+            <!-- Fila: macros promedio/día vs objetivo -->
+            <div class="grid grid-cols-4 divide-x divide-gray-100 dark:divide-[#172036]">
+
+              <!-- Calorías -->
+              <div class="px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Calorías / día</p>
+                <p class="text-xl font-bold leading-none" [ngClass]="{
+                  'text-success-600 dark:text-success-400': cSt === 'ok',
+                  'text-amber-600 dark:text-amber-400':    cSt === 'warn',
+                  'text-danger-600 dark:text-danger-400':  cSt === 'danger',
+                  'text-black dark:text-white':            cSt === 'none'
+                }">{{ avgCal | number:'1.0-0' }}</p>
+                @if (dieta?.calorias_dia_objetivo) {
+                  <p class="text-[11px] text-gray-400 mt-1">obj: {{ dieta!.calorias_dia_objetivo | number:'1.0-0' }} kcal</p>
+                  @let diffCal = avgCal - dieta!.calorias_dia_objetivo!;
+                  <p class="text-xs font-semibold mt-0.5" [ngClass]="{
+                    'text-success-500': cSt === 'ok',
+                    'text-amber-500':   cSt === 'warn',
+                    'text-danger-500':  cSt === 'danger'
+                  }">{{ diffCal | number:'+1.0-0' }} kcal</p>
+                  <!-- Progress bar -->
+                  <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
+                      'bg-success-400': cSt === 'ok',
+                      'bg-amber-400':   cSt === 'warn',
+                      'bg-danger-400':  cSt === 'danger'
+                    }" [style.width.%]="pct(avgCal, dieta?.calorias_dia_objetivo)"></div>
+                  </div>
+                } @else {
+                  <p class="text-[11px] text-gray-300 dark:text-gray-600 mt-1">sin objetivo</p>
+                }
+              </div>
+
+              <!-- Proteínas -->
+              <div class="px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Proteínas / día</p>
+                <p class="text-xl font-bold leading-none" [ngClass]="{
+                  'text-success-600 dark:text-success-400': pSt === 'ok',
+                  'text-amber-600 dark:text-amber-400':    pSt === 'warn',
+                  'text-danger-600 dark:text-danger-400':  pSt === 'danger',
+                  'text-blue-600 dark:text-blue-400':      pSt === 'none'
+                }">{{ avgPro | number:'1.0-0' }}g</p>
+                @if (dieta?.proteinas_g_dia) {
+                  <p class="text-[11px] text-gray-400 mt-1">obj: {{ dieta!.proteinas_g_dia | number:'1.0-0' }}g</p>
+                  @let diffPro = avgPro - dieta!.proteinas_g_dia!;
+                  <p class="text-xs font-semibold mt-0.5" [ngClass]="{
+                    'text-success-500': pSt === 'ok',
+                    'text-amber-500':   pSt === 'warn',
+                    'text-danger-500':  pSt === 'danger'
+                  }">{{ diffPro | number:'+1.0-0' }}g</p>
+                  <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
+                      'bg-success-400': pSt === 'ok',
+                      'bg-amber-400':   pSt === 'warn',
+                      'bg-danger-400':  pSt === 'danger'
+                    }" [style.width.%]="pct(avgPro, dieta?.proteinas_g_dia)"></div>
+                  </div>
+                } @else {
+                  <p class="text-[11px] text-gray-300 dark:text-gray-600 mt-1">sin objetivo</p>
+                }
+              </div>
+
+              <!-- Carbohidratos -->
+              <div class="px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Carbos / día</p>
+                <p class="text-xl font-bold leading-none" [ngClass]="{
+                  'text-success-600 dark:text-success-400': cbSt === 'ok',
+                  'text-amber-600 dark:text-amber-400':    cbSt === 'warn' || cbSt === 'none',
+                  'text-danger-600 dark:text-danger-400':  cbSt === 'danger'
+                }">{{ avgCarb | number:'1.0-0' }}g</p>
+                @if (dieta?.carbohidratos_g_dia) {
+                  <p class="text-[11px] text-gray-400 mt-1">obj: {{ dieta!.carbohidratos_g_dia | number:'1.0-0' }}g</p>
+                  @let diffCarb = avgCarb - dieta!.carbohidratos_g_dia!;
+                  <p class="text-xs font-semibold mt-0.5" [ngClass]="{
+                    'text-success-500': cbSt === 'ok',
+                    'text-amber-500':   cbSt === 'warn',
+                    'text-danger-500':  cbSt === 'danger'
+                  }">{{ diffCarb | number:'+1.0-0' }}g</p>
+                  <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
+                      'bg-success-400': cbSt === 'ok',
+                      'bg-amber-400':   cbSt === 'warn',
+                      'bg-danger-400':  cbSt === 'danger'
+                    }" [style.width.%]="pct(avgCarb, dieta?.carbohidratos_g_dia)"></div>
+                  </div>
+                } @else {
+                  <p class="text-[11px] text-gray-300 dark:text-gray-600 mt-1">sin objetivo</p>
+                }
+              </div>
+
+              <!-- Grasas -->
+              <div class="px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Grasas / día</p>
+                <p class="text-xl font-bold leading-none" [ngClass]="{
+                  'text-success-600 dark:text-success-400': fSt === 'ok',
+                  'text-amber-600 dark:text-amber-400':    fSt === 'warn',
+                  'text-danger-600 dark:text-danger-400':  fSt === 'danger',
+                  'text-orange-600 dark:text-orange-400':  fSt === 'none'
+                }">{{ avgFat | number:'1.0-0' }}g</p>
+                @if (dieta?.grasas_g_dia) {
+                  <p class="text-[11px] text-gray-400 mt-1">obj: {{ dieta!.grasas_g_dia | number:'1.0-0' }}g</p>
+                  @let diffFat = avgFat - dieta!.grasas_g_dia!;
+                  <p class="text-xs font-semibold mt-0.5" [ngClass]="{
+                    'text-success-500': fSt === 'ok',
+                    'text-amber-500':   fSt === 'warn',
+                    'text-danger-500':  fSt === 'danger'
+                  }">{{ diffFat | number:'+1.0-0' }}g</p>
+                  <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
+                      'bg-success-400': fSt === 'ok',
+                      'bg-amber-400':   fSt === 'warn',
+                      'bg-danger-400':  fSt === 'danger'
+                    }" [style.width.%]="pct(avgFat, dieta?.grasas_g_dia)"></div>
+                  </div>
+                } @else {
+                  <p class="text-[11px] text-gray-300 dark:text-gray-600 mt-1">sin objetivo</p>
+                }
+              </div>
+
             </div>
           </div>
 
@@ -523,6 +695,38 @@
       @if (asignarStep === 1) {
         <div class="p-5 overflow-y-auto flex-1">
 
+          <!-- Preferencias del paciente -->
+          @if (restriccionesAlimentos.length > 0 || disgustosAlimentos.length > 0) {
+            <div class="mb-4 rounded-xl border border-gray-100 dark:border-[#172036] overflow-hidden">
+              @if (restriccionesAlimentos.length > 0) {
+                <div class="p-3 bg-danger-50/60 dark:bg-danger-900/10 border-b border-danger-100 dark:border-danger-900/30">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-danger-700 dark:text-danger-400 flex items-center gap-1.5 mb-1.5">
+                    <i class="ri-forbid-line"></i> Restringidos ({{ restriccionesAlimentos.length }})
+                  </p>
+                  <div class="flex flex-wrap gap-1">
+                    @for (r of restriccionesAlimentos; track r.nombre) {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400 border border-danger-200 dark:border-danger-800/40"
+                        [title]="r.notas ?? ''">{{ r.nombre }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (disgustosAlimentos.length > 0) {
+                <div class="p-3 bg-amber-50/50 dark:bg-amber-900/10">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 flex items-center gap-1.5 mb-1.5">
+                    <i class="ri-emotion-unhappy-line"></i> No le gustan ({{ disgustosAlimentos.length }})
+                  </p>
+                  <div class="flex flex-wrap gap-1">
+                    @for (d of disgustosAlimentos; track d.nombre) {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40"
+                        [title]="d.notas ?? ''">{{ d.nombre }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
           <!-- Filtro por semana -->
           <div class="flex items-center gap-3 mb-4 p-3 bg-primary-50/50 dark:bg-primary-900/10 rounded-xl border border-primary-100 dark:border-primary-900/30">
             <div class="flex-1">
@@ -631,6 +835,95 @@
             </div>
           </div>
 
+          <!-- Diff macros plantilla vs objetivo paciente -->
+          @let avg = getPlantillaDayAvg();
+          @if (avg.cal > 0) {
+            <div class="rounded-xl border border-gray-100 dark:border-[#172036] bg-white dark:bg-[#0c1427] overflow-hidden">
+              <p class="px-4 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-[#172036] flex items-center gap-1.5">
+                <i class="ri-scales-3-line"></i> Comparación plantilla vs objetivo del paciente (promedio/día)
+              </p>
+              <div class="grid grid-cols-4 divide-x divide-gray-100 dark:divide-[#172036]">
+                @let calStatus = diffStatus(avg.cal, dieta?.calorias_dia_objetivo);
+                @let proStatus = diffStatus(avg.pro, dieta?.proteinas_g_dia);
+                @let carbStatus = diffStatus(avg.carb, dieta?.carbohidratos_g_dia);
+                @let fatStatus = diffStatus(avg.fat, dieta?.grasas_g_dia);
+
+                <!-- Calorías -->
+                <div class="px-4 py-3 text-center">
+                  <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Calorías</p>
+                  <p class="font-bold text-sm" [ngClass]="{
+                    'text-success-600 dark:text-success-400': calStatus === 'ok',
+                    'text-amber-600 dark:text-amber-400': calStatus === 'warn',
+                    'text-danger-600 dark:text-danger-400': calStatus === 'danger',
+                    'text-black dark:text-white': calStatus === 'none'
+                  }">{{ avg.cal | number:'1.0-0' }}</p>
+                  @if (dieta?.calorias_dia_objetivo) {
+                    <p class="text-[10px] text-gray-400 mt-0.5">obj: {{ dieta!.calorias_dia_objetivo | number:'1.0-0' }}</p>
+                    <p class="text-[10px] font-semibold mt-0.5" [ngClass]="{
+                      'text-success-500': calStatus === 'ok',
+                      'text-amber-500': calStatus === 'warn',
+                      'text-danger-500': calStatus === 'danger'
+                    }">{{ (avg.cal - dieta!.calorias_dia_objetivo!) | number:'+1.0-0' }} kcal</p>
+                  }
+                </div>
+                <!-- Proteínas -->
+                <div class="px-4 py-3 text-center">
+                  <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Proteínas</p>
+                  <p class="font-bold text-sm" [ngClass]="{
+                    'text-success-600 dark:text-success-400': proStatus === 'ok',
+                    'text-amber-600 dark:text-amber-400': proStatus === 'warn',
+                    'text-danger-600 dark:text-danger-400': proStatus === 'danger',
+                    'text-black dark:text-white': proStatus === 'none'
+                  }">{{ avg.pro | number:'1.0-0' }}g</p>
+                  @if (dieta?.proteinas_g_dia) {
+                    <p class="text-[10px] text-gray-400 mt-0.5">obj: {{ dieta!.proteinas_g_dia | number:'1.0-0' }}g</p>
+                    <p class="text-[10px] font-semibold mt-0.5" [ngClass]="{
+                      'text-success-500': proStatus === 'ok',
+                      'text-amber-500': proStatus === 'warn',
+                      'text-danger-500': proStatus === 'danger'
+                    }">{{ (avg.pro - dieta!.proteinas_g_dia!) | number:'+1.0-0' }}g</p>
+                  }
+                </div>
+                <!-- Carbohidratos -->
+                <div class="px-4 py-3 text-center">
+                  <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Carbos</p>
+                  <p class="font-bold text-sm" [ngClass]="{
+                    'text-success-600 dark:text-success-400': carbStatus === 'ok',
+                    'text-amber-600 dark:text-amber-400': carbStatus === 'warn',
+                    'text-danger-600 dark:text-danger-400': carbStatus === 'danger',
+                    'text-black dark:text-white': carbStatus === 'none'
+                  }">{{ avg.carb | number:'1.0-0' }}g</p>
+                  @if (dieta?.carbohidratos_g_dia) {
+                    <p class="text-[10px] text-gray-400 mt-0.5">obj: {{ dieta!.carbohidratos_g_dia | number:'1.0-0' }}g</p>
+                    <p class="text-[10px] font-semibold mt-0.5" [ngClass]="{
+                      'text-success-500': carbStatus === 'ok',
+                      'text-amber-500': carbStatus === 'warn',
+                      'text-danger-500': carbStatus === 'danger'
+                    }">{{ (avg.carb - dieta!.carbohidratos_g_dia!) | number:'+1.0-0' }}g</p>
+                  }
+                </div>
+                <!-- Grasas -->
+                <div class="px-4 py-3 text-center">
+                  <p class="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Grasas</p>
+                  <p class="font-bold text-sm" [ngClass]="{
+                    'text-success-600 dark:text-success-400': fatStatus === 'ok',
+                    'text-amber-600 dark:text-amber-400': fatStatus === 'warn',
+                    'text-danger-600 dark:text-danger-400': fatStatus === 'danger',
+                    'text-black dark:text-white': fatStatus === 'none'
+                  }">{{ avg.fat | number:'1.0-0' }}g</p>
+                  @if (dieta?.grasas_g_dia) {
+                    <p class="text-[10px] text-gray-400 mt-0.5">obj: {{ dieta!.grasas_g_dia | number:'1.0-0' }}g</p>
+                    <p class="text-[10px] font-semibold mt-0.5" [ngClass]="{
+                      'text-success-500': fatStatus === 'ok',
+                      'text-amber-500': fatStatus === 'warn',
+                      'text-danger-500': fatStatus === 'danger'
+                    }">{{ (avg.fat - dieta!.grasas_g_dia!) | number:'+1.0-0' }}g</p>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
           <!-- Preview grid compacto -->
           @let diasNames = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
           <div class="overflow-x-auto">
@@ -681,6 +974,104 @@
           </div>
         </div>
       }
+    </div>
+  </div>
+}
+
+<!-- ── Botón flotante: Historias clínicas ──────────────────────────────────────── -->
+<button (click)="openHistoriasModal()"
+  class="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-secondary-500 hover:bg-secondary-600 text-white rounded-2xl shadow-lg text-sm font-semibold transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+  <i class="ri-file-list-3-line text-base"></i>
+  <span>Historia clínica</span>
+</button>
+
+<!-- ── Modal: Historias clínicas ───────────────────────────────────────────────── -->
+@if (showHistoriasModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="showHistoriasModal = false"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100 dark:border-[#172036] flex flex-col max-h-[88vh]">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center">
+            <i class="ri-file-list-3-line text-secondary-500"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-black dark:text-white">Historia clínica</h3>
+            <p class="text-xs text-gray-400 mt-0.5">{{ historiaGroups.length }} formulario(s) registrado(s)</p>
+          </div>
+        </div>
+        <button (click)="showHistoriasModal = false" class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        @if (historiasLoading) {
+          <div class="flex flex-col items-center justify-center py-16 gap-3">
+            <div class="w-7 h-7 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-400">Cargando historias...</p>
+          </div>
+        } @else if (historiaGroups.length === 0) {
+          <div class="text-center py-16">
+            <i class="ri-file-list-3-line text-5xl text-gray-200 dark:text-gray-700 block mb-3"></i>
+            <p class="text-sm text-gray-400">Sin historias clínicas registradas</p>
+          </div>
+        } @else {
+          @for (grupo of historiaGroups; track grupo.id) {
+            <div class="rounded-xl border overflow-hidden transition-all"
+              [ngClass]="expandedHistorias.has(grupo.id) ? 'border-secondary-200 dark:border-secondary-800/50' : 'border-gray-100 dark:border-[#172036]'">
+
+              <!-- Header del grupo -->
+              <button type="button" (click)="toggleHistoria(grupo.id)"
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors text-left">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                  [ngClass]="expandedHistorias.has(grupo.id) ? 'bg-secondary-500 text-white' : 'bg-secondary-50 dark:bg-secondary-900/20 text-secondary-500'">
+                  <i class="ri-file-text-line text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0 text-left">
+                  <p class="font-semibold text-sm text-black dark:text-white truncate">{{ grupo.nombre }}</p>
+                  <p class="text-[11px] text-gray-400 mt-0.5">{{ grupo.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <i class="ri-arrow-down-s-line text-lg text-gray-400 transition-transform duration-200 flex-shrink-0"
+                  [ngClass]="expandedHistorias.has(grupo.id) ? 'rotate-180' : ''"></i>
+              </button>
+
+              <!-- Respuestas expandidas -->
+              @if (expandedHistorias.has(grupo.id)) {
+                <div class="border-t border-gray-100 dark:border-[#172036]">
+                  <div class="grid grid-cols-1 md:grid-cols-2 divide-y divide-gray-50 dark:divide-[#172036] md:divide-y-0">
+                    @for (row of grupo.respuestas; track row.orden_pregunta; let odd = $odd) {
+                      @if (!isRespuestaEmpty(row)) {
+                        <div class="flex flex-col gap-1 px-4 py-3 hover:bg-gray-50/60 dark:hover:bg-[#0a0e19]/60 transition-colors"
+                          [ngClass]="odd ? 'md:border-l md:border-gray-50 dark:md:border-[#172036]' : ''">
+                          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 truncate">{{ row.pregunta }}</p>
+                          <p class="text-sm font-semibold text-black dark:text-white">{{ formatRespuesta(row) }}</p>
+                        </div>
+                      }
+                    }
+                  </div>
+                  <!-- Observación general -->
+                  @if (grupo.observacion_general) {
+                    <div class="border-t border-gray-100 dark:border-[#172036] px-4 py-3 bg-amber-50/50 dark:bg-amber-900/10">
+                      <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                        <i class="ri-sticky-note-line"></i> Observación general
+                      </p>
+                      <p class="text-sm text-black dark:text-white whitespace-pre-wrap">{{ grupo.observacion_general }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end px-5 py-4 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <button (click)="showHistoriasModal = false" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Cerrar</button>
+      </div>
     </div>
   </div>
 }

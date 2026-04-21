@@ -488,6 +488,14 @@
                         }
                       }
                     </div>
+                    @if (grupo.observacion_general) {
+                      <div class="border-t border-gray-100 dark:border-[#172036] px-6 py-4 bg-amber-50/50 dark:bg-amber-900/10">
+                        <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1.5">
+                          <i class="ri-sticky-note-line"></i> Observación general
+                        </p>
+                        <p class="text-sm text-black dark:text-white whitespace-pre-wrap">{{ grupo.observacion_general }}</p>
+                      </div>
+                    }
                     <div class="border-t border-gray-100 dark:border-[#172036] px-6 py-3 flex justify-center">
                       <button type="button" (click)="toggleHistoria(grupo.id)"
                               class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-primary-500 transition-colors">

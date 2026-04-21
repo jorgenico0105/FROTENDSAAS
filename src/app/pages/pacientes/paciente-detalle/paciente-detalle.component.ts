@@ -18,6 +18,7 @@ export interface HistoriaGroup {
   id: number;
   nombre: string;
   fecha: string;
+  observacion_general?: string | null;
   respuestas: HistoriaRespuestaRow[];
 }
 
@@ -111,7 +112,7 @@ export class PacienteDetalleComponent implements OnInit {
         const map = new Map<number, HistoriaGroup>();
         for (const row of rows) {
           if (!map.has(row.id_historia_clinica)) {
-            map.set(row.id_historia_clinica, { id: row.id_historia_clinica, nombre: row.nombre_formulario, fecha: row.fecha_registro, respuestas: [] });
+            map.set(row.id_historia_clinica, { id: row.id_historia_clinica, nombre: row.nombre_formulario, fecha: row.fecha_registro, observacion_general: row.observacion_general, respuestas: [] });
           }
           map.get(row.id_historia_clinica)!.respuestas.push(row);
         }

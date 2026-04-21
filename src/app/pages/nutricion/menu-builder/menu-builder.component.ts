@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgClass, DecimalPipe } from '@angular/common';
+import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin } from 'rxjs';
 import { NutricionService } from '../../../core/services/nutricion.service';
 import { PlantillaMenuService } from '../../../core/services/plantilla-menu.service';
+import { FormulariosService, HistoriaRespuestaRow } from '../../../core/services/formularios.service';
 import {
   NutricionAlimento,
   NutricionMenu,
@@ -81,6 +82,14 @@ interface GridCell {
   recetaGuardada?: boolean;
 }
 
+interface HistoriaGroup {
+  id: number;
+  nombre: string;
+  fecha: string;
+  observacion_general?: string | null;
+  respuestas: HistoriaRespuestaRow[];
+}
+
 const ALL_DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const DIAS_DEFAULT   = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -105,7 +114,7 @@ const TIPOS_COMIDA_DEFAULT = [
 
 @Component({
   selector: 'app-menu-builder',
-  imports: [RouterLink, FormsModule, NgClass, DecimalPipe],
+  imports: [RouterLink, FormsModule, NgClass, DecimalPipe, DatePipe],
   templateUrl: './menu-builder.component.html',
   styleUrl: './menu-builder.component.scss'
 })
@@ -141,6 +150,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   dragAlimento: NutricionAlimento | null = null;
   preferencias: NutricionPreferencia[] = [];
   restriccionIds = new Set<number>();
+  disgustoIds = new Set<number>();
 
   // Selected cell detail
   selectedCell: GridCell | null = null;
@@ -148,6 +158,12 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
 
   // Dieta actual
   dieta: NutricionDietaPaciente | null = null;
+
+  // Historias clínicas
+  showHistoriasModal = false;
+  historiasLoading = false;
+  historiaGroups: HistoriaGroup[] = [];
+  expandedHistorias = new Set<number>();
 
   // Asignar semana desde plantilla
   showAsignarModal = false;
@@ -166,6 +182,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private svc: NutricionService,
     private plantillaSvc: PlantillaMenuService,
+    private formulariosSvc: FormulariosService,
     private sanitizer: DomSanitizer,
   ) {}
 
@@ -190,6 +207,11 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
         this.restriccionIds = new Set(
           res.preferencias
             .filter(p => p.tipo === 'RESTRICCION' && p.alimento_id != null)
+            .map(p => p.alimento_id!)
+        );
+        this.disgustoIds = new Set(
+          res.preferencias
+            .filter(p => p.tipo === 'DISGUSTO' && p.alimento_id != null)
             .map(p => p.alimento_id!)
         );
         this.alimentos = res.alimentos.filter(a => !this.restriccionIds.has(a.id));
@@ -703,6 +725,91 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
 
   getAssignCell(diaN: number, tcId: number): AssignCell | undefined {
     return this.assignCells.find(c => c.dia_numero === diaN && c.tipo_comida_id === tcId);
+  }
+
+  // ─── Historias clínicas ──────────────────────────────────────────────────
+
+  openHistoriasModal(): void {
+    this.showHistoriasModal = true;
+    if (this.historiaGroups.length > 0) return;
+    this.historiasLoading = true;
+    this.formulariosSvc.getHistoriasRespuestas(this.pacienteId).subscribe({
+      next: (rows) => {
+        const map = new Map<number, HistoriaGroup>();
+        for (const row of rows) {
+          if (!map.has(row.id_historia_clinica)) {
+            map.set(row.id_historia_clinica, {
+              id: row.id_historia_clinica,
+              nombre: row.nombre_formulario,
+              fecha: row.fecha_registro,
+              observacion_general: row.observacion_general,
+              respuestas: [],
+            });
+          }
+          map.get(row.id_historia_clinica)!.respuestas.push(row);
+        }
+        this.historiaGroups = Array.from(map.values()).sort((a, b) => a.id - b.id);
+        if (this.historiaGroups.length > 0) this.expandedHistorias.add(this.historiaGroups[0].id);
+        this.historiasLoading = false;
+      },
+      error: () => { this.historiasLoading = false; }
+    });
+  }
+
+  toggleHistoria(id: number): void {
+    if (this.expandedHistorias.has(id)) this.expandedHistorias.delete(id);
+    else this.expandedHistorias.add(id);
+  }
+
+  formatRespuesta(row: HistoriaRespuestaRow): string {
+    const txt = row.respuesta_text?.trim() ?? '';
+    if (txt === 'true')  return 'Sí';
+    if (txt === 'false') return 'No';
+    if (txt && txt !== '0') return txt;
+    if (row.respuesta_numero !== null && row.respuesta_numero !== undefined) return String(row.respuesta_numero);
+    return '—';
+  }
+
+  isRespuestaEmpty(row: HistoriaRespuestaRow): boolean {
+    const txt = row.respuesta_text?.trim() ?? '';
+    return (!txt || txt === '0' || txt === 'false') && (row.respuesta_numero === null || row.respuesta_numero === 0);
+  }
+
+  // ─── Diff macros plantilla vs objetivo dieta ─────────────────────────────
+
+  getPlantillaDayAvg(): { cal: number; pro: number; carb: number; fat: number } {
+    if (this.assignCells.length === 0) return { cal: 0, pro: 0, carb: 0, fat: 0 };
+    return {
+      cal:  this.assignCells.reduce((s, c) => s + c.calorias_total, 0) / 7,
+      pro:  this.assignCells.reduce((s, c) => s + c.proteinas_g_total, 0) / 7,
+      carb: this.assignCells.reduce((s, c) => s + c.carbohidratos_g_total, 0) / 7,
+      fat:  this.assignCells.reduce((s, c) => s + c.grasas_g_total, 0) / 7,
+    };
+  }
+
+  pct(real: number, target: number | undefined): number {
+    if (!target) return 0;
+    return Math.min((real / target) * 100, 100);
+  }
+
+  diffStatus(real: number, target: number | undefined): 'ok' | 'warn' | 'danger' | 'none' {
+    if (!target) return 'none';
+    const pct = Math.abs((real - target) / target) * 100;
+    if (pct <= 5)  return 'ok';
+    if (pct <= 15) return 'warn';
+    return 'danger';
+  }
+
+  get restriccionesAlimentos(): { nombre: string; notas?: string }[] {
+    return this.preferencias
+      .filter(p => p.tipo === 'RESTRICCION')
+      .map(p => ({ nombre: p.Alimento?.nombre || p.nombre_libre || '?', notas: p.notas }));
+  }
+
+  get disgustosAlimentos(): { nombre: string; notas?: string }[] {
+    return this.preferencias
+      .filter(p => p.tipo === 'DISGUSTO')
+      .map(p => ({ nombre: p.Alimento?.nombre || p.nombre_libre || '?', notas: p.notas }));
   }
 
   saveReceta(cell: GridCell): void {

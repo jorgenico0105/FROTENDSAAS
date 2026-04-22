@@ -257,7 +257,7 @@
                     'text-success-500': cSt === 'ok',
                     'text-amber-500':   cSt === 'warn',
                     'text-danger-500':  cSt === 'danger'
-                  }">{{ diffCal | number:'+1.0-0' }} kcal</p>
+                  }">{{ diffCal >= 0 ? '+' : '' }}{{ diffCal | number:'1.0-0' }} kcal</p>
                   <!-- Progress bar -->
                   <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
@@ -287,7 +287,7 @@
                     'text-success-500': pSt === 'ok',
                     'text-amber-500':   pSt === 'warn',
                     'text-danger-500':  pSt === 'danger'
-                  }">{{ diffPro | number:'+1.0-0' }}g</p>
+                  }">{{ diffPro >= 0 ? '+' : '' }}{{ diffPro | number:'1.0-0' }}g</p>
                   <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
                       'bg-success-400': pSt === 'ok',
@@ -315,7 +315,7 @@
                     'text-success-500': cbSt === 'ok',
                     'text-amber-500':   cbSt === 'warn',
                     'text-danger-500':  cbSt === 'danger'
-                  }">{{ diffCarb | number:'+1.0-0' }}g</p>
+                  }">{{ diffCarb >= 0 ? '+' : '' }}{{ diffCarb | number:'1.0-0' }}g</p>
                   <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
                       'bg-success-400': cbSt === 'ok',
@@ -344,7 +344,7 @@
                     'text-success-500': fSt === 'ok',
                     'text-amber-500':   fSt === 'warn',
                     'text-danger-500':  fSt === 'danger'
-                  }">{{ diffFat | number:'+1.0-0' }}g</p>
+                  }">{{ diffFat >= 0 ? '+' : '' }}{{ diffFat | number:'1.0-0' }}g</p>
                   <div class="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-[#172036] overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
                       'bg-success-400': fSt === 'ok',
@@ -863,7 +863,7 @@
                       'text-success-500': calStatus === 'ok',
                       'text-amber-500': calStatus === 'warn',
                       'text-danger-500': calStatus === 'danger'
-                    }">{{ (avg.cal - dieta!.calorias_dia_objetivo!) | number:'+1.0-0' }} kcal</p>
+                    }">{{ (avg.cal - dieta!.calorias_dia_objetivo!) >= 0 ? '+' : '' }}{{ (avg.cal - dieta!.calorias_dia_objetivo!) | number:'1.0-0' }} kcal</p>
                   }
                 </div>
                 <!-- Proteínas -->
@@ -881,7 +881,7 @@
                       'text-success-500': proStatus === 'ok',
                       'text-amber-500': proStatus === 'warn',
                       'text-danger-500': proStatus === 'danger'
-                    }">{{ (avg.pro - dieta!.proteinas_g_dia!) | number:'+1.0-0' }}g</p>
+                    }">{{ (avg.pro - dieta!.proteinas_g_dia!) >= 0 ? '+' : '' }}{{ (avg.pro - dieta!.proteinas_g_dia!) | number:'1.0-0' }}g</p>
                   }
                 </div>
                 <!-- Carbohidratos -->
@@ -899,7 +899,7 @@
                       'text-success-500': carbStatus === 'ok',
                       'text-amber-500': carbStatus === 'warn',
                       'text-danger-500': carbStatus === 'danger'
-                    }">{{ (avg.carb - dieta!.carbohidratos_g_dia!) | number:'+1.0-0' }}g</p>
+                    }">{{ (avg.carb - dieta!.carbohidratos_g_dia!) >= 0 ? '+' : '' }}{{ (avg.carb - dieta!.carbohidratos_g_dia!) | number:'1.0-0' }}g</p>
                   }
                 </div>
                 <!-- Grasas -->
@@ -917,7 +917,7 @@
                       'text-success-500': fatStatus === 'ok',
                       'text-amber-500': fatStatus === 'warn',
                       'text-danger-500': fatStatus === 'danger'
-                    }">{{ (avg.fat - dieta!.grasas_g_dia!) | number:'+1.0-0' }}g</p>
+                    }">{{ (avg.fat - dieta!.grasas_g_dia!) >= 0 ? '+' : '' }}{{ (avg.fat - dieta!.grasas_g_dia!) | number:'1.0-0' }}g</p>
                   }
                 </div>
               </div>

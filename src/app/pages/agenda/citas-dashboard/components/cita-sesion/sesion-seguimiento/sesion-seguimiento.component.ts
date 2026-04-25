@@ -1,25 +1,35 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { NgClass, DecimalPipe } from '@angular/common';
+import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Cita, Sesion } from '../../../../../../core/models/agenda.model';
 import { NutricionService } from '../../../../../../core/services/nutricion.service';
-import { FormulariosService } from '../../../../../../core/services/formularios.service';
+import { FormulariosService, HistoriaRespuestaRow } from '../../../../../../core/services/formularios.service';
 import {
   NutricionDietaPaciente, NutricionProgreso, CreateProgresoRequest,
   NutricionRegistroComida, NutricionRegistroEjercicio,
   NutricionPreferencia, NutricionMenu, PacienteImagen
 } from '../../../../../../core/models/nutricion.model';
+import { FormularioCitaAsignacion } from '../../../../../../core/models/formulario.model';
 import { AgendaService } from '../../../../../../core/services/agenda.service';
 import { environment } from '../../../../../../../environments/environment';
+import { PasoFormulariosComponent } from '../pasos/paso-formularios/paso-formularios.component';
 
-type Tab = 'dieta' | 'registros' | 'progreso' | 'imagenes';
+type Tab = 'formularios' | 'dieta' | 'registros' | 'progreso' | 'imagenes';
+
+interface HistoriaGroup {
+  id: number;
+  nombre: string;
+  fecha: string;
+  observacion_general?: string | null;
+  respuestas: HistoriaRespuestaRow[];
+}
 
 @Component({
   selector: 'app-sesion-seguimiento',
   standalone: true,
-  imports: [NgClass, DecimalPipe, FormsModule],
+  imports: [NgClass, DecimalPipe, DatePipe, FormsModule, PasoFormulariosComponent],
   templateUrl: './sesion-seguimiento.component.html'
 })
 export class SesionSeguimientoComponent implements OnInit {
@@ -45,6 +55,10 @@ export class SesionSeguimientoComponent implements OnInit {
   imagenes: PacienteImagen[] = [];
   imagenesLoading = false;
 
+  // Formularios de la sesión
+  formulariosCita: FormularioCitaAsignacion[] = [];
+  formulariosLoaded = false;
+
   // Progreso form
   showProgresoForm = false;
   isSavingProgreso = false;
@@ -55,6 +69,13 @@ export class SesionSeguimientoComponent implements OnInit {
   // Imagen sesión upload
   isUploadingImagen = false;
 
+  // Historias clínicas modal
+  showHistoriasModal = false;
+  historiasLoading = false;
+  historiaGroups: HistoriaGroup[] = [];
+  expandedHistorias = new Set<number>();
+
+  @ViewChild('pasoFormularios') pasoFormularios!: PasoFormulariosComponent;
   @ViewChild('progresoFotoInput') progresoFotoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('sesionImagenInput') sesionImagenInput!: ElementRef<HTMLInputElement>;
 
@@ -70,6 +91,7 @@ export class SesionSeguimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDietas();
+    this.loadFormularios();
   }
 
   setTab(tab: Tab): void {
@@ -78,6 +100,19 @@ export class SesionSeguimientoComponent implements OnInit {
     if (tab === 'progreso'  && this.progreso.length === 0)         this.loadProgreso();
     if (tab === 'registros' && this.registrosComida.length === 0)  this.loadRegistros();
     if (tab === 'imagenes'  && this.imagenes.length === 0)         this.loadImagenes();
+  }
+
+  private loadFormularios(): void {
+    const tipoCitaId = this.cita.tipo_cita?.id ?? this.cita.tipo_cita_id;
+    if (!tipoCitaId) { this.formulariosLoaded = true; return; }
+    this.formulariosSvc.getFormulariosPorTipoCita(tipoCitaId).subscribe({
+      next: (forms) => {
+        this.formulariosCita = forms;
+        this.formulariosLoaded = true;
+        if (forms.length > 0) this.activeTab = 'formularios';
+      },
+      error: () => { this.formulariosLoaded = true; }
+    });
   }
 
   private loadDietas(): void {
@@ -125,6 +160,65 @@ export class SesionSeguimientoComponent implements OnInit {
       },
       error: () => { this.isLoading = false; }
     });
+  }
+
+  // ── Formularios de sesión ─────────────────────────────────────────────────
+
+  get tieneFormularios(): boolean { return this.formulariosCita.length > 0; }
+
+  onFormulariosGuardados(): void {
+    this.successMsg = 'Formularios guardados correctamente.';
+    setTimeout(() => { this.successMsg = ''; }, 3000);
+  }
+
+  onFormulariosError(msg: string): void { this.errorMsg = msg; }
+
+  // ── Historias clínicas modal ──────────────────────────────────────────────
+
+  openHistoriasModal(): void {
+    this.showHistoriasModal = true;
+    if (this.historiaGroups.length > 0) return;
+    this.historiasLoading = true;
+    this.formulariosSvc.getHistoriasRespuestas(this.pacienteId).subscribe({
+      next: (rows) => {
+        const map = new Map<number, HistoriaGroup>();
+        for (const row of rows) {
+          if (!map.has(row.id_historia_clinica)) {
+            map.set(row.id_historia_clinica, {
+              id: row.id_historia_clinica,
+              nombre: row.nombre_formulario,
+              fecha: row.fecha_registro,
+              observacion_general: row.observacion_general,
+              respuestas: [],
+            });
+          }
+          map.get(row.id_historia_clinica)!.respuestas.push(row);
+        }
+        this.historiaGroups = Array.from(map.values()).sort((a, b) => a.id - b.id);
+        if (this.historiaGroups.length > 0) this.expandedHistorias.add(this.historiaGroups[0].id);
+        this.historiasLoading = false;
+      },
+      error: () => { this.historiasLoading = false; }
+    });
+  }
+
+  toggleHistoria(id: number): void {
+    if (this.expandedHistorias.has(id)) this.expandedHistorias.delete(id);
+    else this.expandedHistorias.add(id);
+  }
+
+  formatRespuesta(row: HistoriaRespuestaRow): string {
+    const txt = row.respuesta_text?.trim() ?? '';
+    if (txt === 'true')  return 'Sí';
+    if (txt === 'false') return 'No';
+    if (txt && txt !== '0') return txt;
+    if (row.respuesta_numero !== null && row.respuesta_numero !== undefined) return String(row.respuesta_numero);
+    return '—';
+  }
+
+  isRespuestaEmpty(row: HistoriaRespuestaRow): boolean {
+    const txt = row.respuesta_text?.trim() ?? '';
+    return (!txt || txt === '0' || txt === 'false') && (row.respuesta_numero === null || row.respuesta_numero === 0);
   }
 
   // ── Progreso form ────────────────────────────────────────────────────────

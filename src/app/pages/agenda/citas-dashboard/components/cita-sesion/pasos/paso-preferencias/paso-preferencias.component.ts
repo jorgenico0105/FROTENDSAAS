@@ -40,6 +40,7 @@ export class PasoPreferenciasComponent implements OnInit {
     return labels[tipo] ?? tipo;
   }
 
+  allAlimentos:         NutricionAlimento[]    = [];
   alimentos:            NutricionAlimento[]    = [];
   preferencias:         NutricionPreferencia[] = [];
   isLoadingAlimentos    = false;
@@ -47,12 +48,19 @@ export class PasoPreferenciasComponent implements OnInit {
   alimentoSearch        = '';
   savingPrefId: number | null = null;
 
-  private searchTimer: ReturnType<typeof setTimeout> | null = null;
-
   constructor(private nutricionSvc: NutricionService) {}
 
   ngOnInit(): void {
     if (this.pacienteId > 0) this.cargarPreferencias();
+    this.cargarAlimentos();
+  }
+
+  private cargarAlimentos(): void {
+    this.isLoadingAlimentos = true;
+    this.nutricionSvc.listAlimentos().subscribe({
+      next: (a) => { this.allAlimentos = a; this.isLoadingAlimentos = false; },
+      error: () => { this.isLoadingAlimentos = false; }
+    });
   }
 
   private cargarPreferencias(): void {
@@ -68,15 +76,12 @@ export class PasoPreferenciasComponent implements OnInit {
   }
 
   onAlimentoSearchInput(): void {
-    if (this.searchTimer) clearTimeout(this.searchTimer);
-    if (this.alimentoSearch.trim().length < 2) { this.alimentos = []; return; }
-    this.searchTimer = setTimeout(() => {
-      this.isLoadingAlimentos = true;
-      this.nutricionSvc.listAlimentos({ search: this.alimentoSearch }).subscribe({
-        next: (a: NutricionAlimento[]) => { this.alimentos = a; this.isLoadingAlimentos = false; },
-        error: () => { this.isLoadingAlimentos = false; }
-      });
-    }, 350);
+    const q = this.alimentoSearch.trim().toLowerCase();
+    if (q.length < 2) { this.alimentos = []; return; }
+    this.alimentos = this.allAlimentos.filter(a =>
+      a.nombre.toLowerCase().includes(q) ||
+      (a.categoria || '').toLowerCase().includes(q)
+    );
   }
 
   tipoPreferencia(alimentoId: number): string {

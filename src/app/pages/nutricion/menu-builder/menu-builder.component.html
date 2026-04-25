@@ -414,8 +414,15 @@
                           }
 
                           @for (ca of cell.alimentos; track $index) {
-                            <div class="flex items-center gap-1 text-xs rounded-lg px-1.5 py-1 mb-0.5 bg-gray-50 dark:bg-[#0a0e19] border border-gray-100 dark:border-[#172036]">
-                              <span class="truncate text-black dark:text-white flex-1 font-medium">{{ ca.nombre }}</span>
+                            <div class="flex items-center gap-1 text-xs rounded-lg px-1.5 py-1 mb-0.5 border"
+                              [ngClass]="disgustoIds.has(ca.alimento_id)
+                                ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800/50'
+                                : 'bg-gray-50 dark:bg-[#0a0e19] border-gray-100 dark:border-[#172036]'">
+                              @if (disgustoIds.has(ca.alimento_id)) {
+                                <i class="ri-emotion-unhappy-line text-danger-500 flex-shrink-0 text-[11px]" title="No le gusta al paciente"></i>
+                              }
+                              <span class="truncate flex-1 font-medium"
+                                [ngClass]="disgustoIds.has(ca.alimento_id) ? 'text-danger-700 dark:text-danger-300' : 'text-black dark:text-white'">{{ ca.nombre }}</span>
                               @if (!ca.editando) {
                                 <button (click)="$event.stopPropagation(); startEditGramos(ca)"
                                   class="text-gray-400 hover:text-primary-500 flex-shrink-0 text-[10px] font-mono transition-colors"
@@ -541,12 +548,27 @@
         } @else {
           <div class="space-y-2 mb-4">
             @for (ca of selectedCell.alimentos; track $index) {
-              <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#0a0e19] rounded-xl">
-                <div class="w-8 h-8 bg-success-50 dark:bg-success-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="ri-restaurant-2-line text-success-500 text-xs"></i>
+              <div class="flex items-center gap-3 p-3 rounded-xl border"
+                [ngClass]="disgustoIds.has(ca.alimento_id)
+                  ? 'bg-danger-50/60 dark:bg-danger-900/10 border-danger-200 dark:border-danger-800/50'
+                  : 'bg-gray-50 dark:bg-[#0a0e19] border-transparent'">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  [ngClass]="disgustoIds.has(ca.alimento_id)
+                    ? 'bg-danger-100 dark:bg-danger-900/30'
+                    : 'bg-success-50 dark:bg-success-900/20'">
+                  <i [ngClass]="disgustoIds.has(ca.alimento_id)
+                    ? 'ri-emotion-unhappy-line text-danger-500'
+                    : 'ri-restaurant-2-line text-success-500'"
+                    class="text-xs"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-black dark:text-white truncate">{{ ca.nombre }}</p>
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-sm font-medium truncate"
+                      [ngClass]="disgustoIds.has(ca.alimento_id) ? 'text-danger-700 dark:text-danger-300' : 'text-black dark:text-white'">{{ ca.nombre }}</p>
+                    @if (disgustoIds.has(ca.alimento_id)) {
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-danger-100 dark:bg-danger-900/30 text-danger-600 dark:text-danger-400 font-semibold flex-shrink-0">No le gusta</span>
+                    }
+                  </div>
                   <div class="flex items-center gap-2 mt-0.5">
                     @if (!ca.editando) {
                       <button (click)="startEditGramos(ca)"

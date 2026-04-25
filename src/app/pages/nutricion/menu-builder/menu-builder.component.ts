@@ -610,7 +610,6 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
     this.selectedPlantillaId = 0;
     this.assignCells = [];
     this.plantillaSvc.list({
-      num_comidas: this.dieta.num_comidas,
       semana_numero: this.assignForm.semana_numero || undefined,
     }).subscribe({
       next: (p) => {

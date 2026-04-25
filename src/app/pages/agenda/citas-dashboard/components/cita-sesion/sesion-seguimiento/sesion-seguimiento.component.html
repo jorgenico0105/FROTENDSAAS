@@ -32,6 +32,22 @@
   <!-- ── Tabs ────────────────────────────────────────────────────────────── -->
   <div class="bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] overflow-hidden shadow-sm">
     <div class="flex items-center border-b border-gray-100 dark:border-[#172036] px-2 pt-2 gap-1 overflow-x-auto">
+
+      @if (tieneFormularios) {
+        <button (click)="setTab('formularios')"
+          class="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-all -mb-px"
+          [ngClass]="activeTab === 'formularios'
+            ? 'border-secondary-500 text-secondary-600 dark:text-secondary-400'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'">
+          <i class="ri-clipboard-line text-sm"></i>
+          Formularios
+          <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+            [ngClass]="activeTab === 'formularios' ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400' : 'bg-gray-100 dark:bg-[#172036] text-gray-500'">
+            {{ formulariosCita.length }}
+          </span>
+        </button>
+      }
+
       @for (tab of [
         {id:'dieta',     icon:'ri-restaurant-line',     label:'Dieta activa'},
         {id:'registros', icon:'ri-calendar-check-line', label:'Registros'},
@@ -50,10 +66,38 @@
 
     <div class="p-5">
 
-      @if (isLoading) {
+      @if (isLoading && activeTab !== 'formularios') {
         <div class="flex items-center justify-center py-12">
           <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
+      }
+
+      <!-- FORMULARIOS ──────────────────────────────────────────────────────── -->
+      @if (activeTab === 'formularios') {
+        @if (!formulariosLoaded) {
+          <div class="flex items-center justify-center py-12">
+            <div class="w-6 h-6 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (formulariosCita.length === 0) {
+          <div class="text-center py-10">
+            <i class="ri-clipboard-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
+            <p class="text-sm text-gray-400">No hay formularios asignados para este tipo de cita</p>
+          </div>
+        } @else {
+          <app-paso-formularios
+            #pasoFormularios
+            [pacienteId]="pacienteId"
+            [medicoId]="medicoId"
+            [formularios]="formulariosCita"
+            (guardadoOk)="onFormulariosGuardados()"
+            (guardadoError)="onFormulariosError($event)">
+          </app-paso-formularios>
+          @if (successMsg) {
+            <div class="mt-3 px-4 py-2.5 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 text-success-700 dark:text-success-400 text-sm flex items-center gap-2">
+              <i class="ri-checkbox-circle-line flex-shrink-0"></i> {{ successMsg }}
+            </div>
+          }
+        }
       }
 
       <!-- DIETA ────────────────────────────────────────────────────────────── -->
@@ -267,95 +311,29 @@
                 </button>
               </div>
 
-              <!-- Campos obligatorios -->
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Fecha <span class="text-danger-500">*</span>
-                  </label>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Fecha <span class="text-danger-500">*</span></label>
                   <input type="date" [(ngModel)]="progresoForm.fecha"
                     class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Peso (kg) <span class="text-danger-500">*</span>
-                  </label>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Peso (kg) <span class="text-danger-500">*</span></label>
                   <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.peso_kg" placeholder="70.5"
                     class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    % Grasa corporal <span class="text-danger-500">*</span>
-                  </label>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">% Grasa corporal <span class="text-danger-500">*</span></label>
                   <input type="number" step="0.1" min="0" max="100" [(ngModel)]="progresoForm.grasa_corporal_pct" placeholder="22.5"
                     class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Masa muscular (kg) <span class="text-danger-500">*</span>
-                  </label>
+                  <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Masa muscular (kg) <span class="text-danger-500">*</span></label>
                   <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.masa_muscular_kg" placeholder="30.0"
                     class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
                 </div>
               </div>
 
-              <!-- Campos opcionales -->
-              <details class="group">
-                <summary class="cursor-pointer text-xs font-medium text-primary-500 hover:text-primary-600 flex items-center gap-1 select-none">
-                  <i class="ri-add-circle-line group-open:hidden"></i>
-                  <i class="ri-indeterminate-circle-line hidden group-open:inline"></i>
-                  Medidas adicionales (opcionales)
-                </summary>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Altura (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.altura_cm" placeholder="170"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cintura (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.cintura_cm" placeholder="80"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cadera (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.cadera_cm" placeholder="95"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pecho (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.pecho_cm" placeholder="90"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Brazo (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.brazo_cm" placeholder="35"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Muslo (cm)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.muslo_cm" placeholder="55"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Hidratación (L)</label>
-                    <input type="number" step="0.1" min="0" [(ngModel)]="progresoForm.hidratacion_litros" placeholder="2.5"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sueño (h)</label>
-                    <input type="number" step="0.5" min="0" max="24" [(ngModel)]="progresoForm.sueno_horas" placeholder="7"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                  <div>
-                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Energía (1-10)</label>
-                    <input type="number" min="1" max="10" [(ngModel)]="progresoForm.energia_nivel" placeholder="7"
-                      class="w-full text-sm rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-black dark:text-white px-3 py-2 focus:outline-none focus:border-primary-400">
-                  </div>
-                </div>
-              </details>
-
-              <!-- Foto -->
               <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Foto de progreso (opcional)</label>
                 <div class="flex items-center gap-3">
@@ -372,7 +350,6 @@
                 </div>
               </div>
 
-              <!-- Acciones -->
               <div class="flex items-center justify-end gap-2 pt-1">
                 <button (click)="showProgresoForm = false"
                   class="px-4 py-2 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036] transition-all">
@@ -389,7 +366,6 @@
             </div>
           }
 
-          <!-- Tabla historial -->
           @if (progreso.length === 0 && !showProgresoForm) {
             <div class="text-center py-10">
               <i class="ri-line-chart-line text-3xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
@@ -432,7 +408,6 @@
       <!-- IMÁGENES ────────────────────────────────────────────────────────────── -->
       @if (activeTab === 'imagenes') {
         <div class="space-y-4">
-          <!-- Upload bar -->
           <div class="flex items-center justify-between">
             <p class="text-sm text-gray-500 dark:text-gray-400">
               {{ imagenes.length }} imagen{{ imagenes.length !== 1 ? 'es' : '' }} del paciente
@@ -459,7 +434,6 @@
             <div class="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl">
               <i class="ri-image-line text-4xl text-gray-300 dark:text-gray-700 mb-3 block"></i>
               <p class="text-sm text-gray-400">No hay imágenes registradas</p>
-              <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">Sube la primera imagen de evolución del paciente</p>
             </div>
           }
 
@@ -484,7 +458,6 @@
         </div>
       }
 
-
     </div>
   </div>
 
@@ -495,7 +468,7 @@
     </div>
   }
 
-  <!-- ── Footer: notas + finalizar ────────────────────────────────────────── -->
+  <!-- ── Footer: finalizar ─────────────────────────────────────────────────── -->
   <div class="flex items-center justify-end bg-white dark:bg-[#0c1427] rounded-2xl border border-gray-100 dark:border-[#172036] px-5 py-3.5 shadow-sm">
     <button (click)="finalizarSesion()" [disabled]="isFinalizando"
             class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-success-500 hover:bg-success-600 text-white transition-all disabled:opacity-50 shadow-sm">
@@ -507,3 +480,98 @@
   </div>
 
 </div>
+
+<!-- ── Botón flotante: Historia clínica ──────────────────────────────────── -->
+<button (click)="openHistoriasModal()"
+  class="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-secondary-500 hover:bg-secondary-600 text-white rounded-2xl shadow-lg text-sm font-semibold transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+  <i class="ri-file-list-3-line text-base"></i>
+  <span>Historia clínica</span>
+</button>
+
+<!-- ── Modal: Historia clínica ───────────────────────────────────────────── -->
+@if (showHistoriasModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="showHistoriasModal = false"></div>
+    <div class="relative bg-white dark:bg-[#0c1427] rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-100 dark:border-[#172036] flex flex-col max-h-[88vh]">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-secondary-50 dark:bg-secondary-900/20 flex items-center justify-center">
+            <i class="ri-file-list-3-line text-secondary-500"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-black dark:text-white">Historia clínica</h3>
+            <p class="text-xs text-gray-400 mt-0.5">{{ historiaGroups.length }} formulario(s) registrado(s)</p>
+          </div>
+        </div>
+        <button (click)="showHistoriasModal = false" class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+          <i class="ri-close-line text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        @if (historiasLoading) {
+          <div class="flex flex-col items-center justify-center py-16 gap-3">
+            <div class="w-7 h-7 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-gray-400">Cargando historias...</p>
+          </div>
+        } @else if (historiaGroups.length === 0) {
+          <div class="text-center py-16">
+            <i class="ri-file-list-3-line text-5xl text-gray-200 dark:text-gray-700 block mb-3"></i>
+            <p class="text-sm text-gray-400">Sin historias clínicas registradas</p>
+          </div>
+        } @else {
+          @for (grupo of historiaGroups; track grupo.id) {
+            <div class="rounded-xl border overflow-hidden transition-all"
+              [ngClass]="expandedHistorias.has(grupo.id) ? 'border-secondary-200 dark:border-secondary-800/50' : 'border-gray-100 dark:border-[#172036]'">
+
+              <button type="button" (click)="toggleHistoria(grupo.id)"
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#0a0e19] transition-colors text-left">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                  [ngClass]="expandedHistorias.has(grupo.id) ? 'bg-secondary-500 text-white' : 'bg-secondary-50 dark:bg-secondary-900/20 text-secondary-500'">
+                  <i class="ri-file-text-line text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0 text-left">
+                  <p class="font-semibold text-sm text-black dark:text-white truncate">{{ grupo.nombre }}</p>
+                  <p class="text-[11px] text-gray-400 mt-0.5">{{ grupo.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <i class="ri-arrow-down-s-line text-lg text-gray-400 transition-transform duration-200 flex-shrink-0"
+                  [ngClass]="expandedHistorias.has(grupo.id) ? 'rotate-180' : ''"></i>
+              </button>
+
+              @if (expandedHistorias.has(grupo.id)) {
+                <div class="border-t border-gray-100 dark:border-[#172036]">
+                  <div class="grid grid-cols-1 md:grid-cols-2 divide-y divide-gray-50 dark:divide-[#172036] md:divide-y-0">
+                    @for (row of grupo.respuestas; track row.orden_pregunta; let odd = $odd) {
+                      @if (!isRespuestaEmpty(row)) {
+                        <div class="flex flex-col gap-1 px-4 py-3 hover:bg-gray-50/60 dark:hover:bg-[#0a0e19]/60 transition-colors"
+                          [ngClass]="odd ? 'md:border-l md:border-gray-50 dark:md:border-[#172036]' : ''">
+                          <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 truncate">{{ row.pregunta }}</p>
+                          <p class="text-sm font-semibold text-black dark:text-white">{{ formatRespuesta(row) }}</p>
+                        </div>
+                      }
+                    }
+                  </div>
+                  @if (grupo.observacion_general) {
+                    <div class="border-t border-gray-100 dark:border-[#172036] px-4 py-3 bg-amber-50/50 dark:bg-amber-900/10">
+                      <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                        <i class="ri-sticky-note-line"></i> Observación general
+                      </p>
+                      <p class="text-sm text-black dark:text-white whitespace-pre-wrap">{{ grupo.observacion_general }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end px-5 py-4 border-t border-gray-100 dark:border-[#172036] flex-shrink-0">
+        <button (click)="showHistoriasModal = false" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

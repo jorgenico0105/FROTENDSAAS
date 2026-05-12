@@ -55,7 +55,7 @@ export class NutricionDashboardComponent implements OnInit {
     const today = this.todayStr();
 
     forkJoin({
-      pacientes:      this.pacientesSvc.list(),
+      pacientes:      this.pacientesSvc.listAll(),
       requierenCambio: this.nutricionSvc.listDietasRequierenCambio(),
       citas:          this.agendaSvc.listCitas({ fecha: today, size: 20 })
     }).subscribe({

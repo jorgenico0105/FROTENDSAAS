@@ -99,11 +99,36 @@
                 </div>
                 <p class="text-sm font-semibold text-black dark:text-white truncate">{{ nombrePaciente(dieta) }}</p>
               </div>
-              <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-                [ngClass]="estadoBadge(dieta.estado)">
-                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="estadoDot(dieta.estado)"></span>
-                {{ dieta.estado }}
-              </span>
+              <!-- Estado badge clickeable con dropdown -->
+              <div class="relative flex-shrink-0" (click)="$event.stopPropagation()">
+                <button (click)="toggleEstadoDropdown($event, dieta.id)"
+                  class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full cursor-pointer transition-opacity hover:opacity-80"
+                  [ngClass]="estadoBadge(dieta.estado)"
+                  [disabled]="isUpdatingEstado"
+                  title="Cambiar estado">
+                  <span class="w-1.5 h-1.5 rounded-full" [ngClass]="estadoDot(dieta.estado)"></span>
+                  {{ dieta.estado }}
+                  <i class="ri-arrow-down-s-line text-[10px]"></i>
+                </button>
+                @if (activeEstadoDropdown === dieta.id) {
+                  <div class="absolute right-0 top-full mt-1.5 z-30 bg-white dark:bg-[#0c1427] rounded-xl border border-gray-200 dark:border-[#172036] shadow-xl py-1.5 min-w-[148px]">
+                    @for (est of ESTADOS; track est.val) {
+                      <button (click)="cambiarEstado($event, dieta, est.val)"
+                        class="w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors text-left"
+                        [ngClass]="dieta.estado === est.val
+                          ? 'font-semibold text-black dark:text-white bg-gray-50 dark:bg-[#172036]'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#172036]'"
+                        [disabled]="isUpdatingEstado">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0" [ngClass]="estadoDot(est.val)"></span>
+                        {{ est.label }}
+                        @if (dieta.estado === est.val) {
+                          <i class="ri-check-line ml-auto text-primary-500"></i>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
 
             <!-- Nombre y objetivo -->

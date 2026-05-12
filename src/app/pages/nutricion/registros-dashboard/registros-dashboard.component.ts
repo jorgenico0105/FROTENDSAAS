@@ -86,7 +86,7 @@ export class RegistrosDashboardComponent implements OnInit {
     this.isLoading = true;
     this.statsMap = [];
 
-    this.pacientesSvc.list('', 1, 100).subscribe({
+    this.pacientesSvc.listAll().subscribe({
       next: res => {
         this.pacientes = res.data;
         if (this.pacientes.length === 0) { this.isLoading = false; return; }

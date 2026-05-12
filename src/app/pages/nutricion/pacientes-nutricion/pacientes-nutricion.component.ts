@@ -20,7 +20,7 @@ export class PacientesNutricionComponent implements OnInit {
 
   ngOnInit(): void {
     this.isLoading = true;
-    this.svc.list().subscribe({
+    this.svc.listAll().subscribe({
       next: (res) => {
         this.pacientes = res.data;
         this.filtered = [...res.data];

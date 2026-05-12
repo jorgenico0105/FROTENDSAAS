@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass, DecimalPipe } from '@angular/common';
@@ -36,6 +36,15 @@ export class DietasComponent implements OnInit {
   isSubmitting = false;
   confirmDeleteId: number | null = null;
   isDeleting = false;
+  activeEstadoDropdown: number | null = null;
+  isUpdatingEstado = false;
+
+  readonly ESTADOS = [
+    { val: 'ACTIVA',      label: 'Activa' },
+    { val: 'PAUSADA',     label: 'Pausada' },
+    { val: 'COMPLETADA',  label: 'Completada' },
+    { val: 'CANCELADA',   label: 'Cancelada' },
+  ];
   dietaForm: CreateDietaRequest = {
     nombre: '', fecha_inicio: new Date().toISOString().split('T')[0],
     duracion_dias: 28, num_comidas: 5
@@ -51,9 +60,12 @@ export class DietasComponent implements OnInit {
     this.load();
   }
 
+  @HostListener('document:click')
+  closeDropdowns() { this.activeEstadoDropdown = null; }
+
   private load(): void {
     this.isLoading = true;
-    this.pacientesSvc.list().subscribe({
+    this.pacientesSvc.listAll().subscribe({
       next: res => {
         this.pacientes = res.data;
         this.loadDietas();
@@ -174,6 +186,31 @@ export class DietasComponent implements OnInit {
         setTimeout(() => this.successMsg = '', 3000);
       },
       error: () => { this.isDeleting = false; this.errorMsg = 'Error al eliminar la dieta.'; }
+    });
+  }
+
+  toggleEstadoDropdown(event: Event, dietaId: number): void {
+    event.stopPropagation();
+    this.activeEstadoDropdown = this.activeEstadoDropdown === dietaId ? null : dietaId;
+  }
+
+  cambiarEstado(event: Event, dieta: DietaConPaciente, nuevoEstado: string): void {
+    event.stopPropagation();
+    if (dieta.estado === nuevoEstado || this.isUpdatingEstado) return;
+    this.activeEstadoDropdown = null;
+    this.isUpdatingEstado = true;
+    this.nutricionSvc.updateEstadoDieta(dieta.paciente_id, dieta.id, nuevoEstado).subscribe({
+      next: (updated) => {
+        dieta.estado = updated.estado;
+        this.isUpdatingEstado = false;
+        this.successMsg = `Estado actualizado a ${updated.estado}.`;
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => {
+        this.isUpdatingEstado = false;
+        this.errorMsg = 'Error al actualizar el estado.';
+        setTimeout(() => this.errorMsg = '', 3000);
+      }
     });
   }
 

@@ -103,6 +103,11 @@ export class NutricionService {
       .pipe(map(r => r.data));
   }
 
+  updateEstadoDieta(pacienteId: number, dietaId: number, estado: string): Observable<NutricionDietaPaciente> {
+    return this.http.put<ApiResponse<NutricionDietaPaciente>>(`${this.base}/pacientes/${pacienteId}/dietas/${dietaId}`, { estado })
+      .pipe(map(r => r.data));
+  }
+
   deleteDieta(pacienteId: number, dietaId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/pacientes/${pacienteId}/dietas/${dietaId}`);
   }

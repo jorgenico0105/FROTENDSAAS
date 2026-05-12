@@ -94,7 +94,7 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
     forkJoin({
       dieta:   this.nutricionSvc.getDieta(this.pacienteId, this.dietaId),
       menus:   this.nutricionSvc.listMenusByDieta(this.pacienteId, this.dietaId),
-      pacientes: this.pacientesSvc.list(),
+      pacientes: this.pacientesSvc.listAll(),
     }).subscribe({
       next: res => {
         this.dieta   = res.dieta;

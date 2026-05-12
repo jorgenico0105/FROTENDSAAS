@@ -32,6 +32,11 @@ export class PacientesService {
     return this.http.get<PaginatedPacientes>(this.base, { params });
   }
 
+  /** Carga todos los pacientes de la clínica (hasta 100). Usar en dropdowns, selectores y vistas que necesitan la lista completa. */
+  listAll(): Observable<PaginatedPacientes> {
+    return this.list('', 1, 100);
+  }
+
   get(id: number): Observable<Paciente> {
     return this.http.get<ApiResponse<Paciente>>(`${this.base}/${id}`).pipe(map(r => r.data));
   }

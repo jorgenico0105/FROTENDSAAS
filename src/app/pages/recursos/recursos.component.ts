@@ -79,7 +79,7 @@ export class RecursosComponent implements OnInit {
       }
     });
     this.load();
-    this.pacientesSvc.list().subscribe({ next: r => this.pacientes = r.data });
+    this.pacientesSvc.listAll().subscribe({ next: r => this.pacientes = r.data });
   }
 
   load(): void {

@@ -35,7 +35,7 @@ export class PacientesListaComponent implements OnInit {
 
   loadPacientes(): void {
     this.isLoading = true;
-    this.svc.list().subscribe({
+    this.svc.listAll().subscribe({
       next: (res) => { this.pacientes = res.data; this.applyFilter(); this.isLoading = false; },
       error: () => { this.isLoading = false; }
     });

@@ -173,7 +173,7 @@ button {
 
 /** Sidebar */
 .sidebar-area {
-    @apply w-[260px] ltr:-left-full ltr:xl:left-0 rtl:-right-full rtl:xl:right-0;
+    @apply w-[260px] ltr:-left-full ltr:lg:left-0 rtl:-right-full rtl:lg:right-0;
 
     .burger-menu {
         @apply opacity-0 invisible;
@@ -269,7 +269,7 @@ button {
         }
     }
     &.active {
-        @apply ltr:left-0 rtl:right-0 xl:ltr:-left-full xl:rtl:-right-full;
+        @apply ltr:left-0 rtl:right-0 lg:ltr:-left-full lg:rtl:-right-full;
 
         .burger-menu {
             @apply opacity-100 visible;
@@ -305,7 +305,7 @@ button {
 }
 .sidebar-hidden {
     .sidebar-area {
-        @apply ltr:left-0 rtl:right-0 xl:ltr:-left-full xl:rtl:-right-full;
+        @apply ltr:left-0 rtl:right-0 lg:ltr:-left-full lg:rtl:-right-full;
 
         .burger-menu {
             @apply opacity-100 visible;
@@ -315,7 +315,7 @@ button {
 
 /** Header */
 .header-area {
-    @apply left-[15px] right-[15px] md:left-[25px] md:right-[25px] ltr:xl:left-[285px] rtl:xl:right-[285px];
+    @apply left-[15px] right-[15px] md:left-[25px] md:right-[25px] ltr:lg:left-[285px] rtl:lg:right-[285px];
 
     .hide-sidebar-toggle {
         &.active {
@@ -400,7 +400,7 @@ button {
 
 /** Main Content */
 .main-content {
-    @apply pt-[143px] px-[15px] md:pt-[95px] md:pl-[25px] md:pr-[25px] ltr:xl:pl-[285px] rtl:xl:pr-[285px];
+    @apply pt-[143px] px-[15px] md:pt-[95px] md:pl-[25px] md:pr-[25px] ltr:lg:pl-[285px] rtl:lg:pr-[285px];
 
     &.active {
         @apply ltr:pl-[15px] md:ltr:pl-[25px] rtl:pr-[15px] md:rtl:pr-[25px];

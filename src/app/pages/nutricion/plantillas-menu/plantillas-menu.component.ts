@@ -87,6 +87,10 @@ export class PlantillasMenuComponent implements OnInit {
   confirmDeleteId: number | null = null;
   isDeleting = false;
 
+  // Duplicate
+  isDuplicando = false;
+  duplicandoId: number | null = null;
+
   // Food catalog (left panel)
   allAlimentos: NutricionAlimento[] = [];
   filteredCatalog: NutricionAlimento[] = [];
@@ -389,6 +393,29 @@ export class PlantillasMenuComponent implements OnInit {
     });
   }
 
+  // ─── Duplicar plantilla para hombre ──────────────────────────────────────
+
+  duplicarPlantilla(p: PlantillaSemana): void {
+    if (this.isDuplicando) return;
+    this.isDuplicando = true;
+    this.duplicandoId = p.id;
+    this.errorMsg = '';
+    this.svc.duplicarParaHombre(p.id).subscribe({
+      next: (nueva) => {
+        this.plantillas.unshift(nueva);
+        this.isDuplicando = false;
+        this.duplicandoId = null;
+        this.successMsg = `Plantilla "${nueva.nombre}" creada para hombre.`;
+        setTimeout(() => this.successMsg = '', 4000);
+      },
+      error: (err) => {
+        this.isDuplicando = false;
+        this.duplicandoId = null;
+        this.errorMsg = err?.error?.message || 'Error al duplicar la plantilla.';
+      }
+    });
+  }
+
   // ─── Crear plantilla ──────────────────────────────────────────────────────
 
   openCreateModal(): void {
@@ -485,6 +512,15 @@ export class PlantillasMenuComponent implements OnInit {
       carb: row.reduce((s, c) => s + c.carbohidratos_g, 0),
       fat:  row.reduce((s, c) => s + c.grasas_g, 0),
     };
+  }
+
+  get plantillasPorSemana(): { semana: number; femeninas: PlantillaSemana[]; masculinas: PlantillaSemana[] }[] {
+    const semanas = [...new Set(this.plantillas.map(p => p.semana_numero))].sort((a, b) => a - b);
+    return semanas.map(s => ({
+      semana: s,
+      femeninas: this.plantillas.filter(p => p.semana_numero === s && p.sexo_menu !== 'M'),
+      masculinas: this.plantillas.filter(p => p.semana_numero === s && p.sexo_menu === 'M'),
+    }));
   }
 
   numComidasLabel(n: number): string {

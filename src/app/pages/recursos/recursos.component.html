@@ -207,36 +207,18 @@
     <!-- Barra de filtros -->
     <div class="flex items-center gap-3 mb-5 flex-wrap">
 
-      <!-- Categorías pill scroll -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 flex-1">
-        <button (click)="filtroTipoID = 0"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 border"
-          [ngClass]="filtroTipoID === 0
-            ? 'bg-primary-500 border-primary-500 text-white shadow-sm shadow-primary-200 dark:shadow-primary-900/30'
-            : 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-gray-600 dark:text-gray-400 hover:border-primary-300 hover:text-primary-600'">
-          <i class="ri-apps-2-line"></i>
-          Todos
-          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-            [ngClass]="filtroTipoID === 0 ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-[#172036] text-gray-500'">
-            {{ archivos.length }}
-          </span>
-        </button>
-        @for (t of tipoRecursos; track t.id) {
-          <button (click)="filtroTipoID = t.id"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 border"
-            [ngClass]="filtroTipoID === t.id
-              ? 'bg-primary-500 border-primary-500 text-white shadow-sm shadow-primary-200 dark:shadow-primary-900/30'
-              : 'border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-gray-600 dark:text-gray-400 hover:border-primary-300 hover:text-primary-600'">
-            <i [class]="archivoIcon(t.id)"></i>
-            {{ t.nombre }}
-            @if (countByTipoID(t.id) > 0) {
-              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-                [ngClass]="filtroTipoID === t.id ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-[#172036] text-gray-500'">
-                {{ countByTipoID(t.id) }}
-              </span>
-            }
-          </button>
-        }
+      <!-- Categoría: select compacto -->
+      <div class="relative flex-shrink-0">
+        <i class="ri-filter-3-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+        <select [(ngModel)]="filtroTipoID"
+          class="h-9 pl-8 pr-8 rounded-xl border border-gray-200 dark:border-[#172036] bg-white dark:bg-[#0c1427] text-sm text-black dark:text-white outline-none focus:border-primary-500 transition-all appearance-none cursor-pointer min-w-[200px]"
+          [ngClass]="filtroTipoID !== 0 ? 'border-primary-400 dark:border-primary-700 text-primary-600 dark:text-primary-400 font-semibold' : ''">
+          <option [value]="0">Todas las categorías ({{ archivos.length }})</option>
+          @for (t of tipoRecursos; track t.id) {
+            <option [value]="t.id">{{ t.nombre }} ({{ countByTipoID(t.id) }})</option>
+          }
+        </select>
+        <i class="ri-arrow-down-s-line absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
       </div>
 
       <!-- Búsqueda + view toggle -->

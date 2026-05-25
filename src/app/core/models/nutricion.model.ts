@@ -484,6 +484,7 @@ export interface PlantillaSemana {
   nombre: string;
   notas: string;
   state: string;
+  sexo_menu?: string;
   creado_en: string;
   actualizado_en: string;
   detalles?: DetallePlantilla[];

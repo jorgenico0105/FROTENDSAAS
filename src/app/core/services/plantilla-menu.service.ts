@@ -52,6 +52,12 @@ export class PlantillaMenuService {
     return this.http.delete<void>(`${this.base}/plantillas-menu/${id}`);
   }
 
+  duplicarParaHombre(id: number): Observable<PlantillaSemana> {
+    return this.http.post<ApiResponse<PlantillaSemana>>(
+      `${this.base}/plantillas-menu/${id}/duplicar`, {}
+    ).pipe(map(r => r.data));
+  }
+
   getDetalles(plantillaId: number): Observable<DetallePlantilla[]> {
     return this.http.get<ApiResponse<DetallePlantilla[]>>(`${this.base}/plantillas-menu/${plantillaId}/detalles`)
       .pipe(map(r => r.data ?? []));

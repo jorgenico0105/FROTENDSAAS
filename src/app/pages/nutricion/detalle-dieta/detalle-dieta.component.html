@@ -137,18 +137,28 @@
         <div class="px-4 pt-4 border-b border-gray-100 dark:border-[#172036]">
           <div class="flex items-center gap-1 overflow-x-auto pb-3">
             @for (menu of menus; track menu.id) {
-              <button (click)="seleccionarMenu(menu)"
-                class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all"
-                [ngClass]="menuSeleccionado?.id === menu.id
-                  ? 'bg-primary-500 text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036]'">
-                <span>{{ menu.nombre || ('Semana ' + menu.semana_numero) }}</span>
-                @if (esMenuActivo(menu)) {
-                  <span class="w-1.5 h-1.5 rounded-full bg-success-400 flex-shrink-0"
-                    [ngClass]="menuSeleccionado?.id === menu.id ? 'bg-white/70' : 'bg-success-400'">
-                  </span>
+              <div class="flex-shrink-0 inline-flex items-center gap-1">
+                <button (click)="seleccionarMenu(menu)"
+                  class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all"
+                  [ngClass]="menuSeleccionado?.id === menu.id
+                    ? 'bg-primary-500 text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172036]'">
+                  <span>{{ menu.nombre || ('Semana ' + menu.semana_numero) }}</span>
+                  @if (esMenuActivo(menu)) {
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      [ngClass]="menuSeleccionado?.id === menu.id ? 'bg-white/70' : 'bg-success-400'">
+                    </span>
+                  }
+                </button>
+                @if (!esMenuActivo(menu)) {
+                  <button (click)="activarMenu(menu); $event.stopPropagation()" [disabled]="isActivando"
+                    title="Activar este menú en la app del paciente"
+                    class="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-success-600 hover:bg-success-50 dark:hover:bg-success-900/20 transition-colors disabled:opacity-40"
+                    [ngClass]="menuSeleccionado?.id === menu.id ? 'text-white/60 hover:text-white hover:bg-white/20' : ''">
+                    <i class="ri-checkbox-circle-line text-base"></i>
+                  </button>
                 }
-              </button>
+              </div>
             }
           </div>
         </div>

@@ -197,7 +197,7 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
   }
 
   activarMenu(menu: NutricionMenu): void {
-    if (this.isActivando || menu.estado === 'ACTIVO') return;
+    if (this.isActivando || this.esMenuActivo(menu)) return;
     this.isActivando = true;
     this.nutricionSvc.activarMenu(this.pacienteId, menu.id).subscribe({
       next: () => {
@@ -287,7 +287,7 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
   }
 
   esMenuActivo(menu: NutricionMenu): boolean {
-    return menu.estado === 'ACTIVO';
+    return this.menuActivo()?.id === menu.id;
   }
 
   formatDate(d?: string): string {

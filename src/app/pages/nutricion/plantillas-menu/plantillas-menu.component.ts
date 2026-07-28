@@ -54,6 +54,7 @@ const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   standalone: true,
   imports: [RouterLink, FormsModule, NgClass, DecimalPipe],
   templateUrl: './plantillas-menu.component.html',
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden' },
 })
 export class PlantillasMenuComponent implements OnInit {
   readonly DIAS = DIAS;

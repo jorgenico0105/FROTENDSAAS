@@ -189,14 +189,23 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
     );
   }
 
+  isActivando = false;
+
   menuActivo(): NutricionMenu | null {
     if (!this.menus.length) return null;
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    return this.menus.find(m => {
-      const ini = new Date(m.fecha_inicio); ini.setHours(0, 0, 0, 0);
-      const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
-      return hoy >= ini && hoy <= fin;
-    }) ?? null;
+    return this.menus.find(m => m.estado === 'ACTIVO') ?? null;
+  }
+
+  activarMenu(menu: NutricionMenu): void {
+    if (this.isActivando || menu.estado === 'ACTIVO') return;
+    this.isActivando = true;
+    this.nutricionSvc.activarMenu(this.pacienteId, menu.id).subscribe({
+      next: () => {
+        this.menus = this.menus.map(m => ({ ...m, estado: m.id === menu.id ? 'ACTIVO' : 'PENDIENTE' }));
+        this.isActivando = false;
+      },
+      error: () => { this.isActivando = false; }
+    });
   }
 
   get diaTotal(): { cal: number; pro: number; carb: number; fat: number }[] {
@@ -278,8 +287,7 @@ export class DetalleDietaComponent implements OnInit, OnDestroy {
   }
 
   esMenuActivo(menu: NutricionMenu): boolean {
-    const activo = this.menuActivo();
-    return activo?.id === menu.id;
+    return menu.estado === 'ACTIVO';
   }
 
   formatDate(d?: string): string {

@@ -554,6 +554,7 @@ export interface AddAlimentoPlantillaRequest {
 export interface AssignMenuFromPlantillaRequest {
   semana_numero: number;
   fecha_inicio: string;
+  duracion_semanas?: number;
   nombre?: string;
   notas?: string;
   detalles: PlantillaDetalleInput[];

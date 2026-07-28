@@ -129,6 +129,11 @@ export class NutricionService {
       .pipe(map(r => r.data));
   }
 
+  activarMenu(pacienteId: number, menuId: number): Observable<void> {
+    return this.http.patch<ApiResponse<void>>(`${this.base}/pacientes/${pacienteId}/menus/${menuId}/activar`, {})
+      .pipe(map(() => undefined));
+  }
+
   getMenuConDetalles(pacienteId: number, menuId: number): Observable<NutricionMenuConDetalles> {
     return this.http.get<ApiResponse<NutricionMenuConDetalles>>(`${this.base}/pacientes/${pacienteId}/menus/${menuId}`)
       .pipe(map(r => {

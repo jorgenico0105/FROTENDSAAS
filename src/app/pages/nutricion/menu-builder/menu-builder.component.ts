@@ -174,7 +174,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
   selectedPlantillaId = 0;
   assignCells: AssignCell[] = [];
   assignTiposComida: { id: number; nombre: string }[] = [];
-  assignForm = { semana_numero: 1, fecha_inicio: new Date().toISOString().split('T')[0], nombre: '' };
+  assignForm = { semana_numero: 1, fecha_inicio: new Date().toISOString().split('T')[0], nombre: '', duracion_semanas: 1 };
   isAssigning = false;
   assignError = '';
 
@@ -599,6 +599,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
       semana_numero: (this.menus.length + 1),
       fecha_inicio: new Date().toISOString().split('T')[0],
       nombre: '',
+      duracion_semanas: 1,
     };
     this.showAsignarModal = true;
     this.fetchPlantillas();
@@ -703,6 +704,7 @@ export class MenuBuilderComponent implements OnInit, OnDestroy {
     const body: AssignMenuFromPlantillaRequest = {
       semana_numero: this.assignForm.semana_numero,
       fecha_inicio: this.assignForm.fecha_inicio,
+      duracion_semanas: this.assignForm.duracion_semanas || 1,
       nombre: this.assignForm.nombre || undefined,
       detalles,
     };
